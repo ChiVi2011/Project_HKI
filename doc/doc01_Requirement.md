@@ -120,7 +120,7 @@ Bao gồm:
 - Giỏ hàng
 - Thanh toán
 - Quản lý đơn hàng
-- Dashboard
+- Dashboard Admin
 
 Không bao gồm:
 

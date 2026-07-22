@@ -37,7 +37,7 @@ Register
     │
     ▼
 Nhập thông tin
-(Họ tên, Email, SĐT, Mật khẩu)
+(Họ tên, Email, SĐT, Mật khẩu,...)
     │
     ▼
 Kiểm tra dữ liệu
