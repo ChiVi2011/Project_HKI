@@ -8,7 +8,6 @@ go
 CREATE TABLE Users (
     UserID INT IDENTITY(1,1) PRIMARY KEY,
     CustomerCode VARCHAR(20) NOT NULL UNIQUE,
-    Username VARCHAR(100) NOT NULL UNIQUE,
     FullName NVARCHAR(100) NOT NULL,
     Gender BIT NULL,
     DateOfBirth DATE NULL,
@@ -22,7 +21,8 @@ CREATE TABLE Users (
 
 ALTER TABLE Users
 ADD UserType VARCHAR(20) NOT NULL DEFAULT 'CUSTOMER';
-
+ALTER TABLE Users
+ADD CONSTRAINT CHK_EmailOrPhone CHECK (Email IS NOT NULL OR Phone IS NOT NULL);
 SELECT * FROM Users
 
 
@@ -40,6 +40,7 @@ CREATE TABLE Passwords (
 	  CONSTRAINT FK_Passwords_Users
 			FOREIGN KEY (UserID) REFERENCES Users(UserID)
 )
+
 -- =====================================================
 -- TABLE: Categories
 -- MODULE: Products
@@ -145,4 +146,4 @@ CREATE TABLE ProductImages(
     CONSTRAINT CK_ProductImages_DisplayOrder
         CHECK (DisplayOrder > 0)
 );
-SELECT * FROM ProductImages
+SELECT * FROM ProductImages	
