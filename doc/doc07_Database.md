@@ -69,26 +69,34 @@ Hệ thống sử dụng mô hình cơ sở dữ liệu kết hợp:
 
 # Warehouses    
     1. Warehouses
-    Cột 	    Kiểu dữ liệu	    Ý nghĩa
-    ---------------------------------------
-    2. ProductBatches *****
-    Cột 	    Kiểu dữ liệu	    Ý nghĩa
-    ---------------------------------------
-    3. Inventory
-    Cột 	    Kiểu dữ liệu	    Ý nghĩa
-    ---------------------------------------
-    4. InventoryTransactions
-    Cột 	    Kiểu dữ liệu	    Ý nghĩa
-    ---------------------------------------
-    5. Suppliers
-    Cột 	    Kiểu dữ liệu	    Ý nghĩa
-    ---------------------------------------
-    6. PurchaseOrders
-    Cột 	    Kiểu dữ liệu	    Ý nghĩa
-    ---------------------------------------
-    7. PurchaseOrderDetails
-    Cột 	    Kiểu dữ liệu	    Ý nghĩa
-    ---------------------------------------
+    | Cột           | Kiểu dữ liệu      | Ý nghĩa                          | Ràng buộc         |
+| ------------- | ----------------- | -------------------------------- | ----------------- |
+| WarehouseID   | INT IDENTITY(1,1) | Mã kho                           | Primary Key       |
+| WarehouseName | NVARCHAR(100)     | Tên kho                          | NOT NULL          |
+| Address       | NVARCHAR(255)     | Địa chỉ kho                      | NOT NULL          |
+| Status        | BIT               | 1 = Hoạt động, 0 = Ngừng sử dụng | DEFAULT 1         |
+CreatedAt	      DATETIME	          Ngày tạo	                        DEFAULT GETDATE()
+UpdatedAt	      DATETIME	          Ngày cập nhật	                    NULL
+    2. Inventory
+| Cột           | Kiểu dữ liệu      | Ý nghĩa                          | Ràng buộc         |
+| ------------- | ----------------- | -------------------------------- | ----------------- |
+InventoryID	      INT IDENTITY(1,1)	    Mã tồn kho	                      Primary Key
+WarehouseID	      INT	                  Kho lưu trữ                   Foreign Key (Warehouses)
+ProductVariantID  INT                 Biến thể sản phẩm          Foreign Key (ProductVariants)
+Quantity	      INT	              Số lượng tồn kho	                  NOT NULL
+UpdatedAt	      DATETIME	          Ngày cập nhật tồn kho	              NULL
+
+
+    3. Suppliers
+    | Cột          | Kiểu dữ liệu      | Ý nghĩa                        | Ràng buộc   |
+| ------------ | ----------------- | ------------------------------ | ----------- |
+| SupplierID   | INT IDENTITY(1,1) | Mã nhà cung cấp                | Primary Key |
+| SupplierName | NVARCHAR(200)     | Tên nhà cung cấp               | NOT NULL    |
+| PhoneNumber  | VARCHAR(15)       | Số điện thoại                  | NULL        |
+| Email        | VARCHAR(100)      | Email liên hệ                  | NULL        |
+| Address      | NVARCHAR(255)     | Địa chỉ                        | NULL        |
+| Status       | BIT               | 1 = Hợp tác, 0 = Ngừng hợp tác | DEFAULT 1   |
+
 
 # Shopping
     Carts
