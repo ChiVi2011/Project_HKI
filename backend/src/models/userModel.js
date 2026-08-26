@@ -3,13 +3,13 @@ const db = require("../config/database");
 const bcrypt = require("bcrypt");
 
 // Tạo mã khách hàng tự động +  lấy "KH" làm tiền tố
-// async function generateCustomeCode() {
-//   const result = await pool.request().query(`
-//         SELECT TOP 1 CustomerCode FROM Users ORDER BY UserID DESC`);
-//   const last = result.recordset[0]?.CustomerCode || "KH00000";
-//   const newCustomCode = pareInt(last.replace("KH", "")) + 1;
-//   return "KH" + String(newCustomCode).padStart(5, "0");
-// }
+async function generateCustomeCode() {
+  const result = await pool.request().query(`
+        SELECT TOP 1 CustomerCode FROM Users ORDER BY UserID DESC`);
+  const last = result.recordset[0]?.CustomerCode || "KH00000";
+  const newCustomCode = pareInt(last.replace("KH", "")) + 1;
+  return "KH" + String(newCustomCode).padStart(5, "0");
+}
 
 const userModel = {
   // Lấy ds User trên DB

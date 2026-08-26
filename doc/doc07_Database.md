@@ -10,11 +10,12 @@ Hệ thống sử dụng mô hình cơ sở dữ liệu kết hợp:
     1. Users
     Cột 	    Kiểu dữ liệu	    Ý nghĩa                Ràng buộc
     ------------------------------------------------------------------
-    UesrID      INT IDENTITY(1,1)   Mã ID                  Primary Key
+    UserID      INT IDENTITY(1,1)   Mã ID                  Primary Key
     FullName    NVARCHAR(100)       Họ và tên              NOT NULL
     Email	    VARCHAR(100)	    Email đăng nhập        NOT NULL, UNIQUE
     PhoneNumber VARCHAR(15)	        Số điện thoại          NULL, UNIQUE
     Status	    BIT	                Trạng thái tài khoản   1 = Active, 0 = Blocked
+    Role        VARCHAR(20)         Vai trò                DEFAULT 'CUSTOMER'
     CreatedAt	DATETIME	        Ngày tạo tài khoản	   DEFAULT GETDATE()
     UpdatedAt   DATETIME            Ngày cập nhật gần nhất NULL
 
@@ -35,14 +36,14 @@ Hệ thống sử dụng mô hình cơ sở dữ liệu kết hợp:
     CategoryName  NVARCHAR(100)	     Tên danh mục    NOT NULL
     
     2. Brands
-    Cột 	    Kiểu dữ liệu	    Ý nghĩa
-    ---------------------------------------
-    BrandID	       INT	            Mã thương hiệu
-    BrandName	   NVARCHAR(100)	Tên thương hiệu (NutralisBaby, AmoraCare...)
-    Description    NVARCHAR(500)	Mô tả thương hiệu
-    Status	       BIT	            1 = Hoạt động, 0 = Ngừng sử dụng
-    CreatedAt	   DATETIME	        Ngày tạo
-    UpdatedAt      DATETIME	        Ngày cập nhật
+    Cột 	    Kiểu dữ liệu	    Ý nghĩa                                Ràng buộc
+    ------------------------------------------------------------------------------------------------
+    BrandID	       INT IDENTITY(1,1)	Mã thương hiệu                         Primary Key
+    BrandName	   NVARCHAR(100)	Tên thương hiệu (NutralisBaby...)      NOT NULL
+    Description    NVARCHAR(500)	Mô tả thương hiệu                      NULL
+    Status	       BIT	            1 = Hoạt động, 0 = Ngừng sử dụng       DEFAULT 1
+    CreatedAt	   DATETIME	        Ngày tạo                               DEFAULT GETDATE()
+    UpdatedAt      DATETIME	        Ngày cập nhật                          NULL
 
     3. Products
     Cột 	    Kiểu dữ liệu	   Ý nghĩa                                    Ràng buộc
@@ -106,19 +107,14 @@ Hệ thống sử dụng mô hình cơ sở dữ liệu kết hợp:
     UnitPrice               DECIMAL(18,0)        Đơn giá nhập            NOT NULL
 
 # Shopping
-    1. Carts
-    Cột        Kiểu dữ liệu         Ý nghĩa                  Ràng buộc
-    -------------------------------------------------------------------------
-    CartID     INT IDENTITY(1,1)    Mã giỏ hàng              Primary Key
-    UserID     INT                  Người sở hữu giỏ hàng    Foreign Key (Users), UNIQUE
-
-    2. CartItems
+    1. CartItems
     Cột                Kiểu dữ liệu         Ý nghĩa                 Ràng buộc
     ------------------------------------------------------------------------------------
     CartItemID         INT IDENTITY(1,1)    Mã sản phẩm trong giỏ  Primary Key
-    CartID             INT                  Mã giỏ hàng             Foreign Key (Carts)
-    ProductVariantID   INT                  Biến thể sản phẩm      Foreign Key (ProductVariants)
-    Quantity           INT                  Số lượng sản phẩm      NOT NULL
+    UserID             INT                  Mã người dùng           Foreign Key (Users)
+    ProductVariantID   INT                  Biến thể sản phẩm       Foreign Key (ProductVariants)
+    Quantity           INT                  Số lượng sản phẩm       DEFAULT 1
+    CreatedAt          DATETIME             Ngày tạo                DEFAULT GETDATE()
 
 # Orders
     1. Orders

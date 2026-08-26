@@ -12,14 +12,13 @@ const { sendOtpSms } = require("../services/smsService");
 const otpVerificationModel = require("../models/otpVerificationModel");
 
 const { generateOtp } = require("../services/otpService");
-
 //=== USER ====
 const userController = {
   //Đăng Nhập
   async login(req, res) {
     try {
       // lấy thông tin người dùng từ màn hình
-      const { account, password } = req.body;
+      const { account, password,rememberMe } = req.body;
       if (!account || !password) {
         return res.status(400).json({
           success: false,
@@ -87,6 +86,7 @@ const userController = {
           message: "Mật khẩu không chính xác.",
         });
       }
+
       // Tạo JWT 15 phút
       const accessToken = jwt.sign(
         { UserID: user.UserID, CustomerCode: user.CustomerCode },
@@ -94,7 +94,7 @@ const userController = {
         { expiresIn: "15m" },
       );
       // Khi người nhấn vào remenberMe thì là lưu 30 ngày, còn ko nhấn là 1 ngày
-      const refreshExpriesIn = remenberMe ? "30d" : "1d";
+      const refreshExpriesIn = rememberMe ? "30d" : "1d";
 
       // Cấp refreshToken mới
       const refreshToken = jwt.sign(
@@ -447,8 +447,14 @@ const userController = {
     }
   },
   // Đăng xuất
-  async logout(req,res) {
-    
-  }
+  async logout(req, res) {
+    const token = req.headers["authorization"]?.split(" ")[1];
+    await tokenModel.blacklistToken(token);
+    res.status(200).json({
+      success: true,
+      statusCode: 200,
+      message: "Đăng xuất thành công",
+    });
+  },
 };
 module.exports = userController;
