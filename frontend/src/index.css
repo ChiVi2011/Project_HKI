@@ -1,0 +1,41 @@
+html {
+  scroll-behavior: smooth;
+  /* scrollbar-width: thin;
+  scrollbar-color: #23408e #f4f6f9; */
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  background-color: #fffffe;
+}
+@font-face {
+  font-family: "ViDairy";
+  src: url("./assets/font/NunitoSans-VariableFont_YTLC,opsz,wdth,wght.ttf")
+    format("truetype");
+  font-weight: 200 1000;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "ViDairy1";
+  src: url("./assets/font/Quicksand-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  border-radius: 4px;
+  background: #f4f6f9;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8fb32e;
+}

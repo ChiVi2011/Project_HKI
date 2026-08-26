@@ -1,0 +1,76 @@
+.banner-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  aspect-ratio: 1527 / 633;
+  display: flex;
+}
+.banner-container img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.banner-container i {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  font-size: 3rem;
+  color: rgba(255, 255, 255, 0.592);
+  cursor: pointer;
+  padding: 8px 8px;
+  border-radius: 12%;
+  transition: background-color 0.2s ease-in-out;
+}
+.bi-chevron-compact-left {
+  left: 20px;
+}
+.bi-chevron-compact-right {
+  right: 20px;
+}
+.banner-container i:hover {
+  background-color: rgba(125, 125, 125, 0.53);
+  color: white;
+}
+.bg-surface-tertiary {
+  background-color: var(--color-surface-tertiary);
+  margin-top: 30px;
+}
+.title-tertiary {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin: 10px, 40px;
+}
+.title-tertiary h2 {
+  font-family: "ViDairy1", sans-serif;
+  color: #23408e;
+  font-size: 35px;
+}
+.title-tertiary p {
+  font-family: "ViDairy", sans-serif;
+  color: #23408e;
+}
+.title-tertiary a {
+  border: 1px solid #23408e;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 10px;
+}
+.img-tertiary {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+.img-tertiary img {
+  width: 1400px;
+  height: auto;
+}
