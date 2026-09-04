@@ -1,0 +1,288 @@
+/* ================= FOOTER STYLING (VIDAIRY BRAND) ================= */
+.main-footer {
+  background-color: #172b63;
+  color: #ffffff;
+  padding: 60px 0 0 0;
+  font-family: "ViDairy", sans-serif;
+  position: relative;
+  overflow: hidden;
+  margin-top: auto;
+  text-align: left;
+  width: 100%;
+}
+
+.footer-top-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #23408e, #3db4ff, #8fb32e);
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px 40px;
+  display: grid;
+  grid-template-columns: 1.8fr 1fr 1fr 1.5fr;
+  gap: 40px;
+  align-items: start;
+  justify-items: start;
+  text-align: left;
+}
+
+.footer-col {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+/* Cột 1: Thông tin công ty & Logo */
+.footer-col-company {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 16px;
+}
+
+.footer-logo {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+}
+
+.footer-logo img {
+  width: 160px;
+  max-width: 100%;
+  filter: brightness(0) invert(1);
+  display: block;
+}
+
+.footer-company-name {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  margin: 0;
+  text-align: left;
+}
+
+.footer-company-desc {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #c7d8f5;
+  margin: 0;
+  text-align: left;
+}
+
+/* Các tiêu đề cột footer */
+.footer-col-title {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 18px 0;
+  position: relative;
+  padding-bottom: 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.footer-col-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 32px;
+  height: 2px;
+  background-color: #3db4ff;
+  border-radius: 2px;
+}
+
+/* Danh sách liên kết */
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+}
+
+.footer-links li {
+  width: 100%;
+  text-align: left;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.footer-links li a {
+  color: #c7d8f5;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-family: "ViDairy", sans-serif;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  gap: 6px;
+  border: none;
+  padding: 0;
+}
+
+.footer-links li a:hover {
+  color: #3db4ff;
+  transform: translateX(4px);
+  border: none;
+}
+
+/* Cột liên hệ */
+.footer-contact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+}
+
+.footer-contact-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  font-size: 13.5px;
+  color: #c7d8f5;
+  line-height: 1.5;
+  text-align: left;
+  width: 100%;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.footer-contact-item i {
+  color: #3db4ff;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.footer-contact-item span {
+  color: #c7d8f5;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+
+.footer-contact-item a {
+  color: #c7d8f5;
+  text-decoration: none;
+  font-family: "ViDairy", sans-serif;
+  font-size: 13.5px;
+  transition: color 0.2s ease;
+  text-align: left;
+}
+
+.footer-contact-item a:hover {
+  color: #3db4ff;
+}
+
+.footer-contact-item strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Mạng xã hội */
+.footer-social-icons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.social-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.25s ease;
+}
+
+.social-btn:hover {
+  background-color: #3db4ff;
+  color: #172b63;
+  border-color: #3db4ff;
+  transform: translateY(-3px);
+}
+
+/* Dòng bản quyền cuối cùng */
+.footer-bottom {
+  background-color: #0f1d44;
+  padding: 18px 20px;
+  font-size: 12.5px;
+  color: #92aee0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.footer-bottom-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  text-align: left;
+}
+
+.footer-bottom-content p {
+  margin: 0;
+  text-align: left;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .footer-container {
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+  }
+}
+
+@media (max-width: 576px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .footer-bottom-content {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+}

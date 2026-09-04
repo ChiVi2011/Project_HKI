@@ -1,0 +1,426 @@
+/* ================= SLIDE-OVER CART DRAWER (VIDAIRY BRAND) ================= */
+.cart-drawer-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  justify-content: flex-end;
+  font-family: "ViDairy", sans-serif;
+}
+
+/* 1. LỚP NỀN MỜ BACKDROP */
+.cart-backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(3px);
+  animation: fadeInBackdrop 0.3s ease forwards;
+}
+
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 2. KHUNG TRƯỢT TỪ MÉP PHẢI */
+.cart-drawer-panel {
+  position: fixed;
+  top: 10px;
+  height: calc(100vh - 20px);
+  width: 440px;
+  max-width: 100vw;
+  background-color: #fffff2;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -12px 0 35px rgba(23, 43, 99, 0.18);
+  animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 100;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* 3. HEADER GIỎ HÀNG */
+.cart-drawer-header {
+  display: flex;
+  flex-direction: column;
+}
+.header-css {
+  --scallop-size: 32px;
+  --scallop-radius: 16px;
+  --scallop-color: #23408e; /* Cậu chủ thay bằng mã màu của khối bên trên */
+
+  width: 100%;
+  height: var(--scallop-radius);
+  background-image: radial-gradient(
+    circle at var(--scallop-radius) 0,
+    var(--scallop-color) calc(var(--scallop-radius) - 0.5px),
+    transparent var(--scallop-radius)
+  );
+  background-size: var(--scallop-size) var(--scallop-radius);
+  background-repeat: repeat-x;
+}
+.cart-header-title-wrap {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 0.5px solid #172b6376;
+}
+.cart-header-title-wrap h3 {
+  font-family: "ViDairy", sans-serif;
+  color: #23408e;
+  font-size: 30px;
+}
+.cart-header-title-wrap button {
+  background: none;
+  border: none;
+  color: #23408e;
+}
+/* 5. DANH SÁCH SẢN PHẨM (BODY) */
+.cart-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.cart-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cart-item-card {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 0;
+  background: transparent;
+}
+
+.cart-item-left {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.cart-item-left img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+  display: block;
+}
+
+.cart-item-center {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cart-item-name-link {
+  text-decoration: none;
+}
+
+.cart-item-name {
+  font-size: 14.5px;
+  font-family: "ViDairy1", sans-serif;
+  color: #23408e;
+  margin: 0;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cart-item-volume-tag {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.cart-item-actions-row {
+  margin-top: 4px;
+}
+
+.qty-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #23408e;
+  border-radius: 20px;
+  height: 28px;
+}
+
+.qty-btn {
+  background: none;
+  border: none;
+  width: 26px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #23408e;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.qty-btn:hover {
+  background-color: #f1f5f9;
+  border-radius: 20px;
+}
+
+.qty-number {
+  min-width: 28px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.cart-item-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cart-item-remove-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px;
+  transition: color 0.2s ease;
+}
+
+.cart-item-remove-btn:hover {
+  color: #ef4444;
+}
+
+.cart-item-price-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.cart-item-price {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #ff6b00;
+}
+
+.cart-item-original-price {
+  font-size: 12px;
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+/* TRẠNG THÁI TRỐNG */
+.cart-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.empty-cart-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #e0edff;
+  color: #23408e;
+  font-size: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.cart-empty-state h4 {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 18px;
+  color: #1e293b;
+  margin: 0;
+}
+
+.cart-empty-state p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  max-width: 280px;
+}
+
+.btn-continue-shopping {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #23408e;
+  color: #ffffff;
+  text-decoration: none;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 11px 22px;
+  border-radius: 25px;
+  box-shadow: 0 4px 14px rgba(35, 64, 142, 0.25);
+  transition: all 0.25s ease;
+}
+
+/* 6. FOOTER THANH TOÁN THEO THIẾT KẾ MẪU */
+.cart-drawer-footer {
+  padding: 16px 20px 20px;
+  background-color: #23408e;
+  border-top: 1px solid #d6e9ff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 -4px 16px rgba(35, 64, 142, 0.04);
+}
+
+.cart-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: "ViDairy", sans-serif;
+  font-size: 15px;
+}
+
+.summary-label {
+  color: #f0f7ff;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.summary-val {
+  font-family: "ViDairy1", sans-serif;
+  font-weight: 700;
+  color: #f0f7ff;
+  font-size: 15.5px;
+}
+
+.summary-val.discount-val {
+  color: #ff4d6d;
+}
+
+/* Khung Thêm Voucher */
+.cart-voucher-box {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid #23408e;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #f0f7ff;
+  height: 42px;
+  margin: 6px 0 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cart-voucher-box:hover {
+  background-color: #e5f1ff;
+  box-shadow: 0 2px 8px rgba(35, 64, 142, 0.12);
+}
+
+.voucher-icon-box {
+  background-color: #f0f7ff;
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1.5px dashed #23408e;
+  color: #23408e;
+  font-size: 19px;
+  flex-shrink: 0;
+}
+
+.voucher-text-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  color: #23408e;
+  font-family: "ViDairy", sans-serif;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.voucher-text-box i {
+  font-size: 17px;
+  font-weight: bold;
+}
+
+/* Dòng Tổng cộng */
+.total-row {
+  margin-top: 2px;
+}
+
+.total-row .total-label {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+  color: #f0f7ff;
+}
+
+.total-row .summary-total-price {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #f0f7ff;
+}
+
+.cart-footer-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.btn-checkout-now {
+  width: 100%;
+  background: #f0f7ff;
+  color: #23408e;
+  border: none;
+  padding: 13px;
+  border-radius: 8px;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(35, 64, 142, 0.25);
+  transition: all 0.25s ease;
+}
+
+
+/* Responsive */
+@media (max-width: 480px) {
+  .cart-drawer-panel {
+    width: 100vw;
+  }
+}

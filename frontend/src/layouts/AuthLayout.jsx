@@ -7,16 +7,18 @@ export default function AuthLayout() {
     <div className="login">
       <div className="header">
         <div className="back">
-          <Link to="/home" className="backicon">
+          <Link to="/home" className="backicon" title="Quay về trang chủ">
             <i className="bi bi-arrow-left-short"></i>
             <p>Quay lại</p>
-          </Link>{" "}
+          </Link>
         </div>
         <div className="logo">
-          <img src={logoImg} alt="" />
+          <Link to="/home">
+            <img src={logoImg} alt="ViDairy Logo" />
+          </Link>
         </div>
       </div>
-      <div className="from" >
+      <div className="from">
         <Outlet />
       </div>
       <div className="footerLogin"></div>

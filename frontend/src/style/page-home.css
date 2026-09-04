@@ -37,9 +37,20 @@
   background-color: rgba(125, 125, 125, 0.53);
   color: white;
 }
+
+.product-category {
+  padding: 40px 20px 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
 .bg-surface-tertiary {
   background-color: var(--color-surface-tertiary);
-  margin-top: 30px;
+  --color-surface-tertiary: #f1faff;
+  padding-bottom: 10px;
 }
 .title-tertiary {
   display: flex;
@@ -47,6 +58,7 @@
   justify-content: center;
   align-items: center;
   gap: 5px;
+  padding-top: 20px;
   margin: 10px, 40px;
 }
 .title-tertiary h2 {
@@ -68,9 +80,27 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 20px;
+  margin-top: 10px;
 }
 .img-tertiary img {
   width: 1400px;
   height: auto;
+}
+
+/* ================= CUSTOMER REVIEW SECTION ================= */
+.customer {
+  padding: 60px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fbff;
+}
+
+.customer h2 {
+  font-family: "ViDairy1", sans-serif;
+  color: #23408e;
+  font-size: 35px;
+  margin-bottom: 30px;
+  text-align: center;
 }

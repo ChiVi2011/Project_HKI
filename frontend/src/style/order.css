@@ -1,0 +1,813 @@
+/* ================= ORDER / CHECKOUT PAGE (VIDAIRY BRAND) ================= */
+
+.order-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  padding: 30px 90px 60px;
+  font-family: "ViDairy", sans-serif;
+  color: #1e293b;
+  min-height: calc(100vh - 80px);
+}
+
+.order-left {
+  flex: 1.1;
+  max-width: 600px;
+}
+
+.order-right {
+  flex: 0.9;
+  max-width: 500px;
+}
+
+.order-page-title {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: #23408e;
+  margin: 0 0 20px 0;
+}
+
+/* 1. SWITCHER GIAO HÀNG / TẠI CỬA HÀNG */
+.btn-change-order {
+  margin-bottom: 24px;
+}
+
+.btn-change-order-switcher {
+  display: flex;
+  gap: 14px;
+  width: 100%;
+}
+
+.btn-change-order-btn {
+  flex: 1;
+  padding: 13px 20px;
+  border-radius: 8px;
+  border: 1.5px solid #23408e;
+  background-color: #ffffff;
+  color: #23408e;
+  font-family: "ViDairy", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-change-order-btn:hover {
+  background-color: #f0f6ff;
+}
+
+.btn-change-order-btn.active {
+  background-color: #23408e;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(35, 64, 142, 0.25);
+}
+
+/* 2. FORM THÔNG TIN NHẬN HÀNG */
+.order-form-card {
+  background-color: #fffff2;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(35, 64, 142, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.order-form-section-title {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #23408e;
+  margin: 0 0 2px 0;
+  display: block;
+}
+
+/* Hàng Tên + Số điện thoại */
+.gtn-user {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.gtn-user input,
+.gtn-address input {
+  width: 100%;
+  padding: 11px 14px;
+  border: none;
+  border-bottom: 1px solid #23408e;
+  font-family: "ViDairy", sans-serif;
+  font-size: 14.5px;
+  color: #23408e;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background-color 0.2s;
+}
+
+.gtn-user input:focus,
+.gtn-address input:focus {
+  border-color: #23408e;
+}
+
+.gtn-user input::placeholder,
+.gtn-address input::placeholder {
+  color: #94a3b8;
+  font-family: "ViDairy", sans-serif;
+  font-size: 14px;
+}
+
+/* Hàng Tỉnh/Thành + Phường/Xã */
+.gtn-location-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.gtn-city,
+.WardCode {
+  position: relative;
+  flex: 1;
+}
+
+.city-select-trigger,
+.ward-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border: none;
+  border-bottom: 1px solid #23408e;
+  background-color: #f8fbff;
+  cursor: pointer;
+  font-family: "ViDairy", sans-serif;
+  font-size: 14.5px;
+  color: #23408e;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s,
+    box-shadow 0.2s;
+  user-select: none;
+}
+
+.city-select-trigger:hover,
+.ward-select-trigger:hover {
+  border-color: #23408e;
+  background-color: #ffffff;
+}
+
+.city-select-trigger.has-value,
+.ward-select-trigger.has-value {
+  color: #23408e;
+  font-weight: 600;
+}
+
+.city-select-trigger.placeholder,
+.ward-select-trigger.placeholder {
+  color: #94a3b8;
+}
+
+/* Dropdown Menu Popup */
+.city-dropdown-menu,
+.ward-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #23408e;
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(35, 64, 142, 0.16);
+  max-height: 270px;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  overflow: hidden;
+  animation: fadeInDrop 0.2s ease forwards;
+}
+
+@keyframes fadeInDrop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.city-search-box,
+.ward-search-box {
+  padding: 9px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f8fbff;
+}
+
+.city-search-box i,
+.ward-search-box i {
+  color: #23408e;
+  font-size: 14px;
+}
+
+.city-search-box input,
+.ward-search-box input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-family: "ViDairy", sans-serif;
+  color: #23408e;
+  background-color: transparent;
+}
+
+.city-options-list,
+.ward-options-list {
+  overflow-y: auto;
+  max-height: 210px;
+  padding: 4px 0;
+}
+
+.dropdown-option-item {
+  padding: 9px 14px;
+  cursor: pointer;
+  font-family: "ViDairy", sans-serif;
+  font-size: 14px;
+  color: #23408e;
+  transition: background-color 0.15s;
+}
+
+.dropdown-option-item:hover {
+  background-color: #eef6ff;
+}
+
+.dropdown-option-item.selected {
+  background-color: #23408e;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.dropdown-no-results {
+  padding: 14px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13.5px;
+}
+
+/* Checkbox Điều kiện giao hàng */
+.gtn-checkbox {
+  margin-top: 4px;
+}
+
+.gtn-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "ViDairy", sans-serif;
+  font-size: 13.5px;
+  color: #23408e;
+  cursor: pointer;
+  user-select: none;
+}
+
+.gtn-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #23408e;
+  cursor: pointer;
+}
+
+/* 3. FORM NHẬN TẠI CỬA HÀNG (CH-FORM) & THÔNG BÁO 403 */
+.ch-form {
+  margin-top: 20px;
+}
+
+.ch-403-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);
+  border: 1.5px solid #d6e9ff;
+  border-radius: 16px;
+  padding: 36px 28px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(35, 64, 142, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.ch-403-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.ch-403-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #fee2e2;
+  color: #dc2626;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+.ch-403-illustration {
+  position: relative;
+  margin: 4px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ch-403-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #23408e 0%, #172b63 100%);
+  color: #ffffff;
+  font-size: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 22px rgba(35, 64, 142, 0.28);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.ch-403-card:hover .ch-403-icon-wrapper {
+  transform: scale(1.06);
+  box-shadow: 0 12px 28px rgba(35, 64, 142, 0.35);
+}
+
+.ch-403-text-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 480px;
+}
+
+.ch-403-title {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 21px;
+  font-weight: 800;
+  color: #23408e;
+  margin: 0;
+}
+
+.ch-403-desc {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.ch-403-desc strong {
+  color: #23408e;
+}
+
+.ch-403-tip-box {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 11px 15px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  font-size: 13px;
+  color: #1e40af;
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+.ch-403-tip-box i {
+  font-size: 17px;
+  color: #2563eb;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.ch-403-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.btn-switch-gtn {
+  padding: 13px 28px;
+  background: linear-gradient(135deg, #23408e 0%, #1a316c 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(35, 64, 142, 0.28);
+  transition: all 0.25s ease;
+}
+
+.btn-switch-gtn:hover {
+  background: linear-gradient(135deg, #ff6b00 0%, #e55e00 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 0, 0.35);
+}
+
+.ch-403-support {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.ch-support-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #23408e;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.ch-support-link:hover {
+  color: #ff6b00;
+  text-decoration: underline;
+}
+
+.store-empty-alert {
+  padding: 24px;
+  text-align: center;
+  background-color: #f8fbff;
+  border: 1.5px dashed #23408e;
+  border-radius: 10px;
+  color: #23408e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.store-empty-alert i {
+  font-size: 32px;
+  color: #23408e;
+}
+
+.store-empty-alert p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* 5. HÓA ĐƠN VAT */
+.order-vat-section,
+.VAT {
+  background-color: #fffff2;
+  padding: 18px 22px;
+  margin-top: 20px;
+  transition: all 0.25s ease;
+}
+
+.order-vat-section:hover,
+.VAT:hover {
+  border-color: #bcd9ff;
+}
+
+.order-vat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.order-vat-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.order-vat-title-wrap i {
+  font-size: 22px;
+  color: #23408e;
+  background-color: #eef6ff;
+  padding: 9px;
+  border-radius: 10px;
+}
+
+.order-vat-title {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #23408e;
+  margin: 0 0 2px 0;
+}
+
+.order-vat-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  display: block;
+}
+
+/* Toggle Switch Style */
+.order-vat-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.order-vat-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.order-vat-switch .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 30px;
+}
+
+.order-vat-switch .slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.order-vat-switch input:checked + .slider {
+  background-color: #23408e;
+}
+
+.order-vat-switch input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+/* VAT Form Details */
+.order-vat-form {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed #d6e9ff;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  animation: fadeInDown 0.3s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.vat-input-group {
+  color: #23408e;
+}
+
+.vat-input-group label .req {
+  color: #ef4444;
+}
+
+.vat-input-group input {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 6px;
+  font-family: "ViDairy", sans-serif;
+  font-size: 14px;
+  color: #23408e;
+  background-color: #f8fbff;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background-color 0.2s;
+  box-sizing: border-box;
+}
+
+.vat-input-group input:focus {
+  border-color: #23408e;
+  box-shadow: 0 0 0 3px rgba(35, 64, 142, 0.12);
+}
+
+.vat-input-group input::placeholder {
+  color: #94a3b8;
+  font-size: 13.5px;
+}
+
+.vat-input-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.vat-input-row .flex-1 {
+  flex: 1;
+}
+
+/* 6. PHƯƠNG THỨC THANH TOÁN */
+.order-payment-section,
+.PaymentMethod {
+  background-color: #fffff2;
+  padding: 22px;
+  box-shadow: 0 4px 18px rgba(35, 64, 142, 0.05);
+  margin-top: 20px;
+}
+
+.payment-section-header {
+  margin-bottom: 16px;
+}
+
+.payment-section-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  display: block;
+  margin-top: 2px;
+}
+
+.payment-methods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-method-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 18px;
+  border: 1.5px solid #e2e8f0;
+  background-color: #ffffff;
+  cursor: pointer;
+  position: relative;
+}
+
+.payment-method-card.selected {
+  border-color: #23408e;
+  background-color: #f4f8ff;
+}
+
+.payment-method-radio-wrap {
+  margin-top: 3px;
+}
+
+.payment-method-radio-wrap input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #23408e;
+  cursor: pointer;
+  margin: 0;
+}
+
+.payment-method-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.payment-method-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.payment-method-name {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #23408e;
+  margin: 0;
+}
+
+.payment-badge-popular {
+  background: linear-gradient(135deg, #ff6b00 0%, #ff8833 100%);
+  color: #fffff2;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.payment-method-desc {
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Banking guide info box */
+.banking-info-box {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background-color: #ffffff;
+  border: 1px solid #bfdbfe;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.banking-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.banking-detail-item .b-label {
+  color: #64748b;
+}
+
+.banking-detail-item .b-val {
+  color: #1e293b;
+}
+
+.banking-detail-item .b-val.highlight {
+  color: #23408e;
+  font-size: 14.5px;
+  letter-spacing: 0.5px;
+}
+
+.banking-detail-item .b-val.syntax {
+  color: #d97706;
+  font-weight: 700;
+  background-color: #fef3c7;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .order-container {
+    flex-direction: column;
+    padding: 20px 4%;
+  }
+  .order-left,
+  .order-right {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .gtn-user,
+  .gtn-location-row,
+  .pickup-time-row,
+  .vat-input-row {
+    flex-direction: column;
+  }
+  .btn-change-order-switcher {
+    flex-direction: column;
+  }
+  .payment-method-card {
+    padding: 14px;
+  }
+}
