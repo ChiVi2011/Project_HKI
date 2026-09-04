@@ -3,11 +3,13 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import logoImg from "../assets/img/logo.png";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import "../style/header.css";
 
 function Header() {
   const navActive = ({ isActive }) => (isActive ? "active-menu" : "");
   const { openCart, totalItems } = useCart();
+  const { isLoggedIn, user } = useAuth();
   const [headerSearch, setHeaderSearch] = useState("");
   const navigate = useNavigate();
 
@@ -62,7 +64,7 @@ function Header() {
             <input
               type="text"
               id="search-box"
-              placeholder="Tìm kiếm"
+              placeholder="Tìm kiếm sản phẩm..."
               name="Search"
               value={headerSearch}
               onChange={(e) => setHeaderSearch(e.target.value)}
@@ -71,7 +73,7 @@ function Header() {
           </label>
         </div>
         <div className="icon">
-          <div className="notification" title="Thông báo">
+          <div className="notification" title="Thông báo ưu đãi">
             <i className="bi bi-bell-fill"></i>
             <span className="badge">3</span>
           </div>
@@ -87,9 +89,32 @@ function Header() {
             {totalItems > 0 && <span className="badge">{totalItems}</span>}
           </div>
         </div>
-        <div className="Login" title="Tài khoản">
-          <Link to="/login">
-            <i className="bi bi-person-circle"></i>
+
+        {/* Icon Tài khoản: Chưa đăng nhập -> /login, Đã đăng nhập -> /profile */}
+        <div
+          className="Login"
+          title={
+            isLoggedIn
+              ? `Tài khoản: ${user?.FullName || "Thành viên"} (${user?.Role === "ADMIN" ? "Quản trị viên" : "Khách hàng"})`
+              : "Đăng nhập tài khoản"
+          }
+        >
+          <Link
+            to={isLoggedIn ? "/profile" : "/login"}
+            className={isLoggedIn ? "user-avatar-link logged-in" : "user-avatar-link"}
+            aria-label={isLoggedIn ? "Trang cá nhân" : "Đăng nhập"}
+          >
+            {isLoggedIn ? (
+              <div className="header-user-badge">
+                <i className="bi bi-person-fill-check"></i>
+                <span className="user-short-name">
+                  {user?.FullName?.split(" ").pop() || "User"}
+                </span>
+                {user?.Role === "ADMIN" && <span className="admin-pill">Admin</span>}
+              </div>
+            ) : (
+              <i className="bi bi-person-circle"></i>
+            )}
           </Link>
         </div>
       </div>

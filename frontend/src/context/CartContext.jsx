@@ -28,20 +28,31 @@ export function CartProvider({ children }) {
   const openCart = () => setIsCartOpen(true);
   const closeCart = () => setIsCartOpen(false);
 
-  // Thêm sản phẩm vào giỏ
-  const addToCart = (product, quantity = 1, selectedVolume = null) => {
-    const volumeToUse =
-      selectedVolume ||
-      (product.volumes && product.volumes.length > 0
-        ? product.volumes[0].label
-        : product.unit || "Mặc định");
+  // Thêm sản phẩm vào giỏ (hỗ trợ linh hoạt cả 2 dạng gọi)
+  const addToCart = (product, arg2 = 1, arg3 = null) => {
+    let quantity = 1;
+    let volumeToUse = product.packaging || "Lon thiếc tiêu chuẩn";
+    let itemPrice = product.price || 0;
 
-    // Xác định giá theo dung tích nếu có
-    let itemPrice = product.price;
-    if (product.volumes) {
-      const foundVol = product.volumes.find((v) => v.label === volumeToUse);
-      if (foundVol) {
-        itemPrice = foundVol.price;
+    if (typeof arg2 === "object" && arg2 !== null) {
+      // Gọi dạng: addToCart(product, selectedPack, quantity)
+      volumeToUse = arg2.name || arg2.label || volumeToUse;
+      if (arg2.price !== undefined) itemPrice = arg2.price;
+      quantity = typeof arg3 === "number" && arg3 > 0 ? arg3 : 1;
+    } else {
+      // Gọi dạng: addToCart(product, quantity, selectedVolume)
+      quantity = typeof arg2 === "number" && arg2 > 0 ? arg2 : 1;
+      volumeToUse =
+        arg3 ||
+        (product.volumes && product.volumes.length > 0
+          ? product.volumes[0].label
+          : product.packaging || product.unit || volumeToUse);
+
+      if (product.volumes) {
+        const foundVol = product.volumes.find((v) => v.label === volumeToUse);
+        if (foundVol) {
+          itemPrice = foundVol.price;
+        }
       }
     }
 
@@ -63,7 +74,7 @@ export function CartProvider({ children }) {
           name: product.name,
           price: itemPrice,
           originalPrice: product.originalPrice || itemPrice,
-          image: product.image,
+          image: product.image || product.imageUrl || "",
           categoryName: product.categoryName || "",
           volume: volumeToUse,
           quantity: quantity,

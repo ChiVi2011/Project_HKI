@@ -1,34 +1,52 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "../style/login.css";
+
 function Login() {
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({
     account: "",
     password: "",
   });
+  const [serverError, setServerError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { login, isLoggedIn } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Nếu đã đăng nhập thì tự động chuyển sang trang cá nhân
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/profile");
+    }
+  }, [isLoggedIn, navigate]);
 
   // Tự động xóa lỗi sau 5 giây nếu có lỗi
   useEffect(() => {
-    if (!errors.account && !errors.password) return;
+    if (!errors.account && !errors.password && !serverError) return;
     const timer = setTimeout(() => {
       setErrors({ account: "", password: "" });
-    }, 5000);
+      setServerError("");
+    }, 6000);
     return () => clearTimeout(timer);
-  }, [errors]);
+  }, [errors, serverError]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setServerError("");
     const newErrors = {};
 
     if (!account.trim()) {
-      newErrors.account = "Vui lòng nhập số điện thoại/email";
+      newErrors.account = "Vui lòng nhập số điện thoại hoặc email!";
     }
 
     if (!password.trim()) {
-      newErrors.password = "Vui lòng nhập mật khẩu";
+      newErrors.password = "Vui lòng nhập mật khẩu!";
     }
 
     setErrors(newErrors);
@@ -37,7 +55,35 @@ function Login() {
       return;
     }
 
-    // Xử lý đăng nhập thành công hoặc gọi API tại đây
+    setIsLoading(true);
+    try {
+      const res = await fetch("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          account: account.trim(),
+          password: password.trim(),
+          rememberMe,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin!");
+      }
+
+      // Lưu phiên đăng nhập
+      login(data.token, data.user);
+
+      // Chuyển hướng tới trang thông tin người dùng hoặc trang trước đó
+      const redirectUrl = location.state?.from || "/profile";
+      navigate(redirectUrl);
+    } catch (err) {
+      setServerError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -49,6 +95,23 @@ function Login() {
         </div>
         <div className="form">
           <form onSubmit={handleSubmit}>
+            {serverError && (
+              <div
+                style={{
+                  backgroundColor: "#fef2f2",
+                  color: "#dc2626",
+                  border: "1px solid #fecaca",
+                  padding: "10px 14px",
+                  borderRadius: "8px",
+                  marginBottom: "16px",
+                  fontSize: "13.5px",
+                }}
+              >
+                <i className="bi bi-exclamation-circle-fill" style={{ marginRight: "6px" }}></i>
+                {serverError}
+              </div>
+            )}
+
             <div className="user">
               <input
                 type="text"
@@ -60,9 +123,10 @@ function Login() {
                   if (errors.account) {
                     setErrors((prev) => ({ ...prev, account: "" }));
                   }
+                  if (serverError) setServerError("");
                 }}
                 className={errors.account ? "input-error" : ""}
-                placeholder="Số điện thoại/email"
+                placeholder="Số điện thoại hoặc Email *"
               />
               {errors.account && (
                 <span className="error-text">{errors.account}</span>
@@ -80,9 +144,10 @@ function Login() {
                   if (errors.password) {
                     setErrors((prev) => ({ ...prev, password: "" }));
                   }
+                  if (serverError) setServerError("");
                 }}
                 className={errors.password ? "input-error" : ""}
-                placeholder="Nhập mật khẩu"
+                placeholder="Nhập mật khẩu *"
               />
               <i
                 className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}
@@ -96,7 +161,12 @@ function Login() {
 
             <div className="remember-forgot">
               <label htmlFor="rememberMe">
-                <input type="checkbox" id="rememberMe" />
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
                 Ghi nhớ mật khẩu
               </label>
               <Link to="/forgotPass" className="btnForgot">
@@ -105,8 +175,14 @@ function Login() {
             </div>
 
             <div className="login-action">
-              <button type="submit" className="btnLogin">
-                Đăng nhập
+              <button type="submit" className="btnLogin" disabled={isLoading}>
+                {isLoading ? (
+                  <span>
+                    <i className="bi bi-hourglass-split"></i> Đang đăng nhập...
+                  </span>
+                ) : (
+                  "Đăng nhập"
+                )}
               </button>
             </div>
 
@@ -118,7 +194,7 @@ function Login() {
 
             <div className="SignUp">
               <label>
-                Bạn chưa có tài khoản?
+                Bạn chưa có tài khoản?{" "}
                 <Link to="/signup" className="btn-signup">
                   Đăng Ký
                 </Link>

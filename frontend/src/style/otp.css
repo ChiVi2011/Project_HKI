@@ -1,82 +1,151 @@
 .otp-overplay {
   position: fixed;
   inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 9999;
 }
+
 .otp {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: relative;
   background-color: #ffffff;
-  padding: 70px 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  width: 100%;
-  max-width: 400px;
-  z-index: 100;
+  padding: 40px 30px 35px;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 440px;
+  z-index: 10000;
+  animation: otpScaleIn 0.25s ease-out;
 }
+
+@keyframes otpScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .otp .iconclose {
   position: absolute;
-  top: 15px;
-  right: 15px;
-  font-size: 20px;
+  top: 18px;
+  right: 18px;
+  font-size: 22px;
   cursor: pointer;
-  color: #666;
+  color: #94a3b8;
+  transition: color 0.2s ease;
 }
+
+.otp .iconclose:hover {
+  color: #ef4444;
+}
+
 .otp .titleotp {
   text-align: center;
-  margin-bottom: 50px;
+  margin-bottom: 24px;
 }
+
 .otp h2 {
-  font-family: "ViDairy", sans-serif;
+  font-family: "ViDairy1", sans-serif;
   color: #23408e;
-  font-size: 30px;
+  font-size: 24px;
   font-weight: 800;
+  margin: 0 0 8px;
 }
+
 .otp p {
-  font-family: "ViDairy", sans-serif;
-  color: #23408e;
-  font-size: 14px;
+  color: #64748b;
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin: 0;
 }
+
+.otp-alert {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.otp-alert.error {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.otp-alert.success {
+  background-color: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
 .otp .otpnumber .number {
   display: flex;
-  justify-content: space-between;
-  gap: 5px;
-  margin-bottom: 20px;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 22px;
 }
+
 .otp .otpnumber .number input {
-  width: 50px;
-  height: 50px;
+  width: 46px;
+  height: 52px;
   text-align: center;
-  font-size: 20px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #23408e;
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  background-color: #fafbfd;
 }
+
+.otp .otpnumber .number input:focus {
+  outline: none;
+  border-color: #23408e;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(35, 64, 142, 0.15);
+}
+
 .otp .btnotp button {
   width: 100%;
-  padding: 12px;
-  background-color: #0d6efd;
-  color: white;
+  height: 46px;
+  background: linear-gradient(135deg, #23408e 0%, #003DFF 100%);
+  color: #ffffff;
   border: none;
-  border-radius: 5px;
+  border-radius: 12px;
   cursor: pointer;
-  font-weight: bold;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(35, 64, 142, 0.25);
 }
+
+.otp .btnotp button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #8AB33F 0%, #6f952f 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(138, 179, 63, 0.35);
+}
+
+.otp .btnotp button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .time {
   text-align: center;
-  font-family: "ViDairy", sans-serif;
-  margin-bottom: 15px;
-  font-weight: bold;
-  color: #23408e;
+  font-size: 13.5px;
+  margin-bottom: 18px;
+  color: #64748b;
 }
-.time button {
-  background: none;
-  border: none;
-  color: #0d6efd;
-  cursor: pointer;
-  text-decoration: underline;
+
+.time strong {
+  color: #23408e;
 }

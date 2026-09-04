@@ -1,0 +1,1362 @@
+/* ========================================================
+   CSS TRANG CHI TIẾT SẢN PHẨM (PRODUCT DETAIL PAGE)
+   Thiết kế chuẩn VitaDairy & Vinamilk:
+   - Màu sắc: #23408e (Primary), #8AB33F (Accent), #059669 (Success)
+   - Bố cục 2 cột gọn gàng, tương thích đa màn hình
+   - Tối ưu hóa dung lượng: Không mã thừa, kế thừa font chuẩn
+   ======================================================== */
+
+.product-detail-page {
+  --detail-primary: #23408e;
+  --detail-primary-hover: #1b3270;
+  --detail-accent: #8AB33F;
+  --detail-accent-hover: #729631;
+  --detail-dark: #1e293b;
+  --detail-muted: #64748b;
+  --detail-border: #edf2f7;
+  --detail-bg-soft: #f8fafc;
+  --detail-radius: 14px;
+  --detail-shadow: 0 4px 20px rgba(35, 64, 142, 0.06);
+
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  font-family: "ViDairy", sans-serif;
+  color: #333333;
+  padding-bottom: 50px;
+}
+
+/* ================= 1. BREADCRUMB ================= */
+.detail-breadcrumb-bar {
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--detail-border);
+  padding: 14px 0;
+}
+
+.breadcrumb-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--detail-muted);
+}
+
+.breadcrumb-inner a {
+  color: var(--detail-primary);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s ease;
+}
+
+.breadcrumb-inner a:hover {
+  color: var(--detail-accent);
+  text-decoration: underline;
+}
+
+.breadcrumb-inner .sep {
+  color: #cbd5e1;
+}
+
+.breadcrumb-inner .current-product-name {
+  color: var(--detail-dark);
+  font-weight: 700;
+}
+
+/* Container chính */
+.detail-main-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 28px 24px 40px;
+}
+
+/* Toast Alert thông báo giỏ hàng */
+.detail-toast-alert {
+  position: fixed;
+  top: 85px;
+  right: 24px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+  font-family: "ViDairy1", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 9999;
+  animation: detailSlideInToast 0.3s ease-out;
+}
+
+@keyframes detailSlideInToast {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.btn-toast-view-cart {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease;
+}
+
+.btn-toast-view-cart:hover {
+  background: #ffffff;
+  color: #059669;
+}
+
+/* ================= 2. KHU VỰC THÔNG TIN CHÍNH (2 CỘT) ================= */
+.product-summary-grid {
+  display: grid;
+  grid-template-columns: 460px 1fr;
+  gap: 40px;
+  background-color: #ffffff;
+  border-radius: 20px;
+  border: 1px solid var(--detail-border);
+  padding: 32px;
+  box-shadow: var(--detail-shadow);
+  margin-bottom: 35px;
+}
+
+/* Cột trái: Gallery */
+.product-gallery-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.main-image-container {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  background-color: #fafbfd;
+  border-radius: 16px;
+  border: 1.5px solid var(--detail-border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.main-detail-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.35s ease;
+}
+
+.main-image-container:hover .main-detail-image {
+  transform: scale(1.06);
+}
+
+.detail-hot-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: linear-gradient(135deg, var(--detail-accent) 0%, #6f952f 100%);
+  color: #ffffff;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 3px 10px rgba(138, 179, 63, 0.3);
+  z-index: 2;
+}
+
+.thumbnail-row {
+  display: flex;
+  gap: 10px;
+}
+
+.thumb-btn {
+  width: 76px;
+  height: 76px;
+  border-radius: 10px;
+  border: 2px solid #e2e8f0;
+  background-color: #ffffff;
+  padding: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.thumb-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.thumb-btn.active,
+.thumb-btn:hover {
+  border-color: var(--detail-primary);
+  box-shadow: 0 0 0 2px rgba(35, 64, 142, 0.18);
+}
+
+.quality-trust-box {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #d1fae5;
+  border-radius: var(--detail-radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trust-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.trust-item i {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #10b981;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+}
+
+.trust-item div {
+  display: flex;
+  flex-direction: column;
+}
+
+.trust-item strong {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 13px;
+  color: #065f46;
+}
+
+.trust-item span {
+  font-size: 12px;
+  color: #047857;
+}
+
+/* Cột phải: Thông tin */
+.product-info-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.brand-badge {
+  background-color: var(--detail-primary);
+  color: #ffffff;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.category-meta-link {
+  font-size: 13px;
+  color: var(--detail-muted);
+}
+
+.category-meta-link strong {
+  color: var(--detail-primary);
+}
+
+.detail-title {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--detail-primary);
+  margin: 0 0 10px;
+  line-height: 1.35;
+}
+
+.detail-slogan-strip {
+  background-color: #f0fdf4;
+  border-left: 4px solid var(--detail-accent);
+  padding: 8px 14px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #166534;
+}
+
+.detail-slogan-strip i {
+  color: var(--detail-accent);
+  font-size: 16px;
+}
+
+.detail-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  margin-bottom: 18px;
+}
+
+.star-rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: #eab308;
+}
+
+.rating-num {
+  color: var(--detail-dark);
+  font-weight: 700;
+  margin-left: 5px;
+}
+
+.divider-dot {
+  color: #cbd5e1;
+}
+
+.sold-count {
+  color: var(--detail-muted);
+}
+
+.sold-count strong {
+  color: var(--detail-primary);
+}
+
+/* Khung giá */
+.detail-price-panel {
+  background-color: var(--detail-bg-soft);
+  border-radius: var(--detail-radius);
+  border: 1px solid var(--detail-border);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.price-main-block {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.price-tag-label {
+  font-size: 14px;
+  color: var(--detail-muted);
+}
+
+.price-big {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--detail-primary);
+}
+
+.free-shipping-tag {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Quick specs */
+.quick-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.spec-cell {
+  background-color: #fafbfd;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.spec-label {
+  font-size: 12px;
+  color: var(--detail-muted);
+}
+
+.spec-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--detail-dark);
+}
+
+/* Quy cách đóng gói */
+.detail-option-group {
+  margin-bottom: 20px;
+}
+
+.option-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.option-header label {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--detail-dark);
+}
+
+.selected-pack-hint {
+  font-size: 13px;
+  color: var(--detail-primary);
+  font-weight: 600;
+}
+
+.pack-options-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.pack-option-btn {
+  position: relative;
+  background-color: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.pack-option-btn .pack-name {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.pack-option-btn .pack-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--detail-primary);
+}
+
+.pack-option-btn .pack-tag {
+  position: absolute;
+  top: -7px;
+  right: 6px;
+  background: var(--detail-accent);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.pack-option-btn.active {
+  border-color: var(--detail-primary);
+  background-color: #f8fbff;
+  box-shadow: 0 0 0 2px rgba(35, 64, 142, 0.12);
+}
+
+.pack-option-btn.active .pack-name {
+  color: var(--detail-primary);
+}
+
+/* Số lượng */
+.quantity-control-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.quantity-control-group label {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--detail-dark);
+}
+
+.quantity-counter {
+  display: inline-flex;
+  align-items: center;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+.btn-qty {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background-color: #f8fafc;
+  color: #334155;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.btn-qty:hover:not(:disabled) {
+  background-color: #e2e8f0;
+  color: var(--detail-primary);
+}
+
+.btn-qty:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.qty-number {
+  width: 44px;
+  text-align: center;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--detail-primary);
+}
+
+.total-hint-text {
+  font-size: 13.5px;
+  color: var(--detail-muted);
+}
+
+.total-hint-text strong {
+  color: var(--detail-primary);
+  font-size: 15px;
+}
+
+/* Nút hành động mua */
+.detail-buy-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.btn-detail-add-cart-primary,
+.btn-detail-buy-now {
+  flex: 1;
+  height: 48px;
+  border-radius: 12px;
+  border: none;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-detail-add-cart-primary {
+  background: linear-gradient(135deg, var(--detail-primary) 0%, #003DFF 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(35, 64, 142, 0.25);
+}
+
+.btn-detail-add-cart-primary:hover {
+  background: linear-gradient(135deg, var(--detail-accent) 0%, #6f952f 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(138, 179, 63, 0.35);
+}
+
+.btn-detail-buy-now {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.25);
+}
+
+.btn-detail-buy-now:hover {
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(194, 65, 12, 0.35);
+}
+
+/* Cam kết */
+.store-commitments-box {
+  background-color: var(--detail-bg-soft);
+  border-radius: 12px;
+  padding: 14px 18px;
+  border: 1px solid var(--detail-border);
+}
+
+.store-commitments-box h4 {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--detail-primary);
+  margin: 0 0 8px;
+}
+
+.store-commitments-box ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.store-commitments-box li {
+  font-size: 12.5px;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.text-green {
+  color: #10b981;
+}
+
+/* ================= 3. TABS CHI TIẾT SẢN PHẨM ================= */
+.product-tabs-section {
+  background-color: #ffffff;
+  border-radius: 18px;
+  border: 1px solid var(--detail-border);
+  overflow: hidden;
+  box-shadow: var(--detail-shadow);
+  margin-bottom: 35px;
+}
+
+.tabs-nav-bar {
+  display: flex;
+  border-bottom: 1.5px solid var(--detail-border);
+  background-color: #fafbfd;
+  overflow-x: auto;
+}
+
+.tab-item-btn {
+  padding: 14px 22px;
+  border: none;
+  background: none;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--detail-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.tab-item-btn:hover {
+  color: var(--detail-primary);
+  background-color: #f1f5f9;
+}
+
+.tab-item-btn.active {
+  color: var(--detail-primary);
+  font-weight: 700;
+  background-color: #ffffff;
+}
+
+.tab-item-btn.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1.5px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(135deg, var(--detail-primary) 0%, #003DFF 100%);
+  border-radius: 3px 3px 0 0;
+}
+
+.tab-content-panel {
+  padding: 28px 24px;
+}
+
+.pane-title {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--detail-primary);
+  margin: 0 0 8px;
+}
+
+.pane-intro {
+  font-size: 14.5px;
+  color: #475569;
+  line-height: 1.6;
+  margin-bottom: 22px;
+}
+
+/* Tab 1 Highlights */
+.highlights-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.highlight-card {
+  display: flex;
+  gap: 14px;
+  background-color: var(--detail-bg-soft);
+  border: 1px solid var(--detail-border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.hl-icon-wrap {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--detail-primary) 0%, #003DFF 100%);
+  color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+}
+
+.hl-content h4 {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--detail-primary);
+  margin: 0 0 4px;
+}
+
+.hl-content p {
+  font-size: 13px;
+  color: #555555;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.product-origin-box {
+  background-color: #fafbfd;
+  border-radius: 12px;
+  padding: 16px 20px;
+  border-left: 4px solid var(--detail-primary);
+}
+
+.product-origin-box h4 {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 15px;
+  color: var(--detail-primary);
+  margin: 0 0 8px;
+}
+
+.product-origin-box p {
+  font-size: 13.5px;
+  color: #475569;
+  margin: 0 0 4px;
+}
+
+/* Tab 2 Nutrition Table */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.nutrition-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.nutrition-table th {
+  background-color: var(--detail-primary);
+  color: #ffffff;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: left;
+  padding: 11px 16px;
+}
+
+.nutrition-table td {
+  padding: 11px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 13.5px;
+  color: #334155;
+}
+
+.nutrition-table tr:nth-child(even) td {
+  background-color: var(--detail-bg-soft);
+}
+
+.nutrition-table .nutrient-name strong {
+  color: var(--detail-primary);
+}
+
+.nutrition-table .nutrient-val {
+  font-family: "ViDairy1", sans-serif;
+  font-weight: 700;
+  color: #059669;
+}
+
+/* Tab 3 Usage Steps */
+.usage-steps-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.step-card {
+  background-color: var(--detail-bg-soft);
+  border: 1px solid var(--detail-border);
+  border-radius: 12px;
+  padding: 16px 14px;
+  text-align: center;
+}
+
+.step-number {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--detail-accent) 0%, #6f952f 100%);
+  color: #ffffff;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.step-card h4 {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 14.5px;
+  color: var(--detail-primary);
+  margin: 0 0 6px;
+}
+
+.step-card p {
+  font-size: 12.5px;
+  color: #555555;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.storage-guide-banner {
+  background-color: #fffbeb;
+  border: 1.5px solid #fef3c7;
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.storage-guide-banner i {
+  font-size: 24px;
+  color: #d97706;
+}
+
+.storage-guide-banner strong {
+  color: #b45309;
+  font-size: 14px;
+}
+
+.storage-guide-banner p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #78350f;
+}
+
+/* Tab 4 Reviews */
+.reviews-summary-bar {
+  background-color: var(--detail-bg-soft);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.rating-overall {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.big-rating-score {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--detail-primary);
+}
+
+.stars-fill {
+  color: #eab308;
+  font-size: 18px;
+  display: flex;
+  gap: 3px;
+}
+
+.reviews-total-text {
+  font-size: 13px;
+  color: var(--detail-muted);
+}
+
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.review-item {
+  background-color: #ffffff;
+  border: 1px solid var(--detail-border);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.reviewer-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.reviewer-info strong {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 13.5px;
+  color: var(--detail-primary);
+}
+
+.review-date {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.review-stars {
+  color: #eab308;
+  font-size: 12.5px;
+  margin-bottom: 6px;
+}
+
+.review-comment {
+  font-size: 13.5px;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ================= 4. SẢN PHẨM LIÊN QUAN ================= */
+.related-products-section {
+  margin-bottom: 35px;
+}
+
+.section-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.section-icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background-color: #e0f2fe;
+  color: var(--detail-primary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+}
+
+.section-title {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--detail-primary);
+  margin: 0;
+}
+
+.section-subtitle {
+  font-size: 13px;
+  color: var(--detail-muted);
+  margin: 2px 0 0;
+}
+
+.related-products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.related-product-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1.5px solid var(--detail-border);
+  box-shadow: 0 4px 14px rgba(35, 64, 142, 0.05);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.25s ease;
+}
+
+.related-product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(35, 64, 142, 0.12);
+  border-color: #cce0ff;
+}
+
+.card-badge-hot {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--detail-accent);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  z-index: 1;
+}
+
+.card-brand-tag {
+  align-self: flex-end;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--detail-primary);
+  background-color: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.related-image-wrapper {
+  width: 100%;
+  height: 160px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 8px 0;
+  overflow: hidden;
+  border-radius: 10px;
+  background-color: #fafbfd;
+  text-decoration: none;
+}
+
+.related-image-wrapper img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.related-product-card:hover .related-image-wrapper img {
+  transform: scale(1.05);
+}
+
+.card-slogan-strip {
+  background-color: #f8fafc;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  color: #166534;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.related-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-product-title {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  line-height: 1.35;
+}
+
+.card-product-title a {
+  color: var(--detail-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.card-product-title a:hover {
+  color: var(--detail-accent);
+}
+
+.card-spec-text {
+  font-size: 12px;
+  color: var(--detail-muted);
+  margin: 0 0 8px;
+}
+
+.card-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+.price-title {
+  font-size: 12px;
+  color: var(--detail-muted);
+}
+
+.price-number {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--detail-primary);
+}
+
+.related-card-actions {
+  margin-top: auto;
+}
+
+.btn-view-detail-only {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+  color: var(--detail-primary);
+  font-family: "ViDairy1", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-view-detail-only:hover {
+  background-color: var(--detail-primary);
+  color: #ffffff;
+  border-color: var(--detail-primary);
+}
+
+/* ================= 5. NÚT ĐIỀU HƯỚNG QUAY LẠI ================= */
+.back-navigation-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 0 0;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-back-link {
+  background: none;
+  border: 1.5px solid #cbd5e1;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-back-link:hover {
+  border-color: var(--detail-primary);
+  color: var(--detail-primary);
+  background-color: #f1f5f9;
+}
+
+.btn-view-collection {
+  background-color: var(--detail-primary);
+  color: #ffffff;
+  padding: 8px 22px;
+  border-radius: 20px;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-view-collection:hover {
+  background-color: var(--detail-accent);
+  transform: translateY(-1px);
+}
+
+/* ================= NOT FOUND STATE ================= */
+.product-not-found-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+  padding: 40px 20px;
+}
+
+.not-found-card {
+  text-align: center;
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  padding: 44px 28px;
+  max-width: 440px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+}
+
+.not-found-card i {
+  font-size: 48px;
+  color: #ef4444;
+  margin-bottom: 14px;
+  display: block;
+}
+
+.not-found-card h2 {
+  font-family: "ViDairy1", sans-serif;
+  font-size: 20px;
+  color: var(--detail-primary);
+  margin-bottom: 8px;
+}
+
+.not-found-card p {
+  color: var(--detail-muted);
+  font-size: 14px;
+  margin-bottom: 22px;
+}
+
+.btn-back-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--detail-primary);
+  color: #ffffff;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 24px;
+  border-radius: 20px;
+  text-decoration: none;
+}
+
+.btn-back-home:hover {
+  background-color: var(--detail-accent);
+}
+
+/* ================= 6. RESPONSIVE DESIGN ================= */
+@media (max-width: 1024px) {
+  .product-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .main-image-container {
+    height: 350px;
+  }
+  .highlights-grid {
+    grid-template-columns: 1fr;
+  }
+  .usage-steps-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .related-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .product-summary-grid {
+    padding: 20px;
+    border-radius: 14px;
+  }
+  .detail-title {
+    font-size: 22px;
+  }
+  .price-big {
+    font-size: 24px;
+  }
+  .quick-specs-grid {
+    grid-template-columns: 1fr;
+  }
+  .pack-options-list {
+    grid-template-columns: 1fr;
+  }
+  .detail-buy-actions {
+    flex-direction: column;
+  }
+  .usage-steps-row {
+    grid-template-columns: 1fr;
+  }
+  .related-products-grid {
+    grid-template-columns: 1fr;
+  }
+  .back-navigation-bar {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .detail-main-wrapper {
+    padding: 16px 12px 30px;
+  }
+  .main-image-container {
+    height: 280px;
+  }
+  .tab-item-btn {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+  .tab-content-panel {
+    padding: 20px 14px;
+  }
+}

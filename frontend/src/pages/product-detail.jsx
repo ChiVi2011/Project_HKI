@@ -1,193 +1,314 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { PRODUCTS_DATA } from "../data/products";
+import productService from "../services/productService";
+import {
+  getProductById as fallbackGetProductById,
+  getProductsByCategory,
+  formatCurrency,
+} from "../data/productsData";
 import { useCart } from "../context/CartContext";
-import "../style/product.css";
+import "../style/product-detail.css";
 
 export default function ProductDetail() {
-  const { id } = useParams();
+  const { id, productId } = useParams();
+  const currentId = id || productId;
   const navigate = useNavigate();
   const { addToCart, openCart } = useCart();
 
-  const product = PRODUCTS_DATA.find((p) => String(p.id) === String(id));
+  const [product, setProduct] = useState(() => fallbackGetProductById(currentId));
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [selectedVolume, setSelectedVolume] = useState("");
+  // Quản lý trạng thái tương tác người dùng
+  const [selectedPackIndex, setSelectedPackIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState("desc");
-  const [addedSuccess, setAddedSuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState("benefits");
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [cartAlert, setCartAlert] = useState("");
+  const alertTimerRef = useRef(null);
 
+  // Tải chi tiết sản phẩm từ API Live
   useEffect(() => {
-    window.scrollTo(0, 0);
-    if (product) {
-      if (product.volumes && product.volumes.length > 0) {
-        setSelectedVolume(product.volumes[0].label);
-      } else {
-        setSelectedVolume(product.unit || "Mặc định");
-      }
-      setQuantity(1);
-    }
-  }, [id, product]);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setSelectedPackIndex(0);
+    setQuantity(1);
+    setActiveImageIndex(0);
+    setActiveTab("benefits");
 
-  if (!product) {
+    let isMounted = true;
+    setIsLoading(true);
+
+    productService
+      .getProductById(currentId)
+      .then((data) => {
+        if (isMounted) {
+          if (data) {
+            setProduct(data);
+          } else {
+            setProduct(fallbackGetProductById(currentId));
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn("Lỗi tải chi tiết sản phẩm:", err);
+        if (isMounted) setProduct(fallbackGetProductById(currentId));
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentId]);
+
+  // Hủy timeout khi unmount để tránh rò rỉ bộ nhớ
+  useEffect(() => {
+    return () => {
+      if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+    };
+  }, []);
+
+  // Danh sách hình ảnh sản phẩm (loại bỏ trùng lặp)
+  const productImages = useMemo(() => {
+    if (!product) return [];
+    const imgs = [product.imageUrl];
+    if (product.secondaryImageUrl && product.secondaryImageUrl !== product.imageUrl) {
+      imgs.push(product.secondaryImageUrl);
+    }
+    return imgs;
+  }, [product]);
+
+  // Sản phẩm liên quan cùng danh mục
+  const relatedProducts = useMemo(() => {
+    if (!product) return [];
+    return getProductsByCategory(product.categoryId)
+      .filter((p) => p.id !== product.id)
+      .slice(0, 4);
+  }, [product]);
+
+  // Trạng thái đang tải dữ liệu
+  if (isLoading && !product) {
     return (
-      <div className="product-not-found-page">
-        <i className="bi bi-exclamation-triangle"></i>
-        <h2>Không tìm thấy sản phẩm!</h2>
-        <p>
-          Sản phẩm này có thể đã ngừng kinh doanh hoặc đường dẫn không đúng.
-        </p>
-        <Link to="/products" className="btn-back-to-list">
-          Quay lại danh sách sản phẩm
-        </Link>
+      <div className="product-not-found-container">
+        <div className="not-found-card" style={{ border: "none", boxShadow: "none" }}>
+          <div className="spinner-border text-primary" role="status" style={{ width: "40px", height: "40px" }}></div>
+          <p style={{ marginTop: "16px", color: "#64748b", fontWeight: 600 }}>Đang tải thông tin dinh dưỡng sản phẩm...</p>
+        </div>
       </div>
     );
   }
 
-  // Lấy giá tương ứng với dung tích
-  const currentVolumeObj = product.volumes?.find(
-    (v) => v.label === selectedVolume,
-  );
-  const currentPrice = currentVolumeObj
-    ? currentVolumeObj.price
-    : product.price;
+  // Giao diện khi không tìm thấy sản phẩm
+  if (!product) {
+    return (
+      <div className="product-not-found-container">
+        <div className="not-found-card">
+          <i className="bi bi-exclamation-circle-fill"></i>
+          <h2>Không tìm thấy sản phẩm!</h2>
+          <p>Sản phẩm bạn đang tìm kiếm không tồn tại hoặc đã được cập nhật.</p>
+          <Link to="/products" className="btn-back-home">
+            <i className="bi bi-arrow-left"></i> Quay lại trang sản phẩm
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-  const formatPrice = (amount) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount);
+  // Quy cách đóng gói đang chọn
+  const selectedPack =
+    product.packOptions?.[selectedPackIndex] ||
+    product.packOptions?.[0] || {
+      id: "default",
+      name: product.packaging || "Lon tiêu chuẩn",
+      price: product.price || 0,
+    };
+
+  const totalPrice = (selectedPack?.price || product.price || 0) * quantity;
+
+  // Xử lý thêm vào giỏ hàng & mua ngay
+  const handleAddToCart = (openDrawer = false) => {
+    addToCart(product, selectedPack, quantity);
+    setCartAlert(
+      `Đã thêm ${quantity} x "${product.name} (${selectedPack.name})" vào giỏ hàng!`
+    );
+
+    if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+    alertTimerRef.current = setTimeout(() => setCartAlert(""), 3500);
+
+    if (openDrawer && typeof openCart === "function") {
+      openCart();
+    }
   };
-
-  const handleAddToCart = () => {
-    addToCart(product, quantity, selectedVolume);
-    setAddedSuccess(true);
-    setTimeout(() => setAddedSuccess(false), 3000);
-  };
-
-  const handleBuyNow = () => {
-    addToCart(product, quantity, selectedVolume);
-    openCart();
-  };
-
-  // Sản phẩm liên quan cùng danh mục
-  const relatedProducts = PRODUCTS_DATA.filter(
-    (p) => p.category === product.category && p.id !== product.id,
-  ).slice(0, 3);
 
   return (
     <div className="product-detail-page">
-      {/* 1. BREADCRUMB */}
-      <nav className="product-breadcrumb-nav" aria-label="Đường dẫn trang">
-        <div className="breadcrumb-container">
-          <Link to="/home">Trang chủ</Link>
-          <i className="bi bi-chevron-right"></i>
-          <Link to="/products">Sản phẩm</Link>
-          <i className="bi bi-chevron-right"></i>
-          <Link to={`/products?category=${product.category}`}>
-            {product.categoryName}
+      {/* 1. BREADCRUMB ĐIỀU HƯỚNG */}
+      <div className="detail-breadcrumb-bar">
+        <div className="breadcrumb-inner">
+          <Link to="/home">
+            <i className="bi bi-house-door-fill"></i> Trang chủ
           </Link>
-          <i className="bi bi-chevron-right"></i>
-          <span className="current-breadcrumb">{product.name}</span>
+          <span className="sep">&gt;</span>
+          <Link to="/products">Sản phẩm</Link>
+          <span className="sep">&gt;</span>
+          <Link to={`/products?category=${product.categoryId}`}>
+            {product.categoryName || "Dòng sản phẩm"}
+          </Link>
+          <span className="sep">&gt;</span>
+          <span className="current-product-name">{product.name}</span>
         </div>
-      </nav>
+      </div>
 
-      {/* 2. KHỐI THÔNG TIN CHÍNH (2 CỘT) */}
-      <section className="product-main-detail-section">
-        <div className="product-detail-layout">
-          {/* CỘT TRÁI: HÌNH ẢNH SẢN PHẨM */}
+      <div className="detail-main-wrapper">
+        {/* Toast thông báo giỏ hàng */}
+        {cartAlert && (
+          <div className="detail-toast-alert" role="status">
+            <i className="bi bi-check-circle-fill"></i>
+            <span>{cartAlert}</span>
+            {typeof openCart === "function" && (
+              <button
+                type="button"
+                className="btn-toast-view-cart"
+                onClick={openCart}
+              >
+                Xem giỏ
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* 2. KHU VỰC THÔNG TIN CHÍNH (2 CỘT) */}
+        <section className="product-summary-grid">
+          {/* CỘT TRÁI: HÌNH ẢNH & CHỨNG NHẬN CHẤT LƯỢNG */}
           <div className="product-gallery-col">
-            <div className="product-main-img-box">
+            <div className="main-image-container">
+              {product.isHot && <span className="detail-hot-badge">Nổi bật</span>}
               <img
-                src={product.image}
+                src={productImages[activeImageIndex] || product.imageUrl}
                 alt={product.name}
-                className="product-large-img"
+                className="main-detail-image"
               />
-              {product.badge && (
-                <span className="product-detail-badge">{product.badge}</span>
-              )}
-              {product.discount && (
-                <span className="product-detail-discount">
-                  {product.discount}
-                </span>
-              )}
             </div>
 
-            <div className="product-thumbnails-row">
-              <div className="thumb-item active">
-                <img src={product.image} alt={product.name} />
+            {/* Thumbnail selector (chỉ hiển thị khi có từ 2 ảnh trở lên) */}
+            {productImages.length > 1 && (
+              <div className="thumbnail-row">
+                {productImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className={`thumb-btn ${activeImageIndex === idx ? "active" : ""}`}
+                    onClick={() => setActiveImageIndex(idx)}
+                    aria-label={`Xem ảnh ${idx + 1}`}
+                  >
+                    <img src={img} alt={`${product.name} góc ${idx + 1}`} />
+                  </button>
+                ))}
               </div>
-              <div className="thumb-item">
-                <img src={product.image} alt={product.name} />
+            )}
+
+            {/* 3 Cam kết bảo chứng chất lượng vàng */}
+            <div className="quality-trust-box">
+              <div className="trust-item">
+                <i className="bi bi-shield-check"></i>
+                <div>
+                  <strong>Sữa non Mỹ 24h</strong>
+                  <span>Kháng thể IgG tự nhiên</span>
+                </div>
+              </div>
+              <div className="trust-item">
+                <i className="bi bi-award"></i>
+                <div>
+                  <strong>Chuẩn Y Tế GMP</strong>
+                  <span>Công nghệ sản xuất vô trùng</span>
+                </div>
+              </div>
+              <div className="trust-item">
+                <i className="bi bi-heart-pulse"></i>
+                <div>
+                  <strong>Hấp thu trọn vẹn</strong>
+                  <span>Bổ sung HMO & MK7</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* CỘT PHẢI: CHI TIẾT ĐẶT MUA */}
+          {/* CỘT PHẢI: CHI TIẾT SẢN PHẨM & MUA HÀNG */}
           <div className="product-info-col">
-            <span className="product-info-cat-tag">{product.categoryName}</span>
-
-            <h1 className="product-detail-title">{product.name}</h1>
-
-            {/* Đánh giá & Đã bán */}
-            <div className="product-detail-rating-row">
-              <div className="stars">
-                <i className="bi bi-star-fill"></i>
-                <i className="bi bi-star-fill"></i>
-                <i className="bi bi-star-fill"></i>
-                <i className="bi bi-star-fill"></i>
-                <i className="bi bi-star-fill"></i>
-              </div>
-              <span className="rating-num">{product.rating}</span>
-              <span className="divider">|</span>
-              <span className="reviews-text">
-                {product.reviewsCount} Đánh giá
+            <div className="brand-header-meta">
+              <span className="brand-badge">{product.brand}</span>
+              <span className="category-meta-link">
+                Dòng sản phẩm: <strong>{product.categoryName}</strong>
               </span>
-              <span className="divider">|</span>
-              <span className="sold-text">
-                <i className="bi bi-check-circle-fill"></i> 100% Chính Hãng
-                ViDairy
+            </div>
+
+            <h1 className="detail-title">{product.name}</h1>
+
+            {product.slogan && (
+              <div className="detail-slogan-strip">
+                <i className="bi bi-quote"></i>
+                <span>{product.slogan}</span>
+              </div>
+            )}
+
+            <div className="detail-rating-row">
+              <div className="star-rating">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <i key={star} className="bi bi-star-fill"></i>
+                ))}
+                <span className="rating-num">{product.rating || "5.0"}</span>
+              </div>
+              <span className="divider-dot">•</span>
+              <span className="sold-count">
+                Đã bán <strong>{product.soldCount?.toLocaleString("vi-VN") || 500}+</strong> sản phẩm
               </span>
             </div>
 
             {/* Bảng giá */}
-            <div className="product-detail-price-box">
-              <span className="detail-current-price">
-                {formatPrice(currentPrice)}
-              </span>
-              {product.originalPrice > currentPrice && (
-                <span className="detail-old-price">
-                  {formatPrice(product.originalPrice)}
-                </span>
-              )}
-              {product.discount && (
-                <span className="detail-discount-tag">
-                  Tiết kiệm {product.discount}
-                </span>
-              )}
+            <div className="detail-price-panel">
+              <div className="price-main-block">
+                <span className="price-tag-label">Giá ưu đãi:</span>
+                <span className="price-big">{formatCurrency(totalPrice)}</span>
+              </div>
+              <div className="free-shipping-tag">
+                <i className="bi bi-truck"></i> Miễn phí vận chuyển từ 300K
+              </div>
             </div>
 
-            <p className="product-detail-summary">{product.summary}</p>
+            {/* Thông số vắn tắt */}
+            <div className="quick-specs-grid">
+              <div className="spec-cell">
+                <span className="spec-label">Đối tượng:</span>
+                <span className="spec-value">{product.targetUser}</span>
+              </div>
+              <div className="spec-cell">
+                <span className="spec-label">Quy cách:</span>
+                <span className="spec-value">{selectedPack.name}</span>
+              </div>
+              <div className="spec-cell">
+                <span className="spec-label">Xuất xứ:</span>
+                <span className="spec-value">{product.origin}</span>
+              </div>
+            </div>
 
-            {/* Bộ chọn Quy cách / Dung tích */}
-            {product.volumes && product.volumes.length > 0 && (
-              <div className="product-volume-select-group">
-                <label className="select-label">
-                  Chọn quy cách / dung tích:
-                </label>
-                <div className="volume-options-grid">
-                  {product.volumes.map((vol) => (
+            {/* Chọn quy cách đóng gói */}
+            {product.packOptions && product.packOptions.length > 0 && (
+              <div className="detail-option-group">
+                <div className="option-header">
+                  <label>Quy cách đóng gói:</label>
+                  <span className="selected-pack-hint">{selectedPack.name}</span>
+                </div>
+                <div className="pack-options-list">
+                  {product.packOptions.map((pack, idx) => (
                     <button
-                      key={vol.label}
+                      key={pack.id || idx}
                       type="button"
-                      className={`volume-btn ${
-                        selectedVolume === vol.label ? "active" : ""
-                      }`}
-                      onClick={() => setSelectedVolume(vol.label)}
+                      className={`pack-option-btn ${selectedPackIndex === idx ? "active" : ""}`}
+                      onClick={() => setSelectedPackIndex(idx)}
                     >
-                      <span className="vol-name">{vol.label}</span>
-                      <span className="vol-price">
-                        {formatPrice(vol.price)}
-                      </span>
+                      <span className="pack-name">{pack.name}</span>
+                      <span className="pack-price">{formatCurrency(pack.price)}</span>
+                      {pack.tag && <span className="pack-tag">{pack.tag}</span>}
                     </button>
                   ))}
                 </div>
@@ -195,173 +316,160 @@ export default function ProductDetail() {
             )}
 
             {/* Bộ chọn số lượng */}
-            <div className="product-quantity-row">
-              <label className="select-label">Số lượng:</label>
-              <div className="detail-qty-stepper">
+            <div className="quantity-control-group">
+              <label>Số lượng:</label>
+              <div className="quantity-counter">
                 <button
                   type="button"
-                  className="qty-btn"
+                  className="btn-qty"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  title="Giảm 1"
-                  aria-label="Giảm 1"
+                  disabled={quantity <= 1}
+                  aria-label="Giảm số lượng"
                 >
                   <i className="bi bi-dash"></i>
                 </button>
-                <span className="qty-val">{quantity}</span>
+                <span className="qty-number">{quantity}</span>
                 <button
                   type="button"
-                  className="qty-btn"
+                  className="btn-qty"
                   onClick={() => setQuantity((q) => q + 1)}
-                  title="Tăng 1"
-                  aria-label="Tăng 1"
+                  aria-label="Tăng số lượng"
                 >
                   <i className="bi bi-plus"></i>
                 </button>
               </div>
-              <span className="in-stock-text">
-                <i className="bi bi-check2"></i> Còn hàng tại kho
+              <span className="total-hint-text">
+                Tổng cộng: <strong>{formatCurrency(totalPrice)}</strong>
               </span>
             </div>
 
-            {/* Nút bấm mua hàng */}
-            <div className="product-detail-cta-buttons">
+            {/* Các nút hành động mua */}
+            <div className="detail-buy-actions">
               <button
                 type="button"
-                className="btn-add-to-cart-large"
-                onClick={handleAddToCart}
+                className="btn-detail-add-cart-primary"
+                onClick={() => handleAddToCart(false)}
               >
-                <i className="bi bi-cart-plus-fill"></i>
-                <span>THÊM VÀO GIỎ HÀNG</span>
+                <i className="bi bi-cart-plus"></i>
+                <span>Thêm vào giỏ hàng</span>
               </button>
-
-              <button
-                type="button"
-                className="btn-buy-now-large"
-                onClick={handleBuyNow}
-              >
-                <span>MUA NGAY VỚI GIÁ NÀY</span>
-                <i className="bi bi-arrow-right"></i>
-              </button>
+          
             </div>
 
-            {addedSuccess && (
-              <div className="add-cart-toast">
-                <i className="bi bi-check-circle-fill"></i>
-                <span>
-                  Đã thêm{" "}
-                  <strong>
-                    {quantity} x {product.name}
-                  </strong>{" "}
-                  vào giỏ hàng thành công!
-                </span>
-              </div>
-            )}
-
-            {/* Cam kết dịch vụ */}
-            <div className="product-service-perks">
-              <div className="perk-item">
-                <i className="bi bi-truck"></i>
-                <span>Giao hỏa tốc 2H</span>
-              </div>
-              <div className="perk-item">
-                <i className="bi bi-arrow-repeat"></i>
-                <span>Đổi trả 7 ngày</span>
-              </div>
-              <div className="perk-item">
-                <i className="bi bi-shield-check"></i>
-                <span>100% Chính hãng</span>
-              </div>
-              <div className="perk-item">
-                <i className="bi bi-headset"></i>
-                <span>Tư vấn: 0989 584 592</span>
-              </div>
+            {/* Cam kết thương hiệu */}
+            <div className="store-commitments-box">
+              <h4>Cam kết từ VitaDairy Official Store:</h4>
+              <ul>
+                <li>
+                  <i className="bi bi-check-circle-fill text-green"></i> 100% Sữa chính hãng từ nhà máy VitaDairy Việt Nam.
+                </li>
+                <li>
+                  <i className="bi bi-check-circle-fill text-green"></i> Đổi trả hàng miễn phí trong 7 ngày nếu lỗi từ nhà sản xuất.
+                </li>
+                <li>
+                  <i className="bi bi-check-circle-fill text-green"></i> Đội ngũ Bác sĩ, Chuyên gia dinh dưỡng tư vấn miễn phí 24/7 qua <strong>1900 633 559</strong>.
+                </li>
+              </ul>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* 3. TABS CHI TIẾT THÔNG TIN & THÀNH PHẦN */}
-      <section className="product-tabs-info-section">
-        <div className="product-tabs-container">
-          <div className="detail-tabs-header">
+        {/* 3. TABS CHI TIẾT SẢN PHẨM */}
+        <section className="product-tabs-section">
+          <div className="tabs-nav-bar" role="tablist">
             <button
               type="button"
-              className={`detail-tab-btn ${activeTab === "desc" ? "active" : ""}`}
-              onClick={() => setActiveTab("desc")}
+              role="tab"
+              aria-selected={activeTab === "benefits"}
+              className={`tab-item-btn ${activeTab === "benefits" ? "active" : ""}`}
+              onClick={() => setActiveTab("benefits")}
             >
-              Mô tả chi tiết
+              <i className="bi bi-stars"></i> Đặc điểm nổi bật
             </button>
             <button
               type="button"
-              className={`detail-tab-btn ${
-                activeTab === "nutrition" ? "active" : ""
-              }`}
+              role="tab"
+              aria-selected={activeTab === "nutrition"}
+              className={`tab-item-btn ${activeTab === "nutrition" ? "active" : ""}`}
               onClick={() => setActiveTab("nutrition")}
             >
-              Bảng thành phần dinh dưỡng
+              <i className="bi bi-table"></i> Bảng dinh dưỡng
             </button>
             <button
               type="button"
-              className={`detail-tab-btn ${
-                activeTab === "guide" ? "active" : ""
-              }`}
-              onClick={() => setActiveTab("guide")}
+              role="tab"
+              aria-selected={activeTab === "usage"}
+              className={`tab-item-btn ${activeTab === "usage" ? "active" : ""}`}
+              onClick={() => setActiveTab("usage")}
             >
-              Hướng dẫn sử dụng & Bảo quản
+              <i className="bi bi-cup-hot"></i> Hướng dẫn pha & Bảo quản
             </button>
             <button
               type="button"
-              className={`detail-tab-btn ${
-                activeTab === "reviews" ? "active" : ""
-              }`}
+              role="tab"
+              aria-selected={activeTab === "reviews"}
+              className={`tab-item-btn ${activeTab === "reviews" ? "active" : ""}`}
               onClick={() => setActiveTab("reviews")}
             >
-              Đánh giá ({product.reviewsCount})
+              <i className="bi bi-chat-heart"></i> Đánh giá ({product.soldCount ? Math.round(product.soldCount / 10) : 58})
             </button>
           </div>
 
-          <div className="detail-tab-content-body">
-            {/* Tab 1: Mô tả */}
-            {activeTab === "desc" && (
-              <div className="tab-pane-content">
-                <h3>Đặc điểm nổi bật của {product.name}</h3>
-                <p>{product.description}</p>
-                <div className="product-highlights-box">
-                  <h4>Lợi ích vượt trội:</h4>
-                  <ul>
-                    <li>
-                      Công thức dinh dưỡng chuẩn y khoa được nghiên cứu phù hợp
-                      thể trạng người Việt.
-                    </li>
-                    <li>
-                      Sản xuất trên dây chuyền khép kín vô trùng chuẩn Châu Âu.
-                    </li>
-                    <li>
-                      Hương vị thơm ngon, ngọt thanh tự nhiên, dễ uống và dễ hấp
-                      thu.
-                    </li>
-                  </ul>
+          <div className="tab-content-panel">
+            {/* TAB 1: ĐẶC ĐIỂM NỔI BẬT */}
+            {activeTab === "benefits" && (
+              <div className="tab-pane-benefits">
+                <h3 className="pane-title">Ưu Điểm Vượt Trội Của {product.name}</h3>
+                <p className="pane-intro">{product.description}</p>
+
+                {product.keyHighlights && product.keyHighlights.length > 0 && (
+                  <div className="highlights-grid">
+                    {product.keyHighlights.map((item, i) => (
+                      <div key={i} className="highlight-card">
+                        <div className="hl-icon-wrap">
+                          <i className={`bi ${item.icon}`}></i>
+                        </div>
+                        <div className="hl-content">
+                          <h4>{item.title}</h4>
+                          <p>{item.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="product-origin-box">
+                  <h4>Thông tin xuất xứ & Nhà sản xuất:</h4>
+                  <p><strong>Nhà sản xuất:</strong> {product.manufacturer}</p>
+                  <p><strong>Nguồn gốc nguyên liệu:</strong> {product.origin}</p>
+                  <p><strong>Hạn sử dụng:</strong> {product.shelfLife}</p>
                 </div>
               </div>
             )}
 
-            {/* Tab 2: Dinh dưỡng */}
+            {/* TAB 2: BẢNG THÀNH PHẦN DINH DƯỠNG */}
             {activeTab === "nutrition" && (
-              <div className="tab-pane-content">
-                <h3>Thành phần & Giá trị dinh dưỡng</h3>
-                <div className="nutrition-table-wrap">
+              <div className="tab-pane-nutrition">
+                <h3 className="pane-title">Bảng Thành Phần Dinh Dưỡng Chuẩn RDA</h3>
+                <p className="pane-intro">
+                  Công thức được nghiên cứu chuyên sâu bởi các chuyên gia dinh dưỡng hàng đầu, cung cấp nguồn dưỡng chất cân bằng và vượt trội.
+                </p>
+
+                <div className="table-responsive">
                   <table className="nutrition-table">
                     <thead>
                       <tr>
-                        <th>Dưỡng chất</th>
-                        <th>Hàm lượng</th>
+                        <th>Chỉ tiêu dinh dưỡng</th>
+                        <th>Đơn vị tính</th>
+                        <th>Hàm lượng trong 100g bột</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {product.nutritionFacts?.map((fact, idx) => (
+                      {product.nutritionFacts?.map((row, idx) => (
                         <tr key={idx}>
-                          <td className="nutrient-name">{fact.name}</td>
-                          <td className="nutrient-value">{fact.value}</td>
+                          <td className="nutrient-name"><strong>{row.name}</strong></td>
+                          <td>{row.unit}</td>
+                          <td className="nutrient-val">{row.value}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -370,133 +478,164 @@ export default function ProductDetail() {
               </div>
             )}
 
-            {/* Tab 3: Hướng dẫn */}
-            {activeTab === "guide" && (
-              <div className="tab-pane-content">
-                <h3>Hướng dẫn sử dụng chuẩn chuyên gia</h3>
-                <p>{product.instructions}</p>
-                <div className="storage-guide-box">
-                  <h4>Hướng dẫn bảo quản:</h4>
-                  <p>
-                    Đậy kín nắp lon sau mỗi lần sử dụng. Bảo quản nơi khô ráo,
-                    thoáng mát, tránh ánh nắng trực tiếp. Không bảo quản trong
-                    tủ lạnh. Nên sử dụng hết trong vòng 4 tuần sau khi mở nắp.
-                  </p>
+            {/* TAB 3: HƯỚNG DẪN PHA & BẢO QUẢN */}
+            {activeTab === "usage" && (
+              <div className="tab-pane-usage">
+                <h3 className="pane-title">4 Bước Pha Sữa Đúng Chuẩn Khoa Học</h3>
+                <p className="pane-intro">
+                  Pha sữa đúng nhiệt độ và tỷ lệ giúp giữ nguyên hoạt tính sinh học của kháng thể IgG tự nhiên và lợi khuẩn đường ruột.
+                </p>
+
+                <div className="usage-steps-row">
+                  {product.usageSteps?.map((step) => (
+                    <div key={step.step} className="step-card">
+                      <div className="step-number">Bước {step.step}</div>
+                      <h4>{step.title}</h4>
+                      <p>{step.desc}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="storage-guide-banner">
+                  <i className="bi bi-info-circle-fill"></i>
+                  <div>
+                    <strong>Lưu ý bảo quản:</strong>
+                    <p>{product.storage}</p>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Tab 4: Đánh giá */}
+            {/* TAB 4: ĐÁNH GIÁ KHÁCH HÀNG */}
             {activeTab === "reviews" && (
-              <div className="tab-pane-content">
-                <div className="reviews-summary-box">
-                  <div className="overall-score">
-                    <h2>{product.rating}</h2>
-                    <div className="stars">
-                      <i className="bi bi-star-fill"></i>
-                      <i className="bi bi-star-fill"></i>
-                      <i className="bi bi-star-fill"></i>
-                      <i className="bi bi-star-fill"></i>
-                      <i className="bi bi-star-fill"></i>
+              <div className="tab-pane-reviews">
+                <div className="reviews-summary-bar">
+                  <div className="rating-overall">
+                    <span className="big-rating-score">5.0</span>
+                    <div className="stars-fill">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <i key={s} className="bi bi-star-fill"></i>
+                      ))}
                     </div>
-                    <span>
-                      Dựa trên {product.reviewsCount} đánh giá xác thực
+                    <span className="reviews-total-text">
+                      Dựa trên {product.soldCount || 350}+ lượt mua hàng chính hãng
                     </span>
                   </div>
                 </div>
 
-                <div className="user-review-samples">
-                  <div className="review-card">
-                    <div className="reviewer-header">
-                      <span className="reviewer-name">Nguyễn Thị Hồng</span>
-                      <span className="verified-badge">
-                        <i className="bi bi-patch-check-fill"></i> Đã mua hàng
-                      </span>
+                <div className="review-list">
+                  <div className="review-item">
+                    <div className="reviewer-info">
+                      <strong>Chị Thu Hà (Hà Nội)</strong>
+                      <span className="review-date">Đã mua hàng 2 ngày trước</span>
                     </div>
-                    <div className="stars">
-                      <i className="bi bi-star-fill"></i>
-                      <i className="bi bi-star-fill"></i>
-                      <i className="bi bi-star-fill"></i>
-                      <i className="bi bi-star-fill"></i>
-                      <i className="bi bi-star-fill"></i>
+                    <div className="review-stars">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <i key={s} className="bi bi-star-fill"></i>
+                      ))}
                     </div>
-                    <p>
-                      Sữa vị thanh nhẹ rất ngon, giao hàng đóng gói cẩn thận 2
-                      lớp. Gia đình tôi đã tin dùng sản phẩm ViDairy được hơn 1
-                      năm nay.
+                    <p className="review-comment">
+                      "Sữa thơm ngon, vị thanh nhạt không bị ngọt gắt. Bé nhà mình uống hợp tác lắm, trộm vía tăng cân đều và tiêu hóa rất tốt không bị táo bón!"
+                    </p>
+                  </div>
+
+                  <div className="review-item">
+                    <div className="reviewer-info">
+                      <strong>Anh Minh Tuấn (TP.HCM)</strong>
+                      <span className="review-date">Đã mua hàng 1 tuần trước</span>
+                    </div>
+                    <div className="review-stars">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <i key={s} className="bi bi-star-fill"></i>
+                      ))}
+                    </div>
+                    <p className="review-comment">
+                      "Giao hàng nhanh, đóng gói cẩn thận 2 lớp chống móp hộp. Sữa non Mỹ chất lượng cao, cả nhà mình đều rất yên tâm sử dụng sản phẩm VitaDairy."
                     </p>
                   </div>
                 </div>
               </div>
             )}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* 4. SẢN PHẨM LIÊN QUAN */}
-      {relatedProducts.length > 0 && (
-        <section className="related-products-section">
-          <div className="related-products-container">
-            <div className="related-header">
-              <h2>SẢN PHẨM CÙNG DANH MỤC</h2>
-              <Link
-                to={`/products?category=${product.category}`}
-                className="link-view-more-cat"
-              >
-                <span>Xem tất cả</span>
-                <i className="bi bi-arrow-right"></i>
-              </Link>
+        {/* 4. SẢN PHẨM LIÊN QUAN */}
+        {relatedProducts.length > 0 && (
+          <section className="related-products-section">
+            <div className="section-title-wrap">
+              <span className="section-icon-badge">
+                <i className="bi bi-grid-3x3-gap-fill"></i>
+              </span>
+              <div>
+                <h2 className="section-title">Sản Phẩm Cùng Danh Mục</h2>
+                <p className="section-subtitle">
+                  Khám phá thêm các giải pháp dinh dưỡng chất lượng khác từ {product.categoryName}
+                </p>
+              </div>
             </div>
 
-            <div className="products-grid">
-              {relatedProducts.map((relProduct) => (
-                <article key={relProduct.id} className="product-item-card">
-                  <div className="product-card-img-wrap">
-                    <Link to={`/product/${relProduct.id}`}>
-                      <img
-                        src={relProduct.image}
-                        alt={relProduct.name}
-                        className="product-card-img"
-                      />
-                    </Link>
-                    {relProduct.badge && (
-                      <span className="product-card-badge">
-                        {relProduct.badge}
-                      </span>
-                    )}
+            <div className="related-products-grid">
+              {relatedProducts.map((item) => (
+                <div key={item.id} className="related-product-card">
+                  {item.isHot && <span className="card-badge-hot">Nổi bật</span>}
+                  <span className="card-brand-tag">{item.brand}</span>
+
+                  <Link to={`/product/${item.id}`} className="related-image-wrapper">
+                    <img src={item.imageUrl} alt={item.name} loading="lazy" />
+                  </Link>
+
+                  <div className="card-slogan-strip">
+                    <span>{item.slogan}</span>
                   </div>
 
-                  <div className="product-card-body">
-                    <span className="product-card-category">
-                      {relProduct.categoryName}
-                    </span>
-                    <Link
-                      to={`/product/${relProduct.id}`}
-                      className="product-card-name-link"
-                    >
-                      <h3 className="product-card-name">{relProduct.name}</h3>
-                    </Link>
-                    <div className="product-card-footer">
-                      <span className="product-current-price">
-                        {formatPrice(relProduct.price)}
+                  <div className="related-body">
+                    <h3 className="card-product-title">
+                      <Link to={`/product/${item.id}`}>{item.name}</Link>
+                    </h3>
+                    <p className="card-spec-text">
+                      <strong>Quy cách:</strong> {item.packaging}
+                    </p>
+
+                    <div className="card-price-row">
+                      <span className="price-title">Giá tham khảo:</span>
+                      <span className="price-number">
+                        {formatCurrency(item.price)}
                       </span>
-                      <button
-                        type="button"
-                        className="btn-add-to-cart-quick"
-                        onClick={() => addToCart(relProduct, 1)}
-                        title="Thêm vào giỏ hàng"
+                    </div>
+
+                    <div className="related-card-actions">
+                      <Link
+                        to={`/product/${item.id}`}
+                        className="btn-view-detail-only"
                       >
-                        <i className="bi bi-cart-plus-fill"></i>
-                        <span>Thêm giỏ</span>
-                      </button>
+                        <span>Xem chi tiết</span>
+                        <i className="bi bi-arrow-right"></i>
+                      </Link>
                     </div>
                   </div>
-                </article>
+                </div>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
+
+        {/* 5. NÚT ĐIỀU HƯỚNG QUAY LẠI */}
+        <div className="back-navigation-bar">
+          <button
+            type="button"
+            className="btn-back-link"
+            onClick={() => navigate(-1)}
+          >
+            <i className="bi bi-arrow-left"></i> Quay lại trang trước
+          </button>
+          <Link
+            to={`/products?category=${product.categoryId}`}
+            className="btn-view-collection"
+          >
+            Xem tất cả {product.categoryName} <i className="bi bi-arrow-right"></i>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

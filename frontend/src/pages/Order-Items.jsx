@@ -1,4 +1,8 @@
 import { useState, useRef, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import productService from "../services/productService";
 import "../style/order.css";
 
 const VIETNAM_CITIES = [
@@ -114,7 +118,16 @@ const SAMPLE_WARDS = [
 ];
 
 export default function Order() {
+  const { cartItems, totalPrice, clearCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState("gtn");
+  const [fullName, setFullName] = useState(user?.FullName || "");
+  const [phone, setPhone] = useState(user?.Phone || "");
+  const [address, setAddress] = useState(user?.Address || "");
+  const [note, setNote] = useState("");
+
   const [selectedCity, setSelectedCity] = useState("");
   const [isCityOpen, setIsCityOpen] = useState(false);
   const [citySearchTerm, setCitySearchTerm] = useState("");
@@ -125,13 +138,149 @@ export default function Order() {
   const [wardSearchTerm, setWardSearchTerm] = useState("");
   const wardDropdownRef = useRef(null);
 
+  // Chi nhánh cửa hàng
+  const [branches, setBranches] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState("");
+
+  // Hóa đơn VAT
   const [isVatRequested, setIsVatRequested] = useState(false);
   const [vatCompany, setVatCompany] = useState("");
   const [vatTaxId, setVatTaxId] = useState("");
   const [vatAddress, setVatAddress] = useState("");
   const [vatEmail, setVatEmail] = useState("");
 
+  // Thanh toán & Voucher
   const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [couponCode, setCouponCode] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponMsg, setCouponMsg] = useState({ text: "", isError: false });
+  const [isCheckingCoupon, setIsCheckingCoupon] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Tải danh sách chi nhánh cửa hàng từ API
+  useEffect(() => {
+    productService
+      .getBranches()
+      .then((res) => {
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setBranches(res.data);
+          setSelectedBranch(res.data[0].name);
+        }
+      })
+      .catch((err) => console.warn("Lỗi tải chi nhánh:", err));
+  }, []);
+
+  const shippingFee = totalPrice >= 300000 || activeTab === "ch" ? 0 : 30000;
+  const finalTotal = Math.max(0, totalPrice + shippingFee - couponDiscount);
+
+  // Kiểm tra mã voucher giảm giá
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponMsg({ text: "Vui lòng nhập mã ưu đãi.", isError: true });
+      return;
+    }
+    setIsCheckingCoupon(true);
+    setCouponMsg({ text: "", isError: false });
+    try {
+      const res = await productService.validateCoupon(couponCode, totalPrice);
+      if (res.success) {
+        setCouponDiscount(res.data.discount);
+        setCouponMsg({ text: res.message || "Áp dụng thành công!", isError: false });
+      } else {
+        setCouponDiscount(0);
+        setCouponMsg({ text: res.message || "Mã không hợp lệ.", isError: true });
+      }
+    } catch (err) {
+      setCouponDiscount(0);
+      setCouponMsg({ text: "Lỗi kết nối kiểm tra mã.", isError: true });
+    } finally {
+      setIsCheckingCoupon(false);
+    }
+  };
+
+  // Gửi tạo đơn hàng lên Database MongoDB Atlas
+  const handleSubmitOrder = async (e) => {
+    if (e) e.preventDefault();
+    if (cartItems.length === 0) {
+      alert("Giỏ hàng của bạn đang trống! Vui lòng chọn sản phẩm trước khi thanh toán.");
+      return;
+    }
+    if (!fullName.trim() || !phone.trim()) {
+      alert("Vui lòng điền đầy đủ Họ và Tên và Số điện thoại nhận hàng.");
+      return;
+    }
+    if (activeTab === "gtn" && !address.trim()) {
+      alert("Vui lòng điền địa chỉ giao hàng cụ thể.");
+      return;
+    }
+    if (isVatRequested && (!vatCompany.trim() || !vatTaxId.trim())) {
+      alert("Vui lòng điền đầy đủ Tên công ty và Mã số thuế để xuất hóa đơn VAT.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const shippingAddress =
+        activeTab === "gtn"
+          ? `${address.trim()}${selectedWard ? `, ${selectedWard}` : ""}${selectedCity ? `, ${selectedCity}` : ""}`
+          : `Nhận tại chi nhánh: ${selectedBranch}`;
+
+      const orderPayload = {
+        UserID: user?._id || user?.id || null,
+        ReceiverName: fullName.trim(),
+        ReceiverPhone: phone.trim(),
+        ShippingAddress: shippingAddress,
+        DeliveryType: activeTab === "gtn" ? "DELIVERY" : "STORE_PICKUP",
+        BranchName: activeTab === "ch" ? selectedBranch : "",
+        Items: cartItems.map((it) => ({
+          ProductID: it.id,
+          ProductName: it.name,
+          VariantName: it.volume || "Lon tiêu chuẩn",
+          Quantity: it.quantity,
+          UnitPrice: it.price,
+          ImageURL: it.image || "",
+        })),
+        SubTotal: totalPrice,
+        Discount: couponDiscount,
+        ShippingFee: shippingFee,
+        TotalAmount: finalTotal,
+        CouponCode: couponCode.trim().toUpperCase(),
+        PaymentMethod:
+          paymentMethod === "cod"
+            ? "COD"
+            : paymentMethod === "banking"
+            ? "Banking"
+            : paymentMethod === "wallet"
+            ? "VNPay"
+            : "Thẻ ATM/Visa",
+        HasVAT: isVatRequested,
+        VATInfo: isVatRequested
+          ? {
+              Company: vatCompany.trim(),
+              TaxId: vatTaxId.trim(),
+              Email: vatEmail.trim(),
+              Address: vatAddress.trim(),
+            }
+          : {},
+        Note: note.trim(),
+      };
+
+      const res = await productService.createOrder(orderPayload);
+      if (!res.success) {
+        throw new Error(res.message || "Tạo đơn hàng thất bại.");
+      }
+
+      clearCart();
+      alert(
+        `🎉 ĐẶT HÀNG THÀNH CÔNG!\nMã đơn hàng: ${res.data.OrderCode}\nTổng tiền: ${finalTotal.toLocaleString("vi-VN")}đ\nCảm ơn bạn đã tin tưởng ViDairy!`
+      );
+      navigate("/profile");
+    } catch (err) {
+      alert("Lỗi khi đặt hàng: " + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -193,8 +342,20 @@ export default function Order() {
                   Thông tin nhận hàng
                 </label>
                 <div className="gtn-user">
-                  <input type="text" placeholder="Nhập Họ và Tên" />
-                  <input type="tel" placeholder="Nhập số điện thoại" />
+                  <input
+                    type="text"
+                    placeholder="Nhập Họ và Tên *"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Nhập số điện thoại *"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                  />
                 </div>
 
                 <label className="order-form-section-title">
@@ -203,7 +364,10 @@ export default function Order() {
                 <div className="gtn-address">
                   <input
                     type="text"
-                    placeholder="Địa chỉ của bạn (Số nhà, tên đường...)"
+                    placeholder="Địa chỉ của bạn (Số nhà, tên đường...) *"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    required
                   />
                 </div>
 
@@ -337,53 +501,55 @@ export default function Order() {
             </div>
           )}
           {activeTab === "ch" && (
-            <div className="ch-form">
-              <div className="ch-403-card">
-                <div className="ch-403-header-badge">
-                  <i className="bi bi-shield-exclamation"></i>
-                  <span>TẠM THỜI CHƯA KHẢ DỤNG</span>
+            <div className="order-form" style={{ marginTop: "20px" }}>
+              <div className="order-form-card">
+                <label className="order-form-section-title">
+                  Thông tin người nhận hàng
+                </label>
+                <div className="gtn-user">
+                  <input
+                    type="text"
+                    placeholder="Nhập Họ và Tên *"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Nhập số điện thoại *"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                  />
                 </div>
 
-                <div className="ch-403-illustration">
-                  <div className="ch-403-icon-wrapper">
-                    <i className="bi bi-shop-window"></i>
-                  </div>
-                </div>
-
-                <div className="ch-403-text-wrap">
-                  <h3 className="ch-403-title">
-                    403 - Chưa Có Thông Tin Cửa Hàng
-                  </h3>
-                  <p className="ch-403-desc">
-                    Hệ thống điểm bán trực tiếp của <strong>ViDairy</strong> tại
-                    khu vực này đang được nâng cấp cơ sở dữ liệu.
-                  </p>
-                  <div className="ch-403-tip-box">
-                    <i className="bi bi-info-circle-fill"></i>
-                    <span>
-                      Để không làm gián đoạn đơn hàng, vui lòng chọn hình thức{" "}
-                      <strong>Giao hàng tận nơi</strong>. ViDairy hỗ trợ giao
-                      nhanh toàn quốc!
-                    </span>
-                  </div>
-                </div>
-
-                <div className="ch-403-actions">
-                  <button
-                    type="button"
-                    className="btn-switch-gtn"
-                    onClick={() => setActiveTab("gtn")}
-                  >
-                    <i className="bi bi-truck"></i> Chuyển sang Giao hàng tận
-                    nơi
-                  </button>
-
-                  <div className="ch-403-support">
-                    <span>Cần hỗ trợ đặt hàng nhanh?</span>
-                    <a href="tel:0989584592" className="ch-support-link">
-                      <i className="bi bi-telephone-fill"></i> 0989 584 592
-                    </a>
-                  </div>
+                <label className="order-form-section-title" style={{ marginTop: "18px" }}>
+                  Chọn chi nhánh cửa hàng ViDairy
+                </label>
+                <div className="store-branches-list">
+                  {branches.map((b) => (
+                    <div
+                      key={b.code || b._id}
+                      className={`store-branch-card ${selectedBranch === b.name ? "selected" : ""}`}
+                      onClick={() => setSelectedBranch(b.name)}
+                    >
+                      <div className="store-branch-radio">
+                        <input
+                          type="radio"
+                          name="selectedStore"
+                          checked={selectedBranch === b.name}
+                          onChange={() => setSelectedBranch(b.name)}
+                        />
+                      </div>
+                      <div className="store-branch-info">
+                        <h4>{b.name}</h4>
+                        <p><i className="bi bi-geo-alt-fill text-danger"></i> {b.address}, {b.city}</p>
+                        <span className="store-branch-hours">
+                          <i className="bi bi-clock-fill"></i> {b.hours} • Hotline: {b.phone}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -590,6 +756,113 @@ export default function Order() {
 
       <div className="order-right">
         <h1 className="order-page-title">Kiện hàng</h1>
+        <div className="order-summary-card">
+          <div className="order-summary-header">
+            <h3>Đơn hàng của bạn</h3>
+            <span>{cartItems.length} sản phẩm</span>
+          </div>
+
+          {cartItems.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "30px 0" }}>
+              <i className="bi bi-cart-x" style={{ fontSize: "42px", color: "#94a3b8" }}></i>
+              <p style={{ color: "#64748b", margin: "10px 0 16px" }}>Giỏ hàng chưa có sản phẩm nào</p>
+              <Link to="/products" className="btn btn-primary" style={{ background: "#23408e", border: "none", borderRadius: "8px", padding: "8px 20px" }}>
+                Mua sắm ngay
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="order-items-scroll">
+                {cartItems.map((item) => (
+                  <div key={`${item.id}-${item.volume}`} className="order-item-mini">
+                    <img src={item.image} alt={item.name} />
+                    <div className="order-item-mini-info">
+                      <h4>{item.name}</h4>
+                      <p>Quy cách: {item.volume} • SL: {item.quantity}</p>
+                    </div>
+                    <div className="order-item-mini-price">
+                      {(item.price * item.quantity).toLocaleString("vi-VN")}đ
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Ô Nhập Voucher */}
+              <div className="order-coupon-wrap">
+                <div className="order-coupon-input-group">
+                  <input
+                    type="text"
+                    placeholder="Mã ưu đãi (VD: VIDAIRY10)"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                  />
+                  <button type="button" onClick={handleApplyCoupon} disabled={isCheckingCoupon}>
+                    {isCheckingCoupon ? "Kiểm tra..." : "Áp dụng"}
+                  </button>
+                </div>
+                {couponMsg.text && (
+                  <p className={`coupon-msg ${couponMsg.isError ? "error" : "success"}`}>
+                    <i className={`bi ${couponMsg.isError ? "bi-exclamation-circle" : "bi-check-circle"}`}></i>
+                    {couponMsg.text}
+                  </p>
+                )}
+              </div>
+
+              {/* Bảng giá chi tiết */}
+              <div className="order-breakdown">
+                <div className="order-price-line">
+                  <span>Tạm tính:</span>
+                  <span>{totalPrice.toLocaleString("vi-VN")}đ</span>
+                </div>
+                <div className="order-price-line">
+                  <span>Phí giao hàng:</span>
+                  <span>{shippingFee === 0 ? "Miễn phí" : `${shippingFee.toLocaleString("vi-VN")}đ`}</span>
+                </div>
+                {couponDiscount > 0 && (
+                  <div className="order-price-line discount">
+                    <span>Mã ưu đãi giảm:</span>
+                    <span>-{couponDiscount.toLocaleString("vi-VN")}đ</span>
+                  </div>
+                )}
+                <div className="order-price-line total-line">
+                  <span>Tổng thanh toán:</span>
+                  <span className="grand-total">{finalTotal.toLocaleString("vi-VN")}đ</span>
+                </div>
+              </div>
+
+              {/* Ghi chú đơn hàng */}
+              <textarea
+                className="order-note-input"
+                rows="2"
+                placeholder="Ghi chú thêm cho người giao hàng (Ví dụ: Giao giờ hành chính, gọi trước khi đến...)"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+              ></textarea>
+
+              <div style={{ marginTop: "18px" }}>
+                <button
+                  type="button"
+                  className="btn-submit-order-final"
+                  onClick={handleSubmitOrder}
+                  disabled={isSubmitting || cartItems.length === 0}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="spinner-border spinner-border-sm" role="status"></div>
+                      <span>Đang tạo đơn hàng...</span>
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-shield-check"></i>
+                      <span>XÁC NHẬN ĐẶT HÀNG</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

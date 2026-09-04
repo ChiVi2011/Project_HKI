@@ -1,10 +1,12 @@
 const mongoose = require("mongoose");
 
 const otpVerificationSchema = new mongoose.Schema({
-  UserID: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+  Email: {
+    type: String,
     required: true,
+    lowercase: true,
+    trim: true,
+    index: true,
   },
   OTP: {
     type: String,
@@ -13,9 +15,15 @@ const otpVerificationSchema = new mongoose.Schema({
   ExpiresAt: {
     type: Date,
     required: true,
+    default: () => new Date(Date.now() + 5 * 60 * 1000), // Mặc định 5 phút
+  },
+  CreatedAt: {
+    type: Date,
+    default: Date.now,
   },
 });
-// Tự động xóa sau khi hết 1 phút 
+
+// Tự động xóa tài liệu sau khi ExpiresAt hết hạn
 otpVerificationSchema.index({ ExpiresAt: 1 }, { expireAfterSeconds: 0 });
 
 module.exports = mongoose.model("OtpVerification", otpVerificationSchema);

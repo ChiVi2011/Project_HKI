@@ -22,23 +22,6 @@ function Home() {
 
   useEffect(() => {
     AOS.init({ once: true });
-
-    // TODO: Bỏ comment khi tích hợp API
- 
-    const fetchHomeData = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch("API_URL_CUA_CAU_CHU");
-        const data = await response.json();
-        setHomeData(prev => ({ ...prev, ...data })); 
-      } catch (error) {
-        console.error("Lỗi:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchHomeData();
-
   }, []);
 
   if (loading) return null;

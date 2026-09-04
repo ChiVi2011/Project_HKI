@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import productService from "../services/productService";
 import "../style/cart-drawer.css";
 
 export default function CartDrawer() {
@@ -189,15 +190,22 @@ export default function CartDrawer() {
             {/* Khung Thêm Voucher Giảm Giá */}
             <div
               className="cart-voucher-box"
-              onClick={() => {
+              onClick={async () => {
                 const code = prompt(
-                  "Nhập mã Voucher giảm giá (Ví dụ: VIDAIRY10):",
+                  "Nhập mã Voucher giảm giá (Ví dụ: VIDAIRY10, VIDAIRY50, FREESHIP):",
                 );
-                if (code && code.trim().toUpperCase() === "VIDAIRY10") {
-                  setVoucherDiscount(50000);
-                  alert("Áp dụng mã giảm giá 50.000đ thành công!");
-                } else if (code) {
-                  alert("Mã voucher không hợp lệ hoặc đã hết hạn!");
+                if (code && code.trim()) {
+                  try {
+                    const res = await productService.validateCoupon(code.trim(), totalPrice);
+                    if (res.success) {
+                      setVoucherDiscount(res.data.discount);
+                      alert(res.message || `Áp dụng thành công voucher ${res.data.code}!`);
+                    } else {
+                      alert(res.message || "Mã voucher không hợp lệ hoặc đã hết hạn!");
+                    }
+                  } catch (err) {
+                    alert("Lỗi khi kiểm tra mã voucher: " + err.message);
+                  }
                 }
               }}
               title="Bấm để thêm voucher giảm giá"

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import CardNew from "../components/card-new";
+import productService from "../services/productService";
 import BannerImg from "../assets/img/ViDairy_banner_1527x633_full.png";
 import "../style/news.css";
 
@@ -150,13 +151,38 @@ const POPULAR_TAGS = [
 ];
 
 export default function News() {
+  const [newsList, setNewsList] = useState(NEWS_DATA);
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [searchQuery, setSearchQuery] = useState("");
   const [subscribedEmail, setSubscribedEmail] = useState("");
   const [subscribeSuccess, setSubscribeSuccess] = useState(false);
 
+  useEffect(() => {
+    productService
+      .getNews()
+      .then((res) => {
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          setNewsList(
+            res.data.map((n, i) => ({
+              id: n._id || n.id || i + 1,
+              title: n.title,
+              category: n.category || "Dinh dưỡng",
+              date: n.date || "Hôm nay",
+              readTime: "4 phút đọc",
+              summary: n.summary || n.content || "",
+              image:
+                n.imageUrl ||
+                "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
+              link: `/news/${n._id || i + 1}`,
+            }))
+          );
+        }
+      })
+      .catch((err) => console.warn("Lỗi tải tin tức:", err));
+  }, []);
+
   // Lọc bài viết theo danh mục và từ khóa tìm kiếm
-  const filteredArticles = NEWS_DATA.filter((item) => {
+  const filteredArticles = newsList.filter((item) => {
     const matchCategory =
       selectedCategory === "Tất cả" || item.category === selectedCategory;
     const matchSearch =
