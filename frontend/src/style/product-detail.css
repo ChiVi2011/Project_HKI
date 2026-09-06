@@ -992,36 +992,36 @@
   margin-bottom: 35px;
 }
 
-.section-title-wrap {
+.product-detail-page .section-title-wrap {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 18px;
 }
 
-.section-icon-badge {
+.product-detail-page .section-icon-badge {
   width: 40px;
   height: 40px;
   border-radius: 10px;
   background-color: #e0f2fe;
-  color: var(--detail-primary);
+  color: var(--detail-primary, #23408e);
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 18px;
 }
 
-.section-title {
+.product-detail-page .section-title {
   font-family: "ViDairy1", sans-serif;
   font-size: 20px;
   font-weight: 700;
-  color: var(--detail-primary);
+  color: var(--detail-primary, #23408e);
   margin: 0;
 }
 
-.section-subtitle {
+.product-detail-page .section-subtitle {
   font-size: 13px;
-  color: var(--detail-muted);
+  color: var(--detail-muted, #64748b);
   margin: 2px 0 0;
 }
 
@@ -1161,13 +1161,13 @@
   margin-top: auto;
 }
 
-.btn-view-detail-only {
+.product-detail-page .btn-view-detail-only {
   width: 100%;
   padding: 8px 12px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
   background-color: #ffffff;
-  color: var(--detail-primary);
+  color: var(--detail-primary, #23408e);
   font-family: "ViDairy1", sans-serif;
   font-size: 13px;
   font-weight: 600;
@@ -1179,10 +1179,10 @@
   transition: all 0.2s ease;
 }
 
-.btn-view-detail-only:hover {
-  background-color: var(--detail-primary);
+.product-detail-page .btn-view-detail-only:hover {
+  background-color: var(--detail-primary, #23408e);
   color: #ffffff;
-  border-color: var(--detail-primary);
+  border-color: var(--detail-primary, #23408e);
 }
 
 /* ================= 5. NÚT ĐIỀU HƯỚNG QUAY LẠI ================= */

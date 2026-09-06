@@ -79,7 +79,7 @@ function CategoryRowSlider({
     <section id={section.id} className="category-product-section">
       <div className="section-header">
         <div className="section-title-wrap">
-          <span className="section-icon-badge">
+          <span className={`section-icon-badge section-badge-${section.id}`}>
             <i className={`bi ${section.icon || "bi-grid-fill"}`}></i>
           </span>
           <div>
@@ -207,7 +207,7 @@ function PromotionRowSlider({ promotions, isLoading }) {
     >
       <div className="section-header">
         <div className="section-title-wrap">
-          <span className="section-icon-badge promo-icon-badge">
+          <span className="section-icon-badge promo-icon-badge section-badge-thong-tin-khuyen-mai">
             <i className="bi bi-gift-fill"></i>
           </span>
           <div>

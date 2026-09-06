@@ -7,7 +7,7 @@ export default function Profile() {
   const { user, token, isLoggedIn, isAdmin, logout, updateUser } = useAuth();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("info"); // 'info' | 'orders' | 'admin'
+  const [activeTab, setActiveTab] = useState("info"); // 'info' | 'orders'
   const [formData, setFormData] = useState({
     FullName: "",
     Email: "",
@@ -24,11 +24,6 @@ export default function Profile() {
   // Dữ liệu đơn hàng của tôi
   const [orders, setOrders] = useState([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
-
-  // Dữ liệu danh sách người dùng dành cho Admin
-  const [adminUsers, setAdminUsers] = useState([]);
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-  const [systemActive, setSystemActive] = useState(true);
 
   // Bảo vệ route: nếu chưa đăng nhập thì chuyển hướng sang /login
   useEffect(() => {
@@ -79,32 +74,7 @@ export default function Profile() {
       setIsLoadingOrders(false);
     }
   };
-
-  // 2. Tải danh sách người dùng khi Admin mở tab 'admin'
-  useEffect(() => {
-    if (activeTab === "admin" && isAdmin && token) {
-      loadAdminUsers();
-    }
-  }, [activeTab, isAdmin, token]);
-
-  const loadAdminUsers = async () => {
-    setIsLoadingUsers(true);
-    try {
-      const res = await fetch("http://localhost:3000/api/admin/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
-        setAdminUsers(json.data);
-      }
-    } catch (err) {
-      console.warn("Lỗi tải danh sách người dùng:", err);
-    } finally {
-      setIsLoadingUsers(false);
-    }
-  };
-
-  // 3. Cập nhật thông tin cá nhân
+  // 2. Cập nhật thông tin cá nhân
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setIsUpdating(true);
@@ -136,41 +106,6 @@ export default function Profile() {
       setIsUpdating(false);
     }
   };
-
-  // 4. [ADMIN] Chuyển đổi trạng thái tài khoản người dùng
-  const handleToggleUserStatus = async (targetUser) => {
-    try {
-      const res = await fetch(
-        `http://localhost:3000/api/admin/users/${targetUser.UserID || targetUser._id}/status`,
-        {
-          method: "PATCH",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.message || "Không thể chuyển đổi trạng thái.");
-      }
-
-      // Cập nhật state local
-      setAdminUsers((prev) =>
-        prev.map((u) =>
-          (u.UserID || u._id) === (targetUser.UserID || targetUser._id)
-            ? { ...u, Status: json.data?.Status }
-            : u
-        )
-      );
-
-      setAlert({
-        type: "success",
-        message: json.message || "Chuyển đổi trạng thái thành công!",
-      });
-    } catch (err) {
-      setAlert({ type: "error", message: err.message });
-    }
-  };
-
   if (!user) return null;
 
   return (
@@ -285,21 +220,6 @@ export default function Profile() {
             <i className="bi bi-bag-check-fill"></i>
             <span>Đơn hàng của tôi</span>
           </button>
-
-          {/* TAB ĐẶC QUYỀN DÀNH CHO ADMIN */}
-          {isAdmin && (
-            <button
-              type="button"
-              className="profile-tab-btn admin-tab"
-              onClick={() => navigate("/admin")}
-              title="Chuyển ngay sang Trang Quản Trị Hệ Thống"
-            >
-              <i className="bi bi-speedometer2"></i>
-              <span>Chuyển qua Page Admin</span>
-              <span className="admin-glow-dot"></span>
-              <i className="bi bi-box-arrow-up-right" style={{ fontSize: "12px", marginLeft: "4px" }}></i>
-            </button>
-          )}
         </div>
 
         {/* ================= TAB 1: THÔNG TIN CÁ NHÂN ================= */}
@@ -484,114 +404,7 @@ export default function Profile() {
           </div>
         )}
 
-        {/* ================= TAB 3: DÀNH CHO ADMIN (NÚT CHUYỂN ĐỔI TRẠNG THÁI) ================= */}
-        {activeTab === "admin" && isAdmin && (
-          <div className="profile-tab-panel admin-panel">
-            <div className="panel-header">
-              <div className="admin-title-badge">
-                <i className="bi bi-shield-shaded"></i>
-                <h3>Bảng Quản Trị Hệ Thống & Chuyển Đổi Trạng Thái</h3>
-              </div>
-              <p>
-                Dành riêng cho Quản trị viên (Admin) quản lý trạng thái máy chủ và phân quyền thành viên trong MongoDB Atlas
-              </p>
-            </div>
 
-            {/* Khối nút chuyển đổi trạng thái: Chuyển sang page admin */}
-            <div className="admin-status-switch-box">
-              <div className="switch-info">
-                <div className="switch-title">
-                  <i className="bi bi-speedometer2"></i>
-                  <strong>Chuyển sang Trang Quản Trị Hệ Thống:</strong>
-                  <span className="system-status-indicator live">
-                    Admin Portal Sẵn Sàng
-                  </span>
-                </div>
-                <p>
-                  Nhấp nút bên phải để chuyển sang Page Admin (Quản lý đơn hàng, danh mục, sản phẩm, tồn kho, thành viên và voucher giảm giá).
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="btn-toggle-system active-mode"
-                onClick={() => navigate("/admin")}
-                title="Chuyển ngay sang trang Admin"
-              >
-                <i className="bi bi-box-arrow-up-right"></i>
-                <span>Chuyển qua Page Admin</span>
-              </button>
-            </div>
-
-            {/* Danh sách thành viên và nút chuyển đổi trạng thái từng tài khoản */}
-            <div className="admin-users-management">
-              <div className="section-head">
-                <h4>
-                  <i className="bi bi-people-fill"></i> Quản Lý Tài Khoản Thành Viên & Chuyển Đổi Trạng Thái
-                </h4>
-                <span className="user-count-badge">Tổng số: {adminUsers.length} tài khoản</span>
-              </div>
-
-              {isLoadingUsers ? (
-                <div className="profile-loading-box">
-                  <i className="bi bi-arrow-repeat spin"></i>
-                  <p>Đang tải danh sách thành viên từ MongoDB Atlas...</p>
-                </div>
-              ) : (
-                <div className="orders-table-wrap">
-                  <table className="profile-table admin-users-table">
-                    <thead>
-                      <tr>
-                        <th>Mã KH</th>
-                        <th>Họ và tên</th>
-                        <th>Email</th>
-                        <th>Số điện thoại</th>
-                        <th>Vai trò</th>
-                        <th>Trạng thái hiện tại</th>
-                        <th>Hành động</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {adminUsers.map((u) => (
-                        <tr key={u.UserID || u._id} className={!u.Status ? "row-blocked" : ""}>
-                          <td>
-                            <strong>{u.CustomerCode || "KHxxxxxx"}</strong>
-                          </td>
-                          <td>{u.FullName}</td>
-                          <td>{u.Email}</td>
-                          <td>{u.Phone || "Chưa cập nhật"}</td>
-                          <td>
-                            <span className={`badge-role ${u.Role?.toLowerCase()}`}>
-                              {u.Role}
-                            </span>
-                          </td>
-                          <td>
-                            <span className={`status-pill ${u.Status ? "active" : "blocked"}`}>
-                              <i className={`bi ${u.Status ? "bi-check-circle-fill" : "bi-slash-circle-fill"}`}></i>
-                              {u.Status ? "Hoạt động" : "Tạm khóa"}
-                            </span>
-                          </td>
-                          <td>
-                            {/* NÚT CHUYỂN ĐỔI TRẠNG THÁI THEO YÊU CẦU */}
-                            <button
-                              type="button"
-                              className={`btn-action-switch-status ${u.Status ? "btn-block" : "btn-activate"}`}
-                              onClick={() => handleToggleUserStatus(u)}
-                              title={u.Status ? "Chuyển sang Tạm khóa" : "Chuyển sang Hoạt động"}
-                            >
-                              <i className={`bi ${u.Status ? "bi-lock-fill" : "bi-unlock-fill"}`}></i>
-                              <span>{u.Status ? "Khóa tài khoản" : "Mở khóa"}</span>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
