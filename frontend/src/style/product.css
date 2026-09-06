@@ -516,57 +516,6 @@
   margin: 0 auto;
   padding: 35px 24px 60px;
 }
-
-/* API Status Indicator Bar */
-.api-indicator-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 8px 16px;
-  margin-bottom: 20px;
-  font-size: 13px;
-  color: #64748b;
-}
-
-.api-status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-}
-
-.api-badge-live {
-  background-color: #dcfce7;
-  color: #166534;
-}
-
-.api-badge-fallback {
-  background-color: #eff6ff;
-  color: #1d4ed8;
-}
-
-.btn-api-reload {
-  background: none;
-  border: none;
-  color: #23408e;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
-.btn-api-reload:hover {
-  text-decoration: underline;
-}
-
 /* ================= 2.3. MENU TAB DANH MỤC (STICKY TABS) ================= */
 .category-tabs-nav {
   position: sticky;

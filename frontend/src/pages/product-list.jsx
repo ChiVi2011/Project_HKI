@@ -396,8 +396,6 @@ export default function Products() {
   const [promotions, setPromotions] = useState(mockPromotions);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isFromApi, setIsFromApi] = useState(false);
-  const [fallbackReason, setFallbackReason] = useState(null);
 
   // Bộ lọc từ URL
   const initialCategory =
@@ -445,12 +443,8 @@ export default function Products() {
       });
 
       setProducts(res.data || []);
-      setIsFromApi(Boolean(res.isFromApi));
-      setFallbackReason(res.fallbackReason || null);
     } catch (err) {
       console.error("Lỗi tải danh sách sản phẩm:", err);
-      setIsFromApi(false);
-      setFallbackReason(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -580,43 +574,8 @@ export default function Products() {
 
       {/* ================= PHẦN THÂN TRANG ================= */}
       <div className="product-main-content">
-        {/* Thanh chỉ báo kết nối API */}
-        <div className="api-indicator-bar" id="tat-ca-san-pham">
-          <div>
-            <span
-              className={`api-status-badge ${
-                isFromApi ? "api-badge-live" : "api-badge-fallback"
-              }`}
-            >
-              <i
-                className={`bi ${
-                  isFromApi ? "bi-check-circle-fill" : "bi-database-fill"
-                }`}
-              ></i>
-              {isFromApi ? "Kết nối API Live" : "Dữ liệu Mock dự phòng"}
-            </span>
-            <span style={{ marginLeft: "10px" }}>
-              {isFromApi
-                ? "Dữ liệu được nạp trực tiếp từ hệ thống API máy chủ"
-                : fallbackReason
-                ? `(Đang chạy chế độ an toàn: ${fallbackReason})`
-                : "Hệ thống sẵn sàng chuyển đổi khi API backend kết nối"}
-            </span>
-          </div>
-
-          <button
-            type="button"
-            className="btn-api-reload"
-            onClick={loadProducts}
-            title="Tải lại từ API"
-          >
-            <i className="bi bi-arrow-clockwise"></i>
-            <span>Tải lại</span>
-          </button>
-        </div>
-
         {/* Menu Tab danh mục */}
-        <nav className="category-tabs-nav">
+        <nav className="category-tabs-nav" id="tat-ca-san-pham">
           <ul className="category-tabs-list">
             {tabCategories.map((cat) => (
               <li key={cat.id} className="category-tab-item">
