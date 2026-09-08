@@ -150,7 +150,7 @@ export const productService = {
 
       const queryString = query.toString();
       const url = `${API_BASE_URL}/products${queryString ? `?${queryString}` : ""}`;
-      
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3500);
 
@@ -444,6 +444,21 @@ export const productService = {
   /**
    * Định dạng tiền tệ VND
    */
+  /**
+ * [ADMIN] Cập nhật vai trò và phân quyền người dùng
+ */
+  async updateUserRole(userId, role, permissions, token) {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ role, permissions }),
+    });
+    return await response.json();
+  },
+
   formatCurrency(amount) {
     if (typeof localFormatCurrency === "function") {
       return localFormatCurrency(amount);

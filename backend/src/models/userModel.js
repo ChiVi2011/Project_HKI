@@ -35,7 +35,11 @@ const userSchema = new mongoose.Schema(
     },
     Role: {
       type: String,
-      enum: ["CUSTOMER", "ADMIN", "STAFF"],
+      enum: ["CUSTOMER", "ADMIN", "STAFF", "MANAGER"],
+    },
+    Permissions: {
+      type: [String],
+      default: [],
       default: "CUSTOMER",
     },
     Gender: {

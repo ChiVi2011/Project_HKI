@@ -167,6 +167,7 @@ const INITIAL_USERS = [
     email: "chivinguyen1998@gmail.com",
     phone: "0989584592",
     role: "ADMIN",
+    permissions: ["manage_products", "manage_orders", "manage_inventory", "manage_coupons", "manage_users"],
     status: 1,
     createdAt: "2026-08-01",
   },
@@ -286,6 +287,15 @@ const INITIAL_BRANCHES = [
   },
 ];
 
+
+const PRESET_PRODUCT_IMAGES = [
+  { label: "Sữa Trẻ Em", url: "/src/assets/img/cau_be_vidaiary.png" },
+  { label: "Sữa Mẹ Bầu", url: "/src/assets/img/me-bau_vidaiary.png" },
+  { label: "Sữa Người Cao Tuổi", url: "/src/assets/img/ong_ba_vidairy.png" },
+  { label: "Sữa Hạt Organic", url: "/src/assets/img/sua_hat_vidairy.png" },
+  { label: "Banner Mẹ & Bé", url: "/src/assets/img/mother_baby_banner.jpg" },
+];
+
 export default function AdminDashboard() {
   const { user, isAdmin, token, logout } = useAuth();
   const navigate = useNavigate();
@@ -305,7 +315,174 @@ export default function AdminDashboard() {
   const [productSearch, setProductSearch] = useState("");
   const [productCategoryFilter, setProductCategoryFilter] = useState("ALL");
 
+  // State & Handler cho Phân quyền tài khoản (Role & Permissions)
+  const [selectedUserForRole, setSelectedUserForRole] = useState(null);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [roleForm, setRoleForm] = useState({ role: "CUSTOMER", permissions: [] });
+
+  // Đổi vai trò nhanh từ dropdown
+  const handleQuickRoleChange = async (userId, newRole) => {
+    try {
+      const res = await productService.updateUserRole(userId, newRole, null, token);
+      if (res.success) {
+        setUsers((prev) =>
+          prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
+        );
+      } else {
+        alert(res.message || "Không thể cập nhật vai trò!");
+      }
+    } catch (err) {
+      alert("Lỗi kết nối khi cập nhật vai trò người dùng.");
+    }
+  };
+
+  // Mở modal phân quyền chi tiết
+  const handleOpenRoleModal = (userItem) => {
+    setSelectedUserForRole(userItem);
+    setRoleForm({
+      role: userItem.role || "CUSTOMER",
+      permissions: userItem.permissions || [],
+    });
+    setIsRoleModalOpen(true);
+  };
+
+  // Tắt/bật checkbox quyền chi tiết
+  const handleTogglePermission = (permKey) => {
+    setRoleForm((prev) => {
+      const exists = prev.permissions.includes(permKey);
+      return {
+        ...prev,
+        permissions: exists
+          ? prev.permissions.filter((p) => p !== permKey)
+          : [...prev.permissions, permKey],
+      };
+    });
+  };
+
+  // Lưu phân quyền từ modal
+  const handleSaveRolePermissions = async (e) => {
+    e.preventDefault();
+    if (!selectedUserForRole) return;
+
+    try {
+      const res = await productService.updateUserRole(
+        selectedUserForRole.id,
+        roleForm.role,
+        roleForm.permissions,
+        token
+      );
+
+      if (res.success) {
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === selectedUserForRole.id
+              ? { ...u, role: roleForm.role, permissions: roleForm.permissions }
+              : u
+          )
+        );
+        alert(`🎉 Đã cập nhật phân quyền cho người dùng "${selectedUserForRole.fullName}" thành công!`);
+        setIsRoleModalOpen(false);
+      } else {
+        alert(res.message || "Lỗi khi cập nhật phân quyền.");
+      }
+    } catch (err) {
+      alert("Lỗi khi kết nối đến máy chủ.");
+    }
+  };
+
   // Modal thêm sản phẩm
+  // State & Handler Quản lý Hình ảnh & Sửa Sản Phẩm
+  const [isEditProductOpen, setIsEditProductOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+
+  // Đọc file ảnh từ máy tính chuyển thành Base64
+  const handleImageFileUpload = (e, setImgCallback) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Vui lòng chọn file hình ảnh hợp lệ (.jpg, .png, .webp,...)");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setImgCallback(event.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Mở modal sửa sản phẩm
+  const handleOpenEditProduct = (prod) => {
+    setEditingProduct({
+      id: prod.id,
+      name: prod.name,
+      category: prod.category || "Sữa Bột Trẻ Em",
+      brand: prod.brand || "ViDairy",
+      variant: prod.variant || "Lon 800g",
+      price: prod.price || 0,
+      originalPrice: prod.originalPrice || prod.price || 0,
+      stock: prod.stock || 100,
+      ageGroup: prod.ageGroup || "Mọi lứa tuổi",
+      img: prod.img || "/src/assets/img/cau_be_vidaiary.png",
+    });
+    setIsEditProductOpen(true);
+  };
+
+  // Lưu chỉnh sửa sản phẩm
+  const handleSaveEditProduct = async (e) => {
+    e.preventDefault();
+    if (!editingProduct || !editingProduct.name || !editingProduct.price) {
+      alert("Vui lòng nhập tên và giá sản phẩm!");
+      return;
+    }
+
+    try {
+      const catMap = {
+        "Sữa Bột Trẻ Em": "san-pham-cho-be",
+        "Sữa Cho Mẹ Bầu & Sau Sinh": "san-pham-cho-me",
+        "Sữa Dinh Dưỡng Người Cao Tuổi": "san-pham-cho-nguoi-lon-tuoi",
+        "Sữa Hạt Dinh Dưỡng Tự Nhiên": "dung-kem",
+      };
+
+      const payload = {
+        ProductName: editingProduct.name,
+        CategoryID: catMap[editingProduct.category] || "san-pham-cho-be",
+        BrandName: editingProduct.brand || "ViDairy",
+        packaging: editingProduct.variant || "Lon 800g",
+        price: Number(editingProduct.price),
+        targetUser: editingProduct.ageGroup || "Mọi lứa tuổi",
+        stock: Number(editingProduct.stock || 100),
+        imageUrl: editingProduct.img || "/src/assets/img/cau_be_vidaiary.png",
+      };
+
+      const res = await productService.updateProduct(editingProduct.id, payload);
+      if (res.success || res.data) {
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === editingProduct.id
+              ? {
+                ...p,
+                name: editingProduct.name,
+                category: editingProduct.category,
+                brand: editingProduct.brand,
+                variant: editingProduct.variant,
+                price: Number(editingProduct.price),
+                stock: Number(editingProduct.stock),
+                ageGroup: editingProduct.ageGroup,
+                img: editingProduct.img,
+              }
+              : p
+          )
+        );
+        alert(`🎉 Đã cập nhật thông tin và hình ảnh sản phẩm "${editingProduct.name}" thành công!`);
+        setIsEditProductOpen(false);
+      } else {
+        alert(res.message || "Lỗi khi cập nhật sản phẩm.");
+      }
+    } catch (err) {
+      alert("Lỗi khi kết nối đến máy chủ.");
+    }
+  };
+
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: "",
@@ -316,6 +493,7 @@ export default function AdminDashboard() {
     originalPrice: "",
     stock: "",
     ageGroup: "1 - 3 tuổi",
+    img: "/src/assets/img/cau_be_vidaiary.png",
   });
 
   // Tải tất cả dữ liệu thực từ MongoDB Atlas
@@ -371,10 +549,10 @@ export default function AdminDashboard() {
                   p.categoryId === "san-pham-cho-be"
                     ? "Sữa Bột Trẻ Em"
                     : p.categoryId === "san-pham-cho-me"
-                    ? "Sữa Cho Mẹ Bầu & Sau Sinh"
-                    : p.categoryId === "san-pham-cho-nguoi-lon-tuoi"
-                    ? "Sữa Dinh Dưỡng Người Cao Tuổi"
-                    : "Sữa Hạt Dinh Dưỡng Tự Nhiên",
+                      ? "Sữa Cho Mẹ Bầu & Sau Sinh"
+                      : p.categoryId === "san-pham-cho-nguoi-lon-tuoi"
+                        ? "Sữa Dinh Dưỡng Người Cao Tuổi"
+                        : "Sữa Hạt Dinh Dưỡng Tự Nhiên",
                 categoryId: p.categoryId,
                 brand: p.brand || "ViDairy",
                 variant: p.packaging || "Lon 800g",
@@ -384,7 +562,7 @@ export default function AdminDashboard() {
                 stock: 150,
                 ageGroup: p.targetUser,
                 status: p.raw?.Status !== false ? 1 : 0,
-                img: p.imageUrl,
+                img: p.imageUrl || p.ImageURL || p.img || "/src/assets/img/cau_be_vidaiary.png",
                 raw: p,
               }))
             );
@@ -407,6 +585,7 @@ export default function AdminDashboard() {
                 email: u.Email,
                 phone: u.Phone,
                 role: u.Role,
+                permissions: u.Permissions || [],
                 status: u.Status ? 1 : 0,
                 createdAt: new Date(u.createdAt).toLocaleDateString("vi-VN"),
               }))
@@ -532,9 +711,7 @@ export default function AdminDashboard() {
         price: Number(newProduct.price),
         targetUser: newProduct.ageGroup || "Mọi lứa tuổi",
         stock: Number(newProduct.stock || 100),
-        imageUrl:
-          newProduct.img ||
-          "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
+        imageUrl: newProduct.img || "/src/assets/img/cau_be_vidaiary.png",
       };
 
       const res = await productService.createProduct(payload);
@@ -550,6 +727,7 @@ export default function AdminDashboard() {
           originalPrice: "",
           stock: "",
           ageGroup: "1 - 3 tuổi",
+          img: "/src/assets/img/cau_be_vidaiary.png",
         });
         loadAllAdminData();
       } else {
@@ -644,10 +822,6 @@ export default function AdminDashboard() {
             alt="ViDairy Logo"
             className="admin-logo-img"
           />
-          <div className="admin-brand-info">
-            <span className="admin-brand-name">ViDairy</span>
-            <span className="admin-portal-badge">Admin Portal</span>
-          </div>
         </div>
 
         <nav className="admin-nav">
@@ -1049,13 +1223,12 @@ export default function AdminDashboard() {
                           </td>
                           <td>
                             <span
-                              className={`status-badge ${
-                                o.orderStatus === "Completed"
-                                  ? "completed"
-                                  : o.orderStatus === "Shipping"
-                                    ? "shipping"
-                                    : "processing"
-                              }`}
+                              className={`status-badge ${o.orderStatus === "Completed"
+                                ? "completed"
+                                : o.orderStatus === "Shipping"
+                                  ? "shipping"
+                                  : "processing"
+                                }`}
                             >
                               {o.orderStatus === "Completed" && "Hoàn thành"}
                               {o.orderStatus === "Shipping" && "Đang giao hàng"}
@@ -1260,8 +1433,12 @@ export default function AdminDashboard() {
                       <tr key={p.id}>
                         <td>
                           <img
-                            src={p.img}
+                            src={p.img || p.imageUrl || "/src/assets/img/cau_be_vidaiary.png"}
                             alt={p.name}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = "/src/assets/img/cau_be_vidaiary.png";
+                            }}
                             style={{
                               width: "48px",
                               height: "48px",
@@ -1466,17 +1643,17 @@ export default function AdminDashboard() {
                         <td>{u.email}</td>
                         <td>{u.phone}</td>
                         <td>
-                          <span
-                            className={`status-badge ${
-                              u.role === "ADMIN"
-                                ? "pending"
-                                : u.role === "STAFF"
-                                  ? "shipping"
-                                  : "active"
-                            }`}
+                          <select
+                            value={u.role}
+                            onChange={(e) => handleQuickRoleChange(u.id, e.target.value)}
+                            className={`admin-role-select role-${u.role?.toLowerCase()}`}
+                            title="Thay đổi nhanh vai trò"
                           >
-                            {u.role}
-                          </span>
+                            <option value="CUSTOMER">CUSTOMER (Khách)</option>
+                            <option value="STAFF">STAFF (Nhân viên)</option>
+                            <option value="MANAGER">MANAGER (Quản lý)</option>
+                            <option value="ADMIN">ADMIN (Quản trị)</option>
+                          </select>
                         </td>
                         <td>{u.createdAt}</td>
                         <td>
@@ -1490,6 +1667,14 @@ export default function AdminDashboard() {
                           <div className="admin-action-btn-group">
                             <button
                               type="button"
+                              className="btn-action-icon primary"
+                              title="Phân quyền chi tiết"
+                              onClick={() => handleOpenRoleModal(u)}
+                            >
+                              <i className="bi bi-shield-lock-fill"></i>
+                            </button>
+                            <button
+                              type="button"
                               className={`btn-action-icon ${u.status === 1 ? "danger" : ""}`}
                               title={
                                 u.status === 1
@@ -1499,11 +1684,10 @@ export default function AdminDashboard() {
                               onClick={() => handleToggleUserStatus(u.id)}
                             >
                               <i
-                                className={`bi ${
-                                  u.status === 1
-                                    ? "bi-lock-fill"
-                                    : "bi-unlock-fill"
-                                }`}
+                                className={`bi ${u.status === 1
+                                  ? "bi-lock-fill"
+                                  : "bi-unlock-fill"
+                                  }`}
                               ></i>
                             </button>
                           </div>
@@ -1654,19 +1838,17 @@ export default function AdminDashboard() {
                                   color: "#23408e",
                                 }}
                               >
-                                {`HD-${
-                                  o.orderCode?.replace(/[^0-9]/g, "").slice(-8) ||
+                                {`HD-${o.orderCode?.replace(/[^0-9]/g, "").slice(-8) ||
                                   "202609-001"
-                                }`}
+                                  }`}
                               </span>
                             </td>
                             <td>
                               <span
-                                className={`status-badge ${
-                                  o.orderStatus === "Completed"
-                                    ? "completed"
-                                    : "pending"
-                                }`}
+                                className={`status-badge ${o.orderStatus === "Completed"
+                                  ? "completed"
+                                  : "pending"
+                                  }`}
                               >
                                 {o.orderStatus === "Completed"
                                   ? "Đã phát hành"
@@ -1680,8 +1862,7 @@ export default function AdminDashboard() {
                                 title="Gửi lại email hóa đơn"
                                 onClick={() =>
                                   alert(
-                                    `Đã gửi lại thông tin hóa đơn cho đơn hàng ${o.orderCode} tới ${
-                                      o.vatInfo?.Email || "email khách hàng"
+                                    `Đã gửi lại thông tin hóa đơn cho đơn hàng ${o.orderCode} tới ${o.vatInfo?.Email || "email khách hàng"
                                     }!`
                                   )
                                 }
@@ -1739,9 +1920,8 @@ export default function AdminDashboard() {
                         <td>{b.hours}</td>
                         <td>
                           <span
-                            className={`status-badge ${
-                              b.status === 1 ? "active" : "blocked"
-                            }`}
+                            className={`status-badge ${b.status === 1 ? "active" : "blocked"
+                              }`}
                           >
                             {b.status === 1 ? "Đang mở cửa" : "Tạm đóng cửa"}
                           </span>
@@ -1950,6 +2130,44 @@ export default function AdminDashboard() {
 
             <form onSubmit={handleAddProduct}>
               <div className="admin-modal-body">
+                {/* Phần Quản Lý & Tải Ảnh Sản Phẩm */}
+                <div className="product-img-upload-box">
+                  <label className="admin-form-label">
+                    <i className="bi bi-image-fill text-blue"></i> Hình Ảnh Sản Phẩm <span style={{ color: "red" }}>*</span>
+                  </label>
+
+                  <div className="img-upload-row">
+                    {/* Khung Xem Trước Ảnh */}
+                    <div className="img-preview-card">
+                      {newProduct.img ? (
+                        <img
+                          src={newProduct.img}
+                          alt="Preview"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/src/assets/img/cau_be_vidaiary.png";
+                          }}
+                        />
+                      ) : (
+                        <div className="no-img-text">Chưa có ảnh</div>
+                      )}
+                    </div>
+
+                    <div className="img-upload-controls">
+                      {/* Nút Tải ảnh từ máy tính */}
+                      <label className="btn-upload-file">
+                        <i className="bi bi-cloud-arrow-up-fill"></i> Tải ảnh từ máy tính...
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={(e) => handleImageFileUpload(e, (url) => setNewProduct({ ...newProduct, img: url }))}
+                        />
+                      </label>
+                      {/* Thư viện ảnh gợi ý có sẵn */}
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <label
                     style={{
@@ -1959,6 +2177,7 @@ export default function AdminDashboard() {
                       color: "#23408e",
                       display: "block",
                       marginBottom: "4px",
+                      marginTop: "12px",
                     }}
                   >
                     Tên Sản Phẩm <span style={{ color: "red" }}>*</span>
@@ -2160,7 +2379,334 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* ================= MODAL: EDIT PRODUCT ================= */}
+      {isEditProductOpen && editingProduct && (
+        <div
+          className="admin-modal-overlay"
+          onClick={() => setIsEditProductOpen(false)}
+        >
+          <div
+            className="admin-modal-card"
+            style={{ maxWidth: "680px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="admin-modal-header">
+              <h3 className="admin-modal-title">
+                <i className="bi bi-pencil-square text-blue"></i> Chỉnh Sửa Sản Phẩm & Hình Ảnh
+              </h3>
+              <button
+                type="button"
+                className="btn-modal-close"
+                onClick={() => setIsEditProductOpen(false)}
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditProduct}>
+              <div className="admin-modal-body">
+                {/* Phần Tải & Đổi Ảnh Sản Phẩm */}
+                <div className="product-img-upload-box">
+                  <label className="admin-form-label">
+                    <i className="bi bi-image-fill text-blue"></i> Hình Ảnh Sản Phẩm
+                  </label>
+
+                  <div className="img-upload-row">
+                    <div className="img-preview-card">
+                      {editingProduct.img ? (
+                        <img
+                          src={editingProduct.img}
+                          alt="Preview"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/src/assets/img/cau_be_vidaiary.png";
+                          }}
+                        />
+                      ) : (
+                        <div className="no-img-text">Chưa có ảnh</div>
+                      )}
+                    </div>
+
+                    <div className="img-upload-controls">
+                      <label className="btn-upload-file">
+                        <i className="bi bi-cloud-arrow-up-fill"></i> Tải ảnh mới từ máy tính...
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={(e) => handleImageFileUpload(e, (url) => setEditingProduct({ ...editingProduct, img: url }))}
+                        />
+                      </label>
+
+                      <input
+                        type="text"
+                        className="admin-select"
+                        style={{ width: "100%", marginTop: "6px", boxSizing: "border-box", fontSize: "13px" }}
+                        placeholder="Hoặc dán URL hình ảnh mới"
+                        value={editingProduct.img || ""}
+                        onChange={(e) => setEditingProduct({ ...editingProduct, img: e.target.value })}
+                      />
+
+                      <div className="preset-img-chips">
+                        <span className="chip-label">Ảnh mẫu có sẵn:</span>
+                        {PRESET_PRODUCT_IMAGES.map((preset, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            className={`chip-btn ${editingProduct.img === preset.url ? "active" : ""}`}
+                            onClick={() => setEditingProduct({ ...editingProduct, img: preset.url })}
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="admin-form-label">Tên Sản Phẩm *</label>
+                  <input
+                    type="text"
+                    className="admin-select"
+                    style={{ width: "100%", boxSizing: "border-box" }}
+                    value={editingProduct.name}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+                  <div style={{ flex: 1 }}>
+                    <label className="admin-form-label">Danh Mục</label>
+                    <select
+                      className="admin-select"
+                      style={{ width: "100%", boxSizing: "border-box" }}
+                      value={editingProduct.category}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                    >
+                      <option value="Sữa Bột Trẻ Em">Sữa Bột Trẻ Em</option>
+                      <option value="Sữa Cho Mẹ Bầu & Sau Sinh">Sữa Cho Mẹ Bầu</option>
+                      <option value="Sữa Dinh Dưỡng Người Cao Tuổi">Sữa Người Cao Tuổi</option>
+                      <option value="Sữa Hạt Dinh Dưỡng Tự Nhiên">Sữa Hạt</option>
+                    </select>
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <label className="admin-form-label">Thương Hiệu</label>
+                    <select
+                      className="admin-select"
+                      style={{ width: "100%", boxSizing: "border-box" }}
+                      value={editingProduct.brand}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
+                    >
+                      <option value="ViDairy">ViDairy</option>
+                      <option value="NutralisBaby">NutralisBaby</option>
+                      <option value="NutriCare">NutriCare</option>
+                      <option value="Vinamilk">Vinamilk</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+                  <div style={{ flex: 1 }}>
+                    <label className="admin-form-label">Quy Cách</label>
+                    <input
+                      type="text"
+                      className="admin-select"
+                      style={{ width: "100%", boxSizing: "border-box" }}
+                      value={editingProduct.variant}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, variant: e.target.value })}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label className="admin-form-label">Độ Tuổi / Đối Tượng</label>
+                    <input
+                      type="text"
+                      className="admin-select"
+                      style={{ width: "100%", boxSizing: "border-box" }}
+                      value={editingProduct.ageGroup}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, ageGroup: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+                  <div style={{ flex: 1 }}>
+                    <label className="admin-form-label">Giá Bán (VNĐ) *</label>
+                    <input
+                      type="number"
+                      className="admin-select"
+                      style={{ width: "100%", boxSizing: "border-box" }}
+                      value={editingProduct.price}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label className="admin-form-label">Số Lượng Kho</label>
+                    <input
+                      type="number"
+                      className="admin-select"
+                      style={{ width: "100%", boxSizing: "border-box" }}
+                      value={editingProduct.stock}
+                      onChange={(e) => setEditingProduct({ ...editingProduct, stock: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="admin-modal-footer">
+                <button
+                  type="button"
+                  className="btn-admin-secondary"
+                  onClick={() => setIsEditProductOpen(false)}
+                >
+                  Hủy
+                </button>
+                <button type="submit" className="btn-admin-primary">
+                  <i className="bi bi-check-lg"></i> Lưu Thay Đổi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL PHÂN QUYỀN TÀI KHOẢN ================= */}
+      {isRoleModalOpen && selectedUserForRole && (
+        <div className="admin-modal-overlay" onClick={() => setIsRoleModalOpen(false)}>
+          <div className="admin-modal-content role-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h3>
+                <i className="bi bi-shield-lock-fill text-blue"></i> Phân Quyền Tài Khoản
+              </h3>
+              <button
+                type="button"
+                className="admin-modal-close"
+                onClick={() => setIsRoleModalOpen(false)}
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleSaveRolePermissions}>
+              <div className="admin-modal-body">
+                <div className="role-user-summary">
+                  <div className="user-avatar-circle">
+                    {selectedUserForRole.fullName ? selectedUserForRole.fullName.charAt(0).toUpperCase() : "U"}
+                  </div>
+                  <div className="user-info-text">
+                    <h4>{selectedUserForRole.fullName}</h4>
+                    <p>{selectedUserForRole.email} &bull; Mã: {selectedUserForRole.code}</p>
+                  </div>
+                </div>
+
+                <div className="admin-form-group margin-top">
+                  <label className="admin-form-label">Chọn Vai Trò Hệ Thống (Role):</label>
+                  <div className="role-radio-group">
+                    <label className={`role-radio-card ${roleForm.role === "CUSTOMER" ? "active" : ""}`}>
+                      <input
+                        type="radio"
+                        name="modalRole"
+                        value="CUSTOMER"
+                        checked={roleForm.role === "CUSTOMER"}
+                        onChange={(e) => setRoleForm({ ...roleForm, role: e.target.value })}
+                      />
+                      <div className="role-card-info">
+                        <strong>CUSTOMER (Khách hàng)</strong>
+                        <span>Chỉ xem sản phẩm và mua hàng</span>
+                      </div>
+                    </label>
+
+                    <label className={`role-radio-card ${roleForm.role === "STAFF" ? "active" : ""}`}>
+                      <input
+                        type="radio"
+                        name="modalRole"
+                        value="STAFF"
+                        checked={roleForm.role === "STAFF"}
+                        onChange={(e) => setRoleForm({ ...roleForm, role: e.target.value })}
+                      />
+                      <div className="role-card-info">
+                        <strong>STAFF (Nhân viên CSKH)</strong>
+                        <span>Xem đơn hàng, hỗ trợ tư vấn khách hàng</span>
+                      </div>
+                    </label>
+
+                    <label className={`role-radio-card ${roleForm.role === "MANAGER" ? "active" : ""}`}>
+                      <input
+                        type="radio"
+                        name="modalRole"
+                        value="MANAGER"
+                        checked={roleForm.role === "MANAGER"}
+                        onChange={(e) => setRoleForm({ ...roleForm, role: e.target.value })}
+                      />
+                      <div className="role-card-info">
+                        <strong>MANAGER (Quản lý cửa hàng)</strong>
+                        <span>Quản lý sản phẩm, đơn hàng và tồn kho</span>
+                      </div>
+                    </label>
+
+                    <label className={`role-radio-card ${roleForm.role === "ADMIN" ? "active" : ""}`}>
+                      <input
+                        type="radio"
+                        name="modalRole"
+                        value="ADMIN"
+                        checked={roleForm.role === "ADMIN"}
+                        onChange={(e) => setRoleForm({ ...roleForm, role: e.target.value })}
+                      />
+                      <div className="role-card-info">
+                        <strong>ADMIN (Quản trị viên)</strong>
+                        <span>Toàn quyền quản trị hệ thống</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="admin-form-group margin-top">
+                  <label className="admin-form-label">Danh Sách Quyền Hạn Chi Tiết (Permissions):</label>
+                  <div className="permissions-grid">
+                    {[
+                      { key: "manage_products", label: "Quản lý Sản Phẩm & Giá", desc: "Thêm, sửa, xóa danh mục và giá sản phẩm" },
+                      { key: "manage_orders", label: "Quản lý Đơn Hàng", desc: "Xem, cập nhật trạng thái giao hàng" },
+                      { key: "manage_inventory", label: "Quản lý Kho & Tồn Kho", desc: "Cập nhật số lượng nhập kho các chi nhánh" },
+                      { key: "manage_coupons", label: "Quản lý Mã Giảm Giá", desc: "Tạo và bật/tắt voucher khuyến mãi" },
+                      { key: "manage_users", label: "Quản lý Người Dùng & Phân Quyền", desc: "Xem danh sách và đổi quyền tài khoản" },
+                    ].map((perm) => (
+                      <label key={perm.key} className="permission-item-box">
+                        <input
+                          type="checkbox"
+                          checked={roleForm.permissions.includes(perm.key)}
+                          onChange={() => handleTogglePermission(perm.key)}
+                        />
+                        <div className="perm-text">
+                          <strong>{perm.label}</strong>
+                          <span>{perm.desc}</span>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="admin-modal-footer">
+                <button
+                  type="button"
+                  className="btn-admin-secondary"
+                  onClick={() => setIsRoleModalOpen(false)}
+                >
+                  Hủy bỏ
+                </button>
+                <button type="submit" className="btn-admin-primary">
+                  <i className="bi bi-shield-check"></i> Lưu Phân Quyền
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 

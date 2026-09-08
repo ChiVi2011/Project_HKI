@@ -375,6 +375,59 @@ const authController = {
       return res.status(500).json({ success: false, message: "Lỗi chuyển đổi trạng thái", error: err.message });
     }
   },
+
+  // 8. [ADMIN API] Cập nhật vai trò và phân quyền người dùng (Phân Quyền)
+  async updateUserRole(req, res) {
+    try {
+      const decoded = getUserFromToken(req);
+      if (!decoded || decoded.Role !== "ADMIN") {
+        return res.status(403).json({
+          success: false,
+          message: "Chỉ Quản trị viên (ADMIN) mới có quyền phân quyền tài khoản!",
+        });
+      }
+
+      const { id } = req.params;
+      const { role, permissions } = req.body;
+
+      const validRoles = ["CUSTOMER", "STAFF", "MANAGER", "ADMIN"];
+      if (role && !validRoles.includes(role)) {
+        return res.status(400).json({
+          success: false,
+          message: "Vai trò người dùng không hợp lệ!",
+        });
+      }
+
+      const updateFields = {};
+      if (role) updateFields.Role = role;
+      if (Array.isArray(permissions)) updateFields.Permissions = permissions;
+
+      const updatedUser = await User.findByIdAndUpdate(id, updateFields, { new: true })
+        .select("-PasswordHash")
+        .lean();
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy tài khoản người dùng!",
+        });
+      }
+
+      updatedUser.UserID = updatedUser._id;
+      return res.status(200).json({
+        success: true,
+        message: `Đã cập nhật phân quyền cho tài khoản "${updatedUser.FullName}" thành công!`,
+        data: updatedUser,
+      });
+    } catch (err) {
+      console.error("Lỗi updateUserRole:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi máy chủ khi cập nhật phân quyền tài khoản",
+        error: err.message,
+      });
+    }
+  },
 };
 
 module.exports = authController;

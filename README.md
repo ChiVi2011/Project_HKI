@@ -9,7 +9,7 @@
 
     1. Frontend: React - Vite
     2. Backend: Node.js
-    3. Database: SQL Server 2022 + Mongo DB
+    3. Database:  Mongo DB atlas
     4. Version Control: Git & GitHub
 
 ## III. Kiến trúc hệ thống
@@ -41,7 +41,7 @@
           |                                    |
           v                                    v
 +-----------------------+          +----------------------+
-| SQL Server 2022       |          | MongoDB             |
+|      |          | MongoDB             |
 | - User                |          | - Activity Log      |
 | - Product             |          | - Audit Log         |
 | - Category            |          | - Search History    |

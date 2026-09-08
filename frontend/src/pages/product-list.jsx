@@ -544,32 +544,6 @@ export default function Products() {
         className="product-hero-banner"
         style={bannerMotherBaby ? { backgroundImage: `url(${bannerMotherBaby})` } : undefined}
       >
-        <div className="banner-overlay">
-          <nav className="breadcrumb-nav">
-            <Link to="/home">Trang chủ</Link>
-            <span> &gt; </span>
-            <span className="current-page">Sản phẩm</span>
-            {selectedCategory !== "all" && (
-              <>
-                <span> &gt; </span>
-                <span className="current-category">
-                  {tabCategories.find((cat) => cat.id === selectedCategory)?.name}
-                </span>
-              </>
-            )}
-          </nav>
-
-          <div className="banner-content">
-            <h1>VitaDairy Luôn Đồng Hành Cùng Mẹ Và Bé</h1>
-            <p>
-              VitaDairy hướng tới sản xuất các sản phẩm sữa chăm sóc sức khỏe người
-              tiêu dùng ở nhiều lứa tuổi từ những sản phẩm cung cấp năng lượng cho
-              người lớn, sản phẩm chuyên biệt dành cho người bệnh, sản phẩm cho trẻ
-              biếng ăn, suy dinh dưỡng thấp còi đến các dòng sản phẩm giúp bé phát
-              triển trí não, tăng chiều cao...
-            </p>
-          </div>
-        </div>
       </section>
 
       {/* ================= PHẦN THÂN TRANG ================= */}
@@ -688,10 +662,6 @@ export default function Products() {
           )}
         </main>
 
-        {/* Footer */}
-        <div className="product-footer-wrapper">
-          <Footer />
-        </div>
       </div>
     </div>
   );

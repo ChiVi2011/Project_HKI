@@ -210,19 +210,21 @@ export default function SignUp() {
                   checked={formData.agree}
                   onChange={(e) => setFormData({ ...formData, agree: e.target.checked })}
                 />
-                Tôi đồng ý với{" "}
-                <Link to="/about" style={{ color: "#23408e", fontWeight: 700 }}>
-                  Điều khoản sử dụng
-                </Link>{" "}
-                và{" "}
-                <Link to="/about" style={{ color: "#23408e", fontWeight: 700 }}>
-                  Chính sách bảo mật
-                </Link>
+                <span>
+                  Tôi đồng ý với{" "}
+                  <Link to="/about">
+                    Điều khoản sử dụng
+                  </Link>{" "}
+                  và{" "}
+                  <Link to="/about">
+                    Chính sách bảo mật
+                  </Link>
+                </span>
               </label>
             </div>
 
             <div className="btn-login">
-              <button type="submit" disabled={isLoading}>
+              <button type="submit" className="btnLogin" disabled={isLoading}>
                 {isLoading ? (
                   <span>
                     <i className="bi bi-hourglass-split"></i> Đang gửi mã OTP...
@@ -234,7 +236,7 @@ export default function SignUp() {
             </div>
 
             <div className="resigter">
-              <span>Đã có tài khoản thành viên? </span>
+              <span>Đã có tài khoản thành viên?</span>
               <Link to="/login">Đăng nhập ngay</Link>
             </div>
           </form>

@@ -24,6 +24,7 @@ router.put("/auth/profile", authController.updateProfile);
 // ==========================================
 router.get("/admin/users", authController.getAllUsers);
 router.patch("/admin/users/:id/status", authController.toggleUserStatus);
+router.patch("/admin/users/:id/role", authController.updateUserRole);
 
 // ==========================================
 // 3. PRODUCTS (CRUD & STATUS TOGGLE)
