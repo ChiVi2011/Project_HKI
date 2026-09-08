@@ -9,6 +9,7 @@ const newsController = require("../controllers/newsController");
 const authController = require("../controllers/authController");
 const couponController = require("../controllers/couponController");
 const branchController = require("../controllers/branchController");
+const chatController = require("../controllers/chatController");
 
 // ==========================================
 // 1. AUTHENTICATION & USER PROFILE
@@ -76,5 +77,10 @@ router.patch("/branches/:id/status", branchController.updateBranchStatus);
 // ==========================================
 router.get("/news", newsController.getNews);
 router.get("/news/:id", newsController.getNewsById);
+
+// ==========================================
+// 10. AI NUTRITION CHATBOT (GEMINI & FALLBACK)
+// ==========================================
+router.post("/chat", chatController.handleChat);
 
 module.exports = router;

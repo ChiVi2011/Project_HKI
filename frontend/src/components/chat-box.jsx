@@ -1,41 +1,95 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import logoImg from "../assets/img/logo.png";
 import "../style/chat-box.css";
 
+// Danh sách gợi ý câu hỏi thực tế và thông minh
 const QUICK_SUGGESTIONS = [
-  "👶 Tư vấn sữa cho bé",
-  "🤰 Dinh dưỡng mẹ bầu",
-  "👵 Sữa Canxi người lớn",
-  "🌱 Sữa hạt dinh dưỡng",
-  "📞 Hotline hỗ trợ",
+  "👶 Bé bị táo bón & chậm tăng cân nên uống loại nào?",
+  "🩺 Người bệnh tiểu đường có sữa nào phù hợp?",
+  "🤰 Sữa cho mẹ bầu giảm ốm nghén, dễ uống?",
+  "👵 Sữa bổ sung Canxi ngừa loãng xương cho người già?",
+  "🛡️ Sữa non tăng cường đề kháng cho gia đình?",
+  "📞 Cần gặp nhân viên tư vấn",
 ];
 
-const BOT_RESPONSES = {
-  "👶 Tư vấn sữa cho bé":
-    "ViDairy cung cấp các dòng sản phẩm sữa công thức bổ sung DHA tinh khiết, Canxi sinh học và HMO giúp bé tăng cường miễn dịch và phát triển trí não vượt trội. Bạn có thể cho tôi biết bé nhà mình được mấy tháng tuổi rồi không ạ?",
-  "🤰 Dinh dưỡng mẹ bầu":
-    "Dòng sữa ViDairy Mama bổ sung Acid Folic, Sắt, Canxi và tổ hợp Vitamin nhóm B giúp mẹ giảm ốm nghén và thai nhi phát triển khỏe mạnh ngay từ những tháng đầu đời.",
-  "👵 Sữa Canxi người lớn":
-    "Đối với người lớn và người cao tuổi, dòng sữa ViDairy BoneCare bổ sung Canxi Nano kết hợp Vitamin D3 & MK7 giúp nuôi dưỡng sụn khớp dẻo dai và phòng ngừa loãng xương hiệu quả.",
-  "🌱 Sữa hạt dinh dưỡng":
-    "Sữa hạt dinh dưỡng ViDairy được làm từ 100% hạt tự nhiên (Hạt óc chó, hạnh nhân, yến mạch), giàu chất xơ và chất chống oxy hóa, thích hợp cho người ăn chay và theo đuổi lối sống lành mạnh.",
-  "📞 Hotline hỗ trợ":
-    "Bạn có thể gọi ngay Hotline tư vấn dinh dưỡng miễn phí của ViDairy: 0989 584 592 hoặc gửi email về chivinguyen1998@gmail.com để được hỗ trợ tận tình nhất!",
-};
+// Hàm chuyển đổi văn bản Markdown cơ bản sang HTML an toàn
+function formatMarkdown(text) {
+  if (!text) return "";
+
+  // Xóa mã thẻ [PRODUCT:xxx] khỏi văn bản hiển thị vì đã có thẻ sản phẩm riêng
+  let cleanText = text.replace(/\[PRODUCT:[a-zA-Z0-9\-_]+\]/g, "");
+
+  // Tách dòng
+  const lines = cleanText.split("\n");
+  const formattedElements = [];
+
+  lines.forEach((line, index) => {
+    let trimmed = line.trim();
+    if (!trimmed) {
+      formattedElements.push(<div key={index} className="chat-line-break" />);
+      return;
+    }
+
+    // Xử lý in đậm **text**
+    const parts = [];
+    const boldRegex = /\*\*(.*?)\*\*/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = boldRegex.exec(trimmed)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(trimmed.substring(lastIndex, match.index));
+      }
+      parts.push(
+        <strong key={`b-${index}-${match.index}`} className="chat-bold-text">
+          {match[1]}
+        </strong>
+      );
+      lastIndex = boldRegex.lastIndex;
+    }
+    if (lastIndex < trimmed.length) {
+      parts.push(trimmed.substring(lastIndex));
+    }
+
+    // Kiểm tra gạch đầu dòng
+    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+      formattedElements.push(
+        <div key={index} className="chat-bullet-line">
+          <span className="bullet-dot">•</span>
+          <span className="bullet-text">
+            {parts.length > 0 ? parts : trimmed.substring(2)}
+          </span>
+        </div>
+      );
+    } else {
+      formattedElements.push(
+        <div key={index} className="chat-text-line">
+          {parts.length > 0 ? parts : trimmed}
+        </div>
+      );
+    }
+  });
+
+  return formattedElements;
+}
 
 export default function ChatBox() {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       id: 1,
       sender: "bot",
-      text: "Xin chào bạn! 👋 Tôi là trợ lý dinh dưỡng ViDairy. Tôi có thể hỗ trợ gì cho bạn và gia đình hôm nay?",
+      text: "Xin chào bạn! 👋 Tôi là **Bác sĩ Dinh Dưỡng ViDairy**.\nTôi có thể tư vấn chuyên sâu về các dòng sữa cho bé, mẹ bầu, người lớn tuổi hoặc người có bệnh lý (tiểu đường, suy thận). Bạn cần hỗ trợ gì hôm nay?",
+      suggestedProducts: [],
       time: "Vừa xong",
     },
   ]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [hasUnread, setHasUnread] = useState(true);
+  const [showQuickSuggestions, setShowQuickSuggestions] = useState(true);
 
   const messagesEndRef = useRef(null);
 
@@ -50,9 +104,18 @@ export default function ChatBox() {
     }
   }, [messages, isOpen]);
 
-  const handleSendMessage = (textToSend) => {
+  // URL Backend API
+  const API_BASE_URL =
+    (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) ||
+    (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) ||
+    "http://localhost:3000/api";
+
+  const handleSendMessage = async (textToSend) => {
     const text = typeof textToSend === "string" ? textToSend : inputText;
-    if (!text.trim()) return;
+    if (!text.trim() || isTyping) return;
+
+    // Ẩn khung gợi ý câu hỏi khi người dùng bắt đầu gửi tin nhắn
+    setShowQuickSuggestions(false);
 
     const userMessage = {
       id: Date.now(),
@@ -64,71 +127,81 @@ export default function ChatBox() {
       }),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInputText("");
     setIsTyping(true);
 
-    // Xử lý phản hồi từ Bot
-    setTimeout(() => {
-      let botReply =
-        "Cảm ơn câu hỏi của bạn! Chuyên viên dinh dưỡng ViDairy đã nhận được thông tin và sẽ phản hồi chi tiết. Nếu cần hỗ trợ khẩn cấp, bạn có thể gọi hotline: 0989 584 592 nhé!";
+    try {
+      // Gửi yêu cầu đến Backend API (đã kết nối Gemini & Fallback Engine)
+      const response = await fetch(`${API_BASE_URL}/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: text.trim(),
+          history: updatedMessages.map((m) => ({
+            sender: m.sender,
+            text: m.text,
+          })),
+        }),
+      });
 
-      // Kiểm tra câu hỏi mẫu
-      if (BOT_RESPONSES[text]) {
-        botReply = BOT_RESPONSES[text];
+      if (response.ok) {
+        const data = await response.json();
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now() + 1,
+            sender: "bot",
+            text: data.reply || "Cảm ơn câu hỏi của bạn!",
+            suggestedProducts: data.suggestedProducts || [],
+            modelUsed: data.modelUsed || "AI Dinh Dưỡng ViDairy",
+            time: new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          },
+        ]);
       } else {
-        const lower = text.toLowerCase();
-        if (
-          lower.includes("bé") ||
-          lower.includes("trẻ") ||
-          lower.includes("con")
-        ) {
-          botReply = BOT_RESPONSES["👶 Tư vấn sữa cho bé"];
-        } else if (lower.includes("bầu") || lower.includes("mang thai")) {
-          botReply = BOT_RESPONSES["🤰 Dinh dưỡng mẹ bầu"];
-        } else if (
-          lower.includes("canxi") ||
-          lower.includes("già") ||
-          lower.includes("lớn tuổi") ||
-          lower.includes("khớp")
-        ) {
-          botReply = BOT_RESPONSES["👵 Sữa Canxi người lớn"];
-        } else if (
-          lower.includes("hạt") ||
-          lower.includes("chay") ||
-          lower.includes("thực vật")
-        ) {
-          botReply = BOT_RESPONSES["🌱 Sữa hạt dinh dưỡng"];
-        } else if (
-          lower.includes("hotline") ||
-          lower.includes("sđt") ||
-          lower.includes("liên hệ") ||
-          lower.includes("gặp")
-        ) {
-          botReply = BOT_RESPONSES["📞 Hotline hỗ trợ"];
-        }
+        throw new Error(`Server returned status ${response.status}`);
       }
-
+    } catch (err) {
+      console.warn("Lỗi kết nối API Chat, kích hoạt trả lời dự phòng:", err);
+      // Fallback an toàn nếu máy chủ backend mất mạng
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
           sender: "bot",
-          text: botReply,
+          text: `Dạ, Bác sĩ ViDairy đã nhận được câu hỏi của bạn: "${text.trim()}".\nĐể được tư vấn ngay lập tức, bạn có thể gọi hotline: **0989 584 592** hoặc tham khảo các sản phẩm nổi bật của ViDairy tại mục Sản Phẩm nhé!`,
+          suggestedProducts: [],
+          modelUsed: "Hệ thống hỗ trợ",
           time: new Date().toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
           }),
         },
       ]);
+    } finally {
       setIsTyping(false);
-    }, 800);
+    }
   };
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const handleNavigateToProduct = (productId) => {
+    if (!productId) return;
+    navigate(`/product/${productId}`);
+    // Thu nhỏ chatbox trên mobile nếu cần để tiện xem
+    if (window.innerWidth <= 768) {
+      setIsOpen(false);
     }
   };
 
@@ -140,9 +213,10 @@ export default function ChatBox() {
           type="button"
           className="chat-fab-btn"
           onClick={() => setIsOpen(true)}
-          title="Tư vấn trực tuyến với ViDairy"
+          title="Tư vấn dinh dưỡng cùng Bác Sĩ AI ViDairy"
           aria-label="Mở khung chat hỗ trợ"
         >
+          <span className="chat-ai-sparkle">✨</span>
           <i className="bi bi-chat-dots-fill chat-fab-icon"></i>
           {hasUnread && <span className="chat-fab-badge">1</span>}
         </button>
@@ -162,14 +236,24 @@ export default function ChatBox() {
                 ></span>
               </div>
               <div className="chat-header-text">
-                <h4 className="chat-title">Trợ Lý Dinh Dưỡng ViDairy</h4>
+                <h4 className="chat-title">
+                  Bác Sĩ Dinh Dưỡng ViDairy
+                </h4>
                 <span className="chat-subtitle">
-                  <i className="bi bi-circle-fill online-icon"></i> Đang hoạt
-                  động
+                  <i className="bi bi-circle-fill online-icon"></i> Sẵn sàng giải đáp 24/7
                 </span>
               </div>
             </div>
             <div className="chat-header-actions">
+              <button
+                type="button"
+                className="chat-header-icon-btn"
+                onClick={() => setShowQuickSuggestions((prev) => !prev)}
+                title={showQuickSuggestions ? "Ẩn câu hỏi gợi ý" : "Xem câu hỏi gợi ý"}
+                aria-label="Gợi ý câu hỏi"
+              >
+                <i className={`bi ${showQuickSuggestions ? "bi-lightbulb-fill" : "bi-lightbulb"}`}></i>
+              </button>
               <button
                 type="button"
                 className="chat-close-btn"
@@ -198,13 +282,75 @@ export default function ChatBox() {
                     </div>
                   )}
                   <div className="chat-bubble-wrap">
-                    <div className="chat-bubble">{msg.text}</div>
-                    <span className="chat-time">{msg.time}</span>
+                    {/* Bong bóng tin nhắn */}
+                    <div className="chat-bubble">
+                      {msg.sender === "bot"
+                        ? formatMarkdown(msg.text)
+                        : msg.text}
+                    </div>
+
+                    {/* Danh thiếp / Thẻ sản phẩm mini được AI gợi ý */}
+                    {msg.sender === "bot" &&
+                      Array.isArray(msg.suggestedProducts) &&
+                      msg.suggestedProducts.length > 0 && (
+                        <div className="chat-suggested-products-box">
+                          <div className="suggested-header">
+                            <i className="bi bi-stars"></i> Sản phẩm được bác sĩ khuyên dùng:
+                          </div>
+                          <div className="suggested-cards-scroll">
+                            {msg.suggestedProducts.map((p) => (
+                              <div
+                                key={p.ProductID || p.id}
+                                className="mini-product-card"
+                                onClick={() =>
+                                  handleNavigateToProduct(p.ProductID || p.id)
+                                }
+                                title="Bấm để xem chi tiết sản phẩm"
+                              >
+                                <img
+                                  src={
+                                    p.imageUrl ||
+                                    "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg"
+                                  }
+                                  alt={p.ProductName}
+                                  className="mini-card-img"
+                                />
+                                <div className="mini-card-info">
+                                  <h5 className="mini-card-title">
+                                    {p.ProductName}
+                                  </h5>
+                                  <div className="mini-card-meta">
+                                    <span className="mini-card-price">
+                                      {Number(p.price || 0).toLocaleString("vi-VN")}{" "}
+                                      đ
+                                    </span>
+                                    {p.packaging && (
+                                      <span className="mini-card-pack">
+                                        {p.packaging}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="mini-card-action-btn"
+                                  >
+                                    Xem chi tiết <i className="bi bi-arrow-right-short"></i>
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                    <div className="chat-meta-row">
+                      <span className="chat-time">{msg.time}</span>
+                    </div>
                   </div>
                 </div>
               ))}
 
-              {/* Hiệu ứng Bot đang gõ chữ */}
+              {/* Hiệu ứng Bot đang suy nghĩ */}
               {isTyping && (
                 <div className="chat-message-row bot-row">
                   <div className="chat-msg-avatar">
@@ -215,6 +361,7 @@ export default function ChatBox() {
                       <span className="typing-dot"></span>
                       <span className="typing-dot"></span>
                       <span className="typing-dot"></span>
+                      <span className="typing-text-hint">Bác sĩ đang phân tích...</span>
                     </div>
                   </div>
                 </div>
@@ -223,22 +370,41 @@ export default function ChatBox() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Gợi ý câu hỏi nhanh */}
-            <div className="chat-quick-suggestions">
-              <span className="quick-title">Gợi ý câu hỏi nhanh:</span>
-              <div className="quick-chips">
-                {QUICK_SUGGESTIONS.map((item) => (
+            {/* Gợi ý câu hỏi nhanh (Chỉ hiển thị lần đầu khi mở web/tải lại trang, ẩn khi đã bắt đầu chat) */}
+            {showQuickSuggestions && messages.length <= 1 && (
+              <div className="chat-quick-suggestions">
+                <div className="quick-title-bar">
+                  <span className="quick-title">
+                    <i className="bi bi-lightbulb-fill"></i> Gợi ý câu hỏi nhanh:
+                  </span>
                   <button
-                    key={item}
                     type="button"
-                    className="quick-chip-btn"
-                    onClick={() => handleSendMessage(item)}
+                    className="quick-close-btn"
+                    onClick={() => setShowQuickSuggestions(false)}
+                    title="Đóng khung gợi ý"
+                    aria-label="Đóng gợi ý"
                   >
-                    {item}
+                    <i className="bi bi-x-lg"></i>
                   </button>
-                ))}
+                </div>
+                <div className="quick-chips">
+                  {QUICK_SUGGESTIONS.map((item, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      className="quick-chip-btn"
+                      onClick={() => {
+                        setShowQuickSuggestions(false);
+                        handleSendMessage(item);
+                      }}
+                      disabled={isTyping}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Ô nhập nội dung tin nhắn */}
@@ -252,16 +418,17 @@ export default function ChatBox() {
             >
               <input
                 type="text"
-                placeholder="Nhập câu hỏi của bạn..."
+                placeholder="Hỏi về sữa cho bé, mẹ bầu, tiểu đường, cách pha..."
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className="chat-input-field"
                 aria-label="Nội dung tin nhắn"
+                disabled={isTyping}
               />
               <button
                 type="submit"
-                disabled={!inputText.trim()}
+                disabled={!inputText.trim() || isTyping}
                 className="chat-send-btn"
                 title="Gửi tin nhắn"
                 aria-label="Gửi"

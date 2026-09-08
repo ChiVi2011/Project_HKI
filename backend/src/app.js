@@ -9,6 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/products", express.static(path.join(__dirname, "../public/products")));
 
 // Trang thông báo trạng thái máy chủ
 app.get("/", (req, res) => {

@@ -73,7 +73,7 @@ export function normalizeProduct(raw) {
       raw.ImageURL ||
       raw.imageUrl ||
       raw.image ||
-      "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
+      "/products/colosbaby-gold.jpg",
     isHot: Boolean(raw.isHot || raw.IsHot || raw.featured),
     isFeatured: raw.isFeatured !== undefined ? Boolean(raw.isFeatured) : true,
     rating: Number(raw.rating || 5),
@@ -122,7 +122,7 @@ export function normalizePromotion(raw) {
       raw.imageUrl ||
       raw.ImageURL ||
       raw.bannerUrl ||
-      "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
+      "/products/colosbaby-gold.jpg",
     details: raw.details || {
       condition: raw.Condition || "Áp dụng cho tất cả khách hàng khi mua các sản phẩm chính hãng",
       gift: raw.Gift || "Nhiều phần quà giá trị cao từ VitaDairy",
