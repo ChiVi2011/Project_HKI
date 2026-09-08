@@ -31,15 +31,19 @@ function formatMarkdown(text) {
       return;
     }
 
+    // Kiểm tra gạch đầu dòng
+    const isBullet = trimmed.startsWith("- ") || trimmed.startsWith("* ");
+    const textToParse = isBullet ? trimmed.substring(2).trim() : trimmed;
+
     // Xử lý in đậm **text**
     const parts = [];
     const boldRegex = /\*\*(.*?)\*\*/g;
     let lastIndex = 0;
     let match;
 
-    while ((match = boldRegex.exec(trimmed)) !== null) {
+    while ((match = boldRegex.exec(textToParse)) !== null) {
       if (match.index > lastIndex) {
-        parts.push(trimmed.substring(lastIndex, match.index));
+        parts.push(textToParse.substring(lastIndex, match.index));
       }
       parts.push(
         <strong key={`b-${index}-${match.index}`} className="chat-bold-text">
@@ -48,17 +52,16 @@ function formatMarkdown(text) {
       );
       lastIndex = boldRegex.lastIndex;
     }
-    if (lastIndex < trimmed.length) {
-      parts.push(trimmed.substring(lastIndex));
+    if (lastIndex < textToParse.length) {
+      parts.push(textToParse.substring(lastIndex));
     }
 
-    // Kiểm tra gạch đầu dòng
-    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+    if (isBullet) {
       formattedElements.push(
         <div key={index} className="chat-bullet-line">
           <span className="bullet-dot">•</span>
           <span className="bullet-text">
-            {parts.length > 0 ? parts : trimmed.substring(2)}
+            {parts.length > 0 ? parts : textToParse}
           </span>
         </div>
       );

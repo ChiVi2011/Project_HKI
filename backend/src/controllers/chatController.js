@@ -146,8 +146,9 @@ QUY TẮC TƯ VẤN BẮT BUỘC:
    - TUYỆT ĐỐI KHÔNG TỰ Ý LIỆT KÊ SANG CÁC ĐỐI TƯỢNG KHÁC. Ví dụ: Nếu khách hỏi "có sữa nào phù hợp cho bé không?", bạn CHỈ được giới thiệu các dòng cho bé (ColosBaby, Calokid, Vitagrow...), CẤM KHÔNG ĐƯỢC nhắc hay liệt kê sữa cho mẹ bầu hoặc người già.
    - Tương tự, nếu khách hỏi về mẹ bầu thì chỉ tư vấn dòng ColosBaby Mum / Oggi Mum; khách hỏi về người già/tiểu đường thì chỉ tư vấn dòng CaloSure / Gluvita / Nepro.
 3. QUY TẮC KẾT THÚC CÂU TƯ VẤN VÀ CHUYỂN TIẾP NHÂN VIÊN (BẮT BUỘC):
-   - Sau khi tư vấn và đề xuất các sản phẩm sữa phù hợp, ở đoạn cuối cùng TUYỆT ĐỐI KHÔNG ĐƯỢC HỎI TIẾP KHÁCH HÀNG (không hỏi tuổi, không hỏi bệnh lý, không hỏi tháng tuổi). Thay vào đó, BẮT BUỘC KẾT THÚC BẰNG ĐÚNG NGUYÊN VĂN CÂU NÀY:
+   - Khi đã tư vấn và ĐỀ XUẤT CÁC HỘP SỮA CỤ THỂ, ở đoạn cuối cùng TUYỆT ĐỐI KHÔNG ĐƯỢC HỎI TIẾP KHÁCH HÀNG (không hỏi tuổi, không hỏi bệnh lý). Thay vào đó, BẮT BUỘC KẾT THÚC BẰNG ĐÚNG NGUYÊN VĂN CÂU NÀY:
      "${CLOSING_NOTE}"
+   - NẾU CHỈ MỚI HỎI NHU CẦU / LIỆT KÊ 3 ĐỐI TƯỢNG (bé, mẹ bầu, người già) mà CHƯA ĐỀ XUẤT HỘP SỮA NÀO: TUYỆT ĐỐI KHÔNG ĐƯỢC GHI CÂU "${CLOSING_NOTE}".
    - Nếu khách hàng bảo cần gặp nhân viên tư vấn (hoặc có thắc mắc cần nhân viên giải đáp, muốn gặp tư vấn viên, gặp người thật, chuyển thông tin): BẠN BẮT BUỘC CHỈ ĐƯỢC PHẢN HỒI DUY NHẤT NGUYÊN VĂN CÂU SAU:
      "${HUMAN_HANDOFF_REPLY}"
 4. Phân tích triệu chứng / nhu cầu:
@@ -362,7 +363,7 @@ function intelligentLocalAdvisor(userMessage, catalog) {
 
   // F. CÂU HỎI CHUNG CHUNG / KHÔNG NÊU ĐỐI TƯỢNG (Ví dụ: "Shop có sữa gì?", "Xin chào", "Tư vấn cho tôi")
   else {
-    advice = `Xin chào bạn! Bác sĩ Dinh Dưỡng ViDairy rất vui được hỗ trợ bạn.\n\nViDairy cung cấp đầy đủ các giải pháp dinh dưỡng chuyên sâu ứng dụng Sữa non ColosIgG 24h từ Mỹ. Để bác sĩ tư vấn chính xác sản phẩm phù hợp nhất, bạn đang muốn tìm sữa cho đối tượng nào ạ:\n- 👶 **Sữa cho bé yêu** (tăng cân, ngừa táo bón, tăng đề kháng, phát triển chiều cao)\n- 🤰 **Sữa cho mẹ bầu & sau sinh** (giảm ốm nghén, bổ sung Axit Folic, ngừa thiếu máu)\n- 👵 **Sữa cho người lớn tuổi & bệnh lý** (tim mạch, xương khớp, tiểu đường, suy thận)\n\n${CLOSING_NOTE}`;
+    advice = `Xin chào bạn! Bác sĩ Dinh Dưỡng ViDairy rất vui được hỗ trợ bạn.\n\nViDairy cung cấp đầy đủ các giải pháp dinh dưỡng chuyên sâu ứng dụng Sữa non ColosIgG 24h từ Mỹ. Để bác sĩ tư vấn chính xác sản phẩm phù hợp nhất, bạn đang muốn tìm sữa cho đối tượng nào ạ:\n- 👶 **Sữa cho bé yêu** (tăng cân, ngừa táo bón, tăng đề kháng, phát triển chiều cao)\n- 🤰 **Sữa cho mẹ bầu & sau sinh** (giảm ốm nghén, bổ sung Axit Folic, ngừa thiếu máu)\n- 👵 **Sữa cho người lớn tuổi & bệnh lý** (tim mạch, xương khớp, tiểu đường, suy thận)`;
   }
 
   return {
