@@ -13,7 +13,7 @@ export default function ProductDetail() {
   const { id, productId } = useParams();
   const currentId = id || productId;
   const navigate = useNavigate();
-  const { addToCart, openCart } = useCart();
+  const { addToCart, openCart, totalItems } = useCart();
 
   const [product, setProduct] = useState(() => fallbackGetProductById(currentId));
   const [isLoading, setIsLoading] = useState(true);
@@ -328,18 +328,47 @@ export default function ProductDetail() {
                 >
                   <i className="bi bi-dash"></i>
                 </button>
-                <span className="qty-number">{quantity}</span>
+                <input
+                  type="number"
+                  className="qty-number-input"
+                  value={quantity}
+                  min={1}
+                  max={50}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === "") {
+                      setQuantity("");
+                      return;
+                    }
+                    const num = parseInt(raw, 10);
+                    if (isNaN(num)) {
+                      setQuantity(1);
+                    } else if (num > 50) {
+                      setQuantity(50);
+                    } else {
+                      setQuantity(Math.max(1, num));
+                    }
+                  }}
+                  onBlur={() => {
+                    if (!quantity || quantity < 1) setQuantity(1);
+                    else if (quantity > 50) setQuantity(50);
+                  }}
+                  title="Nhập số lượng trực tiếp (Tối đa 50)"
+                />
                 <button
                   type="button"
                   className="btn-qty"
-                  onClick={() => setQuantity((q) => q + 1)}
+                  onClick={() => setQuantity((q) => Math.min(50, q + 1))}
+                  disabled={quantity >= 50}
                   aria-label="Tăng số lượng"
+                  title={quantity >= 50 ? "Số lượng tối đa là 50 hộp" : "Tăng số lượng"}
                 >
                   <i className="bi bi-plus"></i>
                 </button>
               </div>
               <span className="total-hint-text">
                 Tổng cộng: <strong>{formatCurrency(totalPrice)}</strong>
+                <small style={{ marginLeft: "8px", color: "#64748b", fontWeight: 400 }}>(Tổng giỏ hàng tối đa 50 hộp/đơn)</small>
               </span>
             </div>
 

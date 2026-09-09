@@ -3,15 +3,15 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  height: 100vh;
-  max-height: 100vh;
+  min-height: 100vh;
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow: hidden; /* Tuyệt đối không dùng lăn chuột, vừa khít 1 màn hình */
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 .header {
   display: grid;
@@ -23,6 +23,10 @@
   height: 56px;
   flex-shrink: 0;
   box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(35, 64, 142, 0.08);
 }
 .logo img {
   width: 120px;
@@ -33,29 +37,64 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 .From {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-top: 0;
+  margin: auto 0;
   width: 100%;
 }
 .backicon {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
+  text-decoration: none !important;
+  color: #23408e;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background-color: rgba(35, 64, 142, 0.08);
+  border: 1px solid rgba(35, 64, 142, 0.15);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  width: fit-content;
 }
-.backicon p {
-  font-family: "ViDairy", sans-serif;
-  font-size: 13px;
+.backicon:hover {
+  background-color: #23408e;
+  color: #ffffff;
+  border-color: #23408e;
+  transform: translateX(-3px);
+  box-shadow: 0 4px 12px rgba(35, 64, 142, 0.2);
+}
+.backicon p,
+.backicon span {
+  margin: 0;
+  padding: 0;
+  font-family: "ViDairy1", sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: inherit;
+  text-decoration: none !important;
+  line-height: 1;
 }
 .backicon i {
-  font-size: 20px;
-  font-weight: bolder;
+  font-size: 18px;
+  font-weight: 700;
+  color: inherit;
+  transition: transform 0.25s ease;
+  line-height: 1;
+  display: inline-block;
+}
+.backicon:hover i {
+  transform: translateX(-2px);
 }
 .title-login {
   width: 460px;

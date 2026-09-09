@@ -8,8 +8,8 @@ export default function AuthLayout() {
       <div className="header">
         <div className="back">
           <Link to="/home" className="backicon" title="Quay về trang chủ">
-            <i className="bi bi-arrow-left-short"></i>
-            <p>Quay lại</p>
+            <i className="bi bi-arrow-left"></i>
+            <span>Quay lại</span>
           </Link>
         </div>
         <div className="logo">

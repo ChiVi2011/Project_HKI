@@ -11,6 +11,7 @@ export default function CartDrawer() {
     isCartOpen,
     closeCart,
     updateQuantity,
+    setQuantityDirect,
     removeFromCart,
     clearCart,
     totalItems,
@@ -98,14 +99,36 @@ export default function CartDrawer() {
                         >
                           <i className="bi bi-dash"></i>
                         </button>
-                        <span className="qty-number">{item.quantity}</span>
+                        <input
+                          type="number"
+                          className="qty-number-input"
+                          value={item.quantity}
+                          min={1}
+                          max={50}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val !== "") {
+                              setQuantityDirect(item.id, item.volume, val);
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (isNaN(val) || val < 1) {
+                              setQuantityDirect(item.id, item.volume, 1);
+                            } else if (val > 50) {
+                              setQuantityDirect(item.id, item.volume, 50);
+                            }
+                          }}
+                          title="Nhập số lượng (Tối đa 50)"
+                        />
                         <button
                           type="button"
                           className="qty-btn plus"
                           onClick={() =>
                             updateQuantity(item.id, item.volume, 1)
                           }
-                          title="Tăng 1"
+                          disabled={item.quantity >= 50}
+                          title={item.quantity >= 50 ? "Tối đa 50 hộp" : "Tăng 1"}
                           aria-label="Tăng 1"
                         >
                           <i className="bi bi-plus"></i>

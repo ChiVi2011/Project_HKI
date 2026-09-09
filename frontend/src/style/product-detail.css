@@ -554,13 +554,35 @@
   cursor: not-allowed;
 }
 
-.qty-number {
-  width: 44px;
+.qty-number,
+.qty-number-input {
+  width: 48px;
   text-align: center;
   font-family: "ViDairy1", sans-serif;
   font-size: 15px;
   font-weight: 700;
   color: var(--detail-primary);
+  border: 1px solid transparent;
+  background: transparent;
+  outline: none;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.qty-number-input:hover,
+.qty-number-input:focus {
+  border-color: var(--detail-primary);
+  background-color: #f8fafc;
+}
+
+.qty-number-input::-webkit-outer-spin-button,
+.qty-number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.qty-number-input[type="number"] {
+  -moz-appearance: textfield;
 }
 
 .total-hint-text {

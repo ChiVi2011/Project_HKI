@@ -56,7 +56,23 @@ export function CartProvider({ children }) {
       }
     }
 
+    const MAX_TOTAL_QTY = 50;
+    let limitMessage = "";
+
     setCartItems((prevItems) => {
+      const currentTotal = prevItems.reduce((sum, item) => sum + item.quantity, 0);
+      const remainingSlots = MAX_TOTAL_QTY - currentTotal;
+
+      if (remainingSlots <= 0) {
+        limitMessage = "⚠️ Giỏ hàng của bạn đã đạt hạn mức tối đa 50 hộp cho 1 đơn hàng bán lẻ!";
+        return prevItems;
+      }
+
+      const qtyToAdd = Math.min(quantity, remainingSlots);
+      if (qtyToAdd < quantity) {
+        limitMessage = `⚠️ Bạn chỉ có thể thêm tối đa ${qtyToAdd} hộp nữa (Hạn mức giỏ hàng: 50 hộp)!`;
+      }
+
       const existingIndex = prevItems.findIndex(
         (item) => item.id === product.id && item.volume === volumeToUse,
       );
@@ -65,7 +81,7 @@ export function CartProvider({ children }) {
         const updated = [...prevItems];
         updated[existingIndex] = {
           ...updated[existingIndex],
-          quantity: updated[existingIndex].quantity + quantity,
+          quantity: updated[existingIndex].quantity + qtyToAdd,
         };
         return updated;
       } else {
@@ -77,11 +93,15 @@ export function CartProvider({ children }) {
           image: product.image || product.imageUrl || "",
           categoryName: product.categoryName || "",
           volume: volumeToUse,
-          quantity: quantity,
+          quantity: qtyToAdd,
         };
         return [...prevItems, newItem];
       }
     });
+
+    if (limitMessage) {
+      alert(limitMessage);
+    }
 
     // Mở khung giỏ hàng ở góc phải để người dùng thấy
     openCart();
@@ -89,7 +109,15 @@ export function CartProvider({ children }) {
 
   // Cập nhật số lượng (+ / -)
   const updateQuantity = (id, volume, delta) => {
+    const MAX_TOTAL_QTY = 50;
     setCartItems((prevItems) => {
+      const currentTotal = prevItems.reduce((sum, item) => sum + item.quantity, 0);
+
+      if (delta > 0 && currentTotal + delta > MAX_TOTAL_QTY) {
+        alert("⚠️ Tổng số lượng tất cả sản phẩm trong giỏ hàng không được vượt quá 50 hộp!");
+        return prevItems;
+      }
+
       return prevItems
         .map((item) => {
           if (item.id === id && item.volume === volume) {
@@ -99,6 +127,33 @@ export function CartProvider({ children }) {
           return item;
         })
         .filter(Boolean);
+    });
+  };
+
+  // Cập nhật số lượng trực tiếp từ ô nhập tay
+  const setQuantityDirect = (id, volume, val) => {
+    const MAX_TOTAL_QTY = 50;
+    const num = parseInt(val, 10);
+    const requestedQty = isNaN(num) ? 1 : Math.max(1, num);
+
+    setCartItems((prevItems) => {
+      const otherTotal = prevItems
+        .filter((it) => !(it.id === id && it.volume === volume))
+        .reduce((sum, item) => sum + item.quantity, 0);
+
+      const maxAllowed = Math.max(1, MAX_TOTAL_QTY - otherTotal);
+      const finalQty = Math.min(requestedQty, maxAllowed);
+
+      if (requestedQty > maxAllowed) {
+        alert(`⚠️ Tổng số lượng toàn giỏ hàng không thể vượt quá 50 hộp! (Sản phẩm này chỉ có thể đặt tối đa ${maxAllowed} hộp)`);
+      }
+
+      return prevItems.map((item) => {
+        if (item.id === id && item.volume === volume) {
+          return { ...item, quantity: finalQty };
+        }
+        return item;
+      });
     });
   };
 
@@ -133,6 +188,7 @@ export function CartProvider({ children }) {
         closeCart,
         addToCart,
         updateQuantity,
+        setQuantityDirect,
         removeFromCart,
         clearCart,
         totalItems,

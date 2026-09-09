@@ -185,12 +185,35 @@
   border-radius: 20px;
 }
 
-.qty-number {
-  min-width: 28px;
+.qty-number,
+.qty-number-input {
+  width: 36px;
   text-align: center;
   font-size: 13px;
   font-weight: 700;
   color: #1e293b;
+  border: 1px solid transparent;
+  background: transparent;
+  outline: none;
+  border-radius: 4px;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.qty-number-input:hover,
+.qty-number-input:focus {
+  border-color: #3b82f6;
+  background-color: #ffffff;
+}
+
+.qty-number-input::-webkit-outer-spin-button,
+.qty-number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.qty-number-input[type="number"] {
+  -moz-appearance: textfield;
 }
 
 .cart-item-right {

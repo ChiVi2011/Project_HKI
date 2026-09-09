@@ -48,6 +48,17 @@ const orderController = {
         });
       }
 
+      const totalOrderQty = rawItems.reduce(
+        (sum, it) => sum + Number(it.Quantity || it.quantity || 1),
+        0
+      );
+      if (totalOrderQty > 50) {
+        return res.status(400).json({
+          success: false,
+          message: "Tổng số lượng tất cả sản phẩm trong 1 đơn hàng bán lẻ không được vượt quá 50 hộp!",
+        });
+      }
+
       // Tạo mã đơn hàng độc nhất: VD + YYMMDD + 4 chữ số thứ tự
       const datePart = new Date().toISOString().slice(2, 10).replace(/-/g, "");
       const orderCount = await Order.countDocuments();

@@ -167,7 +167,7 @@ const INITIAL_USERS = [
     email: "chivinguyen1998@gmail.com",
     phone: "0989584592",
     role: "ADMIN",
-    permissions: ["manage_products", "manage_orders", "manage_inventory", "manage_coupons", "manage_users"],
+    permissions: ["manage_products", "manage_orders", "manage_coupons", "manage_users"],
     status: 1,
     createdAt: "2026-08-01",
   },
@@ -863,17 +863,7 @@ export default function AdminDashboard() {
             <span className="admin-nav-badge blue">{products.length}</span>
           </button>
 
-          <span className="admin-nav-section-title">VẬN HÀNH & KHO</span>
-          <button
-            type="button"
-            className={`admin-nav-item ${activeTab === "inventory" ? "active" : ""}`}
-            onClick={() => setActiveTab("inventory")}
-          >
-            <div className="admin-nav-item-content">
-              <i className="bi bi-building-fill-check"></i>
-              <span>Kho & Tồn kho</span>
-            </div>
-          </button>
+          <span className="admin-nav-section-title">VẬN HÀNH & HỆ THỐNG</span>
 
           <button
             type="button"
@@ -957,7 +947,6 @@ export default function AdminDashboard() {
               {activeTab === "dashboard" && "Bảng Điều Khiển Tổng Quan"}
               {activeTab === "orders" && "Quản Lý Đơn Đặt Hàng"}
               {activeTab === "products" && "Danh Mục & Quản Lý Sản Phẩm"}
-              {activeTab === "inventory" && "Quản Lý Tồn Kho & Nhà Cung Cấp"}
               {activeTab === "users" && "Quản Lý Khách Hàng & Phân Quyền"}
               {activeTab === "coupons" && "Khuyến Mãi & Voucher Giảm Giá"}
               {activeTab === "invoices" && "Yêu Cầu Xuất Hóa Đơn Doanh Nghiệp (VAT)"}
@@ -1058,9 +1047,8 @@ export default function AdminDashboard() {
                   <div className="admin-kpi-info">
                     <span className="admin-kpi-label">Sản Phẩm Đang Bán</span>
                     <span className="admin-kpi-val">{products.length} dòng sữa</span>
-                    <span className="admin-kpi-trend warn">
-                      <i className="bi bi-exclamation-triangle-fill"></i> Tồn
-                      kho an toàn
+                    <span className="admin-kpi-trend up">
+                      <i className="bi bi-check-circle-fill"></i> Đang hiển thị
                     </span>
                   </div>
                   <div className="admin-kpi-icon-box orange">
@@ -1422,7 +1410,6 @@ export default function AdminDashboard() {
                       <th>DANH MỤC</th>
                       <th>QUY CÁCH (SKU)</th>
                       <th>GIÁ BÁN</th>
-                      <th>TỒN KHO</th>
                       <th>ĐỐI TƯỢNG</th>
                       <th>TRẠNG THÁI</th>
                       <th>THAO TÁC</th>
@@ -1475,13 +1462,7 @@ export default function AdminDashboard() {
                             </div>
                           )}
                         </td>
-                        <td>
-                          <span
-                            className={`status-badge ${p.stock > 50 ? "completed" : "pending"}`}
-                          >
-                            {p.stock} hộp
-                          </span>
-                        </td>
+
                         <td>{p.ageGroup}</td>
                         <td>
                           <span
@@ -1522,94 +1503,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* ---------------- 4. TAB: INVENTORY & WAREHOUSES ---------------- */}
-          {activeTab === "inventory" && (
-            <div>
-              <div className="admin-kpi-grid">
-                <div className="admin-kpi-card">
-                  <div className="admin-kpi-info">
-                    <span className="admin-kpi-label">Kho Miền Nam (TP.HCM)</span>
-                    <span className="admin-kpi-val">2.850 hộp</span>
-                    <span className="admin-kpi-trend up">Kho Tổng</span>
-                  </div>
-                  <div className="admin-kpi-icon-box blue">
-                    <i className="bi bi-building"></i>
-                  </div>
-                </div>
-                <div className="admin-kpi-card">
-                  <div className="admin-kpi-info">
-                    <span className="admin-kpi-label">Kho Miền Bắc (Hà Nội)</span>
-                    <span className="admin-kpi-val">1.410 hộp</span>
-                    <span className="admin-kpi-trend up">Hoạt động tốt</span>
-                  </div>
-                  <div className="admin-kpi-icon-box green">
-                    <i className="bi bi-building"></i>
-                  </div>
-                </div>
-                <div className="admin-kpi-card">
-                  <div className="admin-kpi-info">
-                    <span className="admin-kpi-label">Kho Miền Trung (Đà Nẵng)</span>
-                    <span className="admin-kpi-val">870 hộp</span>
-                    <span className="admin-kpi-trend warn">Cần bổ sung</span>
-                  </div>
-                  <div className="admin-kpi-icon-box orange">
-                    <i className="bi bi-building"></i>
-                  </div>
-                </div>
-              </div>
 
-              <div className="admin-card">
-                <div className="admin-card-header">
-                  <h3 className="admin-card-title">
-                    Danh Sách Tồn Kho Chi Tiết Theo Sản Phẩm
-                  </h3>
-                  <button type="button" className="btn-admin-primary">
-                    <i className="bi bi-file-earmark-plus"></i> Tạo Phiếu Nhập Kho
-                  </button>
-                </div>
-                <div className="admin-table-responsive">
-                  <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th>MÃ SKU</th>
-                        <th>TÊN SẢN PHẨM</th>
-                        <th>QUY CÁCH</th>
-                        <th>KHO TỔNG TP.HCM</th>
-                        <th>KHO HÀ NỘI</th>
-                        <th>KHO ĐÀ NẴNG</th>
-                        <th>TỔNG TỒN</th>
-                        <th>CẢNH BÁO</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {products.map((p) => (
-                        <tr key={p.id}>
-                          <td>
-                            <strong>{p.sku}</strong>
-                          </td>
-                          <td>{p.name}</td>
-                          <td>{p.variant}</td>
-                          <td>{Math.floor(p.stock * 0.6)} hộp</td>
-                          <td>{Math.floor(p.stock * 0.25)} hộp</td>
-                          <td>{Math.floor(p.stock * 0.15)} hộp</td>
-                          <td>
-                            <strong style={{ color: "#23408e" }}>
-                              {p.stock} hộp
-                            </strong>
-                          </td>
-                          <td>
-                            <span className="status-badge completed">
-                              An toàn
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* ---------------- 5. TAB: USERS & CUSTOMERS ---------------- */}
           {activeTab === "users" && (
@@ -2309,57 +2203,30 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: "12px" }}>
-                  <div style={{ flex: 1 }}>
-                    <label
-                      style={{
-                        fontFamily: "ViDairy1",
-                        fontSize: "13.5px",
-                        fontWeight: 700,
-                        color: "#23408e",
-                        display: "block",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      Giá Bán (VNĐ) <span style={{ color: "red" }}>*</span>
-                    </label>
-                    <input
-                      type="number"
-                      className="admin-select"
-                      style={{ width: "100%", boxSizing: "border-box" }}
-                      placeholder="580000"
-                      value={newProduct.price}
-                      onChange={(e) =>
-                        setNewProduct({ ...newProduct, price: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-
-                  <div style={{ flex: 1 }}>
-                    <label
-                      style={{
-                        fontFamily: "ViDairy1",
-                        fontSize: "13.5px",
-                        fontWeight: 700,
-                        color: "#23408e",
-                        display: "block",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      Số Lượng Tồn Kho
-                    </label>
-                    <input
-                      type="number"
-                      className="admin-select"
-                      style={{ width: "100%", boxSizing: "border-box" }}
-                      placeholder="100"
-                      value={newProduct.stock}
-                      onChange={(e) =>
-                        setNewProduct({ ...newProduct, stock: e.target.value })
-                      }
-                    />
-                  </div>
+                <div>
+                  <label
+                    style={{
+                      fontFamily: "ViDairy1",
+                      fontSize: "13.5px",
+                      fontWeight: 700,
+                      color: "#23408e",
+                      display: "block",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    Giá Bán (VNĐ) <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    className="admin-select"
+                    style={{ width: "100%", boxSizing: "border-box" }}
+                    placeholder="580000"
+                    value={newProduct.price}
+                    onChange={(e) =>
+                      setNewProduct({ ...newProduct, price: e.target.value })
+                    }
+                    required
+                  />
                 </div>
               </div>
 
@@ -2532,28 +2399,16 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
-                  <div style={{ flex: 1 }}>
-                    <label className="admin-form-label">Giá Bán (VNĐ) *</label>
-                    <input
-                      type="number"
-                      className="admin-select"
-                      style={{ width: "100%", boxSizing: "border-box" }}
-                      value={editingProduct.price}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label className="admin-form-label">Số Lượng Kho</label>
-                    <input
-                      type="number"
-                      className="admin-select"
-                      style={{ width: "100%", boxSizing: "border-box" }}
-                      value={editingProduct.stock}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, stock: e.target.value })}
-                    />
-                  </div>
+                <div style={{ marginTop: "12px" }}>
+                  <label className="admin-form-label">Giá Bán (VNĐ) *</label>
+                  <input
+                    type="number"
+                    className="admin-select"
+                    style={{ width: "100%", boxSizing: "border-box" }}
+                    value={editingProduct.price}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value })}
+                    required
+                  />
                 </div>
               </div>
 
@@ -2643,7 +2498,7 @@ export default function AdminDashboard() {
                       />
                       <div className="role-card-info">
                         <strong>MANAGER (Quản lý cửa hàng)</strong>
-                        <span>Quản lý sản phẩm, đơn hàng và tồn kho</span>
+                        <span>Quản lý sản phẩm và đơn hàng</span>
                       </div>
                     </label>
 
@@ -2669,7 +2524,6 @@ export default function AdminDashboard() {
                     {[
                       { key: "manage_products", label: "Quản lý Sản Phẩm & Giá", desc: "Thêm, sửa, xóa danh mục và giá sản phẩm" },
                       { key: "manage_orders", label: "Quản lý Đơn Hàng", desc: "Xem, cập nhật trạng thái giao hàng" },
-                      { key: "manage_inventory", label: "Quản lý Kho & Tồn Kho", desc: "Cập nhật số lượng nhập kho các chi nhánh" },
                       { key: "manage_coupons", label: "Quản lý Mã Giảm Giá", desc: "Tạo và bật/tắt voucher khuyến mãi" },
                       { key: "manage_users", label: "Quản lý Người Dùng & Phân Quyền", desc: "Xem danh sách và đổi quyền tài khoản" },
                     ].map((perm) => (
