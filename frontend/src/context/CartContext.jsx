@@ -1,14 +1,30 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
+import { useAuth } from "./AuthContext";
 
 const CartContext = createContext();
 
-const CART_STORAGE_KEY = "vidairy_cart_v1";
+const CART_STORAGE_KEY = "vidairy_cart_v2";
 
 export function CartProvider({ children }) {
+  const { user } = useAuth();
+  const currentUserId = user
+    ? user.id || user._id || user.UserID || user.Email || user.CustomerCode || "auth_user"
+    : null;
+  const prevUserIdRef = useRef(currentUserId);
+
   const [cartItems, setCartItems] = useState(() => {
     try {
+      // Dọn dẹp key cũ để tránh tình trạng kẹt 50 sản phẩm từ trước
+      localStorage.removeItem("vidairy_cart_v1");
       const saved = localStorage.getItem(CART_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        if (currentUserId && parsed.userId === currentUserId) {
+          return parsed.items || [];
+        }
+      }
+      return [];
     } catch {
       return [];
     }
@@ -16,14 +32,54 @@ export function CartProvider({ children }) {
 
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Tự động lưu giỏ hàng vào localStorage khi có thay đổi
+  // Lắng nghe sự kiện reset giỏ hàng khi người dùng bấm Đăng nhập / Đăng xuất
+  useEffect(() => {
+    const handleReset = () => {
+      setCartItems([]);
+      try {
+        localStorage.removeItem(CART_STORAGE_KEY);
+        localStorage.removeItem("vidairy_cart_v1");
+      } catch (e) {
+        console.error("Lỗi khi xóa giỏ hàng:", e);
+      }
+    };
+
+    window.addEventListener("vidairy_cart_reset", handleReset);
+    return () => window.removeEventListener("vidairy_cart_reset", handleReset);
+  }, []);
+
+  // Khi chuyển đổi giữa các tài khoản hoặc đăng xuất / đăng nhập: Luôn làm mới giỏ hàng
+  useEffect(() => {
+    if (prevUserIdRef.current !== currentUserId) {
+      prevUserIdRef.current = currentUserId;
+      setCartItems([]);
+      try {
+        localStorage.removeItem(CART_STORAGE_KEY);
+        localStorage.removeItem("vidairy_cart_v1");
+      } catch (e) {
+        console.error("Lỗi khi làm mới giỏ hàng:", e);
+      }
+    }
+  }, [currentUserId]);
+
+  // Tự động lưu giỏ hàng vào localStorage khi có thay đổi trong phiên hiện tại
   useEffect(() => {
     try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+      if (cartItems.length === 0) {
+        localStorage.removeItem(CART_STORAGE_KEY);
+      } else {
+        localStorage.setItem(
+          CART_STORAGE_KEY,
+          JSON.stringify({
+            userId: currentUserId,
+            items: cartItems,
+          })
+        );
+      }
     } catch (e) {
       console.error("Lỗi khi lưu giỏ hàng:", e);
     }
-  }, [cartItems]);
+  }, [cartItems, currentUserId]);
 
   const openCart = () => setIsCartOpen(true);
   const closeCart = () => setIsCartOpen(false);
@@ -167,6 +223,12 @@ export function CartProvider({ children }) {
   // Xóa sạch giỏ hàng
   const clearCart = () => {
     setCartItems([]);
+    try {
+      localStorage.removeItem(CART_STORAGE_KEY);
+      localStorage.removeItem("vidairy_cart_v1");
+    } catch (e) {
+      console.error("Lỗi khi xóa giỏ hàng:", e);
+    }
   };
 
   // Tổng số lượng món hàng

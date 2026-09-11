@@ -36,14 +36,27 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
+  // Xóa sạch giỏ hàng trong bộ nhớ trình duyệt và phát sự kiện làm mới
+  const clearCartStorageAndNotify = () => {
+    try {
+      localStorage.removeItem("vidairy_cart_v1");
+      localStorage.removeItem("vidairy_cart_v2");
+      window.dispatchEvent(new Event("vidairy_cart_reset"));
+    } catch (e) {
+      console.error("Lỗi khi xóa giỏ hàng:", e);
+    }
+  };
+
   // Đăng nhập
   const login = (newToken, newUser) => {
+    clearCartStorageAndNotify();
     setToken(newToken);
     setUser(newUser);
   };
 
   // Đăng xuất
   const logout = () => {
+    clearCartStorageAndNotify();
     setToken(null);
     setUser(null);
     localStorage.removeItem(TOKEN_KEY);
