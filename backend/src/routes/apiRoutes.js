@@ -10,6 +10,7 @@ const authController = require("../controllers/authController");
 const couponController = require("../controllers/couponController");
 const branchController = require("../controllers/branchController");
 const chatController = require("../controllers/chatController");
+const notificationController = require("../controllers/notificationController");
 
 // ==========================================
 // 1. AUTHENTICATION & USER PROFILE
@@ -82,5 +83,13 @@ router.get("/news/:id", newsController.getNewsById);
 // 10. AI NUTRITION CHATBOT (GEMINI & FALLBACK)
 // ==========================================
 router.post("/chat", chatController.handleChat);
+
+// ==========================================
+// 11. NOTIFICATIONS & CMS (doc08_API)
+// ==========================================
+router.get("/notifications", notificationController.getNotifications);
+router.put("/notifications/read-all", notificationController.markAllAsRead);
+router.put("/notifications/:id/read", notificationController.markAsRead);
+router.post("/notifications", notificationController.createNotification);
 
 module.exports = router;

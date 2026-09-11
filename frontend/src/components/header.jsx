@@ -1,17 +1,64 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import logoImg from "../assets/img/logo.png";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import NotificationDropdown from "./notification-dropdown.jsx";
+import { notificationService } from "../services/notificationService.js";
 import "../style/header.css";
 
 function Header() {
   const navActive = ({ isActive }) => (isActive ? "active-menu" : "");
   const { openCart, totalItems } = useCart();
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, token, canAccessAdmin } = useAuth();
   const [headerSearch, setHeaderSearch] = useState("");
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(3);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchNotifications = async () => {
+      try {
+        const currentUserId = user?.UserID || user?.id || user?._id || null;
+        const res = await notificationService.getNotifications(token, currentUserId);
+        if (isMounted && res) {
+          setNotifications(res.notifications || []);
+          setUnreadCount(res.unreadCount ?? 0);
+        }
+      } catch (err) {
+        console.error("Lỗi tải thông báo:", err);
+      }
+    };
+    fetchNotifications();
+    return () => {
+      isMounted = false;
+    };
+  }, [isLoggedIn, user, token]);
+
+  const handleToggleNotification = () => {
+    setIsNotificationOpen((prev) => !prev);
+  };
+
+  const handleMarkAsRead = async (id) => {
+    const currentUserId = user?.UserID || user?.id || user?._id || null;
+    await notificationService.markAsRead(id, token, currentUserId);
+    setNotifications((prev) =>
+      prev.map((item) =>
+        item._id === id || item.id === id ? { ...item, isRead: true } : item
+      )
+    );
+    setUnreadCount((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleMarkAllAsRead = async () => {
+    const currentUserId = user?.UserID || user?.id || user?._id || null;
+    await notificationService.markAllAsRead(token, currentUserId);
+    setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })));
+    setUnreadCount(0);
+  };
 
   const handleHeaderSearch = (e) => {
     if (e.key === "Enter" && headerSearch.trim()) {
@@ -73,9 +120,34 @@ function Header() {
           </label>
         </div>
         <div className="icon">
-          <div className="notification" title="Thông báo ưu đãi">
-            <i className="bi bi-bell-fill"></i>
-            <span className="badge">3</span>
+          <div className="notification-container">
+            <div
+              className={`notification header-notification-btn ${unreadCount > 0 ? "has-unread" : ""}`}
+              title="Thông báo ưu đãi"
+              onClick={handleToggleNotification}
+              role="button"
+              tabIndex={0}
+              aria-expanded={isNotificationOpen}
+              aria-label="Thông báo"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleToggleNotification();
+                }
+              }}
+            >
+              <i className="bi bi-bell-fill"></i>
+              {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
+            </div>
+
+            <NotificationDropdown
+              isOpen={isNotificationOpen}
+              onClose={() => setIsNotificationOpen(false)}
+              notifications={notifications}
+              unreadCount={unreadCount}
+              onMarkAsRead={handleMarkAsRead}
+              onMarkAllAsRead={handleMarkAllAsRead}
+            />
           </div>
           <div
             className="cart"
@@ -90,12 +162,34 @@ function Header() {
           </div>
         </div>
 
+        {/* Nút vào nhanh Trang Admin: Chỉ hiện cho STAFF, MANAGER hoặc ADMIN */}
+        {canAccessAdmin && (
+          <div className="header-admin-quick-wrap">
+            <Link
+              to="/admin"
+              className="btn-header-admin"
+              title="Vào Trang Quản Trị Hệ Thống (Admin Portal)"
+            >
+              <i className="bi bi-speedometer2"></i>
+              <span>Vào Admin</span>
+            </Link>
+          </div>
+        )}
+
         {/* Icon Tài khoản: Chưa đăng nhập -> /login, Đã đăng nhập -> /profile */}
         <div
           className="Login"
           title={
             isLoggedIn
-              ? `Tài khoản: ${user?.FullName || "Thành viên"} (${user?.Role === "ADMIN" ? "Quản trị viên" : "Khách hàng"})`
+              ? `Tài khoản: ${user?.FullName || "Thành viên"} (${
+                  user?.Role === "ADMIN"
+                    ? "Quản trị viên"
+                    : user?.Role === "MANAGER"
+                    ? "Quản lý"
+                    : user?.Role === "STAFF"
+                    ? "Nhân viên"
+                    : "Khách hàng"
+                })`
               : "Đăng nhập tài khoản"
           }
         >
@@ -111,6 +205,8 @@ function Header() {
                   {user?.FullName?.split(" ").pop() || "User"}
                 </span>
                 {user?.Role === "ADMIN" && <span className="admin-pill">Admin</span>}
+                {user?.Role === "MANAGER" && <span className="admin-pill manager">Quản lý</span>}
+                {user?.Role === "STAFF" && <span className="admin-pill staff">Nhân viên</span>}
               </div>
             ) : (
               <i className="bi bi-person-circle"></i>

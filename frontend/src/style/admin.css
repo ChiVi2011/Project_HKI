@@ -901,6 +901,105 @@
   border-color: #fecdd3;
 }
 
+.admin-role-badge-super {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  box-shadow: 0 1px 2px rgba(185, 28, 28, 0.08);
+}
+
+.admin-pill-unique {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #c2410c;
+  background-color: #ffedd5;
+  border: 1px solid #fed7aa;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.2px;
+}
+
+.admin-pill-self {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #0284c7;
+  background-color: #e0f2fe;
+  border: 1px solid #bae6fd;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.2px;
+}
+
+.admin-role-badge-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  border: 1px solid transparent;
+}
+
+.admin-role-badge-locked.role-customer {
+  background-color: #eef6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+.admin-role-badge-locked.role-staff {
+  background-color: #fef3c7;
+  color: #d97706;
+  border-color: #fde68a;
+}
+
+.admin-role-badge-locked.role-manager {
+  background-color: #f3e8ff;
+  color: #7c3aed;
+  border-color: #ddd6fe;
+}
+
+.admin-role-badge-locked.role-admin {
+  background-color: #ffe4e6;
+  color: #e11d48;
+  border-color: #fecdd3;
+}
+
+.admin-super-action-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #94a3b8;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-style: italic;
+  padding: 4px 10px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px dashed #cbd5e1;
+}
+
+.admin-super-action-locked.self {
+  color: #0284c7;
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  border-style: solid;
+  font-style: normal;
+}
+
 .btn-action-icon.primary {
   color: #2563eb;
 }

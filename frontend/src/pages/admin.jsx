@@ -163,8 +163,8 @@ const INITIAL_USERS = [
   {
     id: 1,
     code: "AD000001",
-    fullName: "Nguyễn Chí Vĩ (Quản trị viên)",
-    email: "chivinguyen1998@gmail.com",
+    fullName: "Quản trị viên VitaDairy",
+    email: "admin@vidairy.vn",
     phone: "0989584592",
     role: "ADMIN",
     permissions: ["manage_products", "manage_orders", "manage_coupons", "manage_users"],
@@ -173,6 +173,17 @@ const INITIAL_USERS = [
   },
   {
     id: 2,
+    code: "QL000001",
+    fullName: "Nguyễn Chí Vĩ (Quản lý cửa hàng)",
+    email: "chivinguyen1998@gmail.com",
+    phone: "0989584592",
+    role: "MANAGER",
+    permissions: ["manage_products", "manage_orders"],
+    status: 1,
+    createdAt: "2026-08-10",
+  },
+  {
+    id: 3,
     code: "NV000001",
     fullName: "Trần Thị Thu Hà (Nhân viên CSKH)",
     email: "staff@vidairy.vn",
@@ -182,7 +193,7 @@ const INITIAL_USERS = [
     createdAt: "2026-08-15",
   },
   {
-    id: 3,
+    id: 4,
     code: "KH000001",
     fullName: "Lê Minh Hoàng",
     email: "khachhang@gmail.com",
@@ -192,7 +203,7 @@ const INITIAL_USERS = [
     createdAt: "2026-09-01",
   },
   {
-    id: 4,
+    id: 5,
     code: "KH000002",
     fullName: "Phạm Thùy Linh",
     email: "thuylinh.pham@gmail.com",
@@ -297,8 +308,17 @@ const PRESET_PRODUCT_IMAGES = [
 ];
 
 export default function AdminDashboard() {
-  const { user, isAdmin, token, logout } = useAuth();
+  const { user, isAdmin, canAccessAdmin, token, logout } = useAuth();
   const navigate = useNavigate();
+
+  // Chặn khách hàng (CUSTOMER) truy cập trang Admin
+  useEffect(() => {
+    if (user && user.Role === "CUSTOMER") {
+      alert("⚠️ Tài khoản Khách hàng (CUSTOMER) không có quyền truy cập trang Quản trị!");
+      navigate("/home");
+    }
+  }, [user, navigate]);
+
   const [activeTab, setActiveTab] = useState("dashboard");
   const [orders, setOrders] = useState(INITIAL_ORDERS);
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
@@ -322,6 +342,32 @@ export default function AdminDashboard() {
 
   // Đổi vai trò nhanh từ dropdown
   const handleQuickRoleChange = async (userId, newRole) => {
+    const currentUserId = user?.UserID || user?.id || user?._id;
+    const targetUser = users.find((u) => u.id === userId);
+
+    if (
+      targetUser?.role === "ADMIN" ||
+      targetUser?.email === "admin@vidairy.vn"
+    ) {
+      alert("⚠️ Không thể can thiệp hoặc thay đổi vai trò của tài khoản Quản trị viên duy nhất!");
+      return;
+    }
+
+    if (currentUserId && String(userId) === String(currentUserId)) {
+      alert("⚠️ Bạn không thể tự thay đổi vai trò của chính mình!");
+      return;
+    }
+
+    if (!user || !["ADMIN", "MANAGER"].includes(user.Role)) {
+      alert("⚠️ Chỉ Quản trị viên và Quản lý mới có quyền thay đổi vai trò người dùng!");
+      return;
+    }
+
+    if (newRole === "ADMIN") {
+      alert("⚠️ Hệ thống chỉ có 1 tài khoản Quản trị viên duy nhất! Bạn chỉ có thể chọn CUSTOMER, STAFF hoặc MANAGER.");
+      return;
+    }
+
     try {
       const res = await productService.updateUserRole(userId, newRole, null, token);
       if (res.success) {
@@ -338,9 +384,33 @@ export default function AdminDashboard() {
 
   // Mở modal phân quyền chi tiết
   const handleOpenRoleModal = (userItem) => {
+    const currentUserId = user?.UserID || user?.id || user?._id;
+    if (
+      userItem.role === "ADMIN" ||
+      userItem.email === "admin@vidairy.vn"
+    ) {
+      alert("⚠️ Tài khoản Quản trị viên tối cao có toàn quyền quản trị và không thể can thiệp!");
+      return;
+    }
+
+    if (currentUserId && String(userItem.id) === String(currentUserId)) {
+      alert("⚠️ Bạn không thể tự phân quyền cho chính mình!");
+      return;
+    }
+
+    if (!user || !["ADMIN", "MANAGER"].includes(user.Role)) {
+      alert("⚠️ Chỉ Quản trị viên và Quản lý mới có quyền phân quyền cho tài khoản khác!");
+      return;
+    }
+
+    if (userItem.role === "CUSTOMER") {
+      alert("⚠️ Tài khoản Khách hàng (CUSTOMER) không có phân quyền chi tiết trong trang quản trị!");
+      return;
+    }
+
     setSelectedUserForRole(userItem);
     setRoleForm({
-      role: userItem.role || "CUSTOMER",
+      role: userItem.role === "ADMIN" ? "MANAGER" : (userItem.role || "CUSTOMER"),
       permissions: userItem.permissions || [],
     });
     setIsRoleModalOpen(true);
@@ -364,11 +434,37 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!selectedUserForRole) return;
 
+    const currentUserId = user?.UserID || user?.id || user?._id;
+    if (
+      selectedUserForRole.role === "ADMIN" ||
+      selectedUserForRole.email === "admin@vidairy.vn"
+    ) {
+      alert("⚠️ Tài khoản Quản trị viên tối cao cố định và không thể can thiệp!");
+      return;
+    }
+
+    if (currentUserId && String(selectedUserForRole.id) === String(currentUserId)) {
+      alert("⚠️ Bạn không thể tự phân quyền hoặc đổi vai trò cho chính mình!");
+      return;
+    }
+
+    if (!user || !["ADMIN", "MANAGER"].includes(user.Role)) {
+      alert("⚠️ Chỉ Quản trị viên và Quản lý mới có quyền phân quyền cho tài khoản khác!");
+      return;
+    }
+
+    if (roleForm.role === "ADMIN") {
+      alert("⚠️ Không thể đặt vai trò Quản trị viên (ADMIN)!");
+      return;
+    }
+
+    const finalPermissions = roleForm.role === "CUSTOMER" ? [] : roleForm.permissions;
+
     try {
       const res = await productService.updateUserRole(
         selectedUserForRole.id,
         roleForm.role,
-        roleForm.permissions,
+        finalPermissions,
         token
       );
 
@@ -376,7 +472,7 @@ export default function AdminDashboard() {
         setUsers((prev) =>
           prev.map((u) =>
             u.id === selectedUserForRole.id
-              ? { ...u, role: roleForm.role, permissions: roleForm.permissions }
+              ? { ...u, role: roleForm.role, permissions: finalPermissions }
               : u
           )
         );
@@ -666,6 +762,27 @@ export default function AdminDashboard() {
 
   // Khóa / Mở khóa người dùng (Đồng bộ trực tiếp DB)
   const handleToggleUserStatus = async (userId) => {
+    const currentUserId = user?.UserID || user?.id || user?._id;
+    const targetUser = users.find((u) => u.id === userId);
+
+    if (
+      targetUser?.role === "ADMIN" ||
+      targetUser?.email === "admin@vidairy.vn"
+    ) {
+      alert("⚠️ Không thể can thiệp hoặc khóa tài khoản Quản trị viên duy nhất của hệ thống!");
+      return;
+    }
+
+    if (currentUserId && String(userId) === String(currentUserId)) {
+      alert("⚠️ Bạn không thể tự khóa tài khoản của chính mình!");
+      return;
+    }
+
+    if (!user || !["ADMIN", "MANAGER"].includes(user.Role)) {
+      alert("⚠️ Chỉ Quản trị viên và Quản lý mới có quyền thay đổi trạng thái tài khoản!");
+      return;
+    }
+
     try {
       const res = await fetch(
         `http://localhost:3000/api/admin/users/${userId}/status`,
@@ -681,6 +798,8 @@ export default function AdminDashboard() {
             u.id === userId ? { ...u, status: json.data?.Status ? 1 : 0 } : u
           )
         );
+      } else {
+        alert(json.message || "Lỗi khi chuyển trạng thái người dùng.");
       }
     } catch (err) {
       alert("Lỗi khi chuyển trạng thái người dùng.");
@@ -932,7 +1051,13 @@ export default function AdminDashboard() {
             </div>
             <div className="admin-user-details">
               <span className="admin-user-name">{user?.FullName || "Quản trị viên"}</span>
-              <span className="admin-user-role">{user?.Role === "ADMIN" ? "Quản trị viên (Admin)" : "Nhân viên hệ thống"}</span>
+              <span className="admin-user-role">
+                {user?.Role === "ADMIN"
+                  ? "Quản trị viên (Admin)"
+                  : user?.Role === "MANAGER"
+                  ? "Quản lý (Manager)"
+                  : "Nhân viên hệ thống"}
+              </span>
             </div>
           </div>
         </div>
@@ -1528,66 +1653,127 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((u) => (
-                      <tr key={u.id}>
-                        <td>
-                          <strong>{u.code}</strong>
-                        </td>
-                        <td>{u.fullName}</td>
-                        <td>{u.email}</td>
-                        <td>{u.phone}</td>
-                        <td>
-                          <select
-                            value={u.role}
-                            onChange={(e) => handleQuickRoleChange(u.id, e.target.value)}
-                            className={`admin-role-select role-${u.role?.toLowerCase()}`}
-                            title="Thay đổi nhanh vai trò"
-                          >
-                            <option value="CUSTOMER">CUSTOMER (Khách)</option>
-                            <option value="STAFF">STAFF (Nhân viên)</option>
-                            <option value="MANAGER">MANAGER (Quản lý)</option>
-                            <option value="ADMIN">ADMIN (Quản trị)</option>
-                          </select>
-                        </td>
-                        <td>{u.createdAt}</td>
-                        <td>
-                          <span
-                            className={`status-badge ${u.status === 1 ? "active" : "blocked"}`}
-                          >
-                            {u.status === 1 ? "Đang hoạt động" : "Đã khóa"}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="admin-action-btn-group">
-                            <button
-                              type="button"
-                              className="btn-action-icon primary"
-                              title="Phân quyền chi tiết"
-                              onClick={() => handleOpenRoleModal(u)}
+                    {users.map((u) => {
+                      const currentUserId = user?.UserID || user?.id || user?._id;
+                      const isTargetAdmin =
+                        u.role === "ADMIN" ||
+                        u.email === "admin@vidairy.vn";
+                      const isSelf = Boolean(currentUserId && String(u.id) === String(currentUserId));
+                      const canManageUsers = Boolean(user && ["ADMIN", "MANAGER"].includes(user.Role));
+
+                      return (
+                        <tr key={u.id}>
+                          <td>
+                            <strong>{u.code}</strong>
+                          </td>
+                          <td>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span>{u.fullName}</span>
+                              {isTargetAdmin && (
+                                <span className="admin-pill-unique" title="Tài khoản Quản trị viên duy nhất của hệ thống">
+                                  Admin tối cao
+                                </span>
+                              )}
+                              {isSelf && !isTargetAdmin && (
+                                <span className="admin-pill-self" title="Tài khoản của bạn">
+                                  Bạn
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td>{u.email}</td>
+                          <td>{u.phone}</td>
+                          <td>
+                            {isTargetAdmin ? (
+                              <span className="admin-role-badge-super" title="Tài khoản Quản trị viên duy nhất">
+                                <i className="bi bi-shield-fill-check"></i> ADMIN (Quản trị)
+                              </span>
+                            ) : isSelf || !canManageUsers ? (
+                              <span
+                                className={`admin-role-badge-locked role-${u.role?.toLowerCase()}`}
+                                title={isSelf ? "Không thể tự thay đổi vai trò của chính mình" : "Chỉ Quản trị viên và Quản lý mới có quyền đổi vai trò"}
+                              >
+                                {u.role === "MANAGER"
+                                  ? "MANAGER (Quản lý)"
+                                  : u.role === "STAFF"
+                                  ? "STAFF (Nhân viên)"
+                                  : u.role === "ADMIN"
+                                  ? "ADMIN (Quản trị)"
+                                  : "CUSTOMER (Khách)"}
+                              </span>
+                            ) : (
+                              <select
+                                value={u.role}
+                                onChange={(e) => handleQuickRoleChange(u.id, e.target.value)}
+                                className={`admin-role-select role-${u.role?.toLowerCase()}`}
+                                title="Thay đổi nhanh vai trò"
+                              >
+                                <option value="CUSTOMER">CUSTOMER (Khách)</option>
+                                <option value="STAFF">STAFF (Nhân viên)</option>
+                                <option value="MANAGER">MANAGER (Quản lý)</option>
+                              </select>
+                            )}
+                          </td>
+                          <td>{u.createdAt}</td>
+                          <td>
+                            <span
+                              className={`status-badge ${u.status === 1 ? "active" : "blocked"}`}
                             >
-                              <i className="bi bi-shield-lock-fill"></i>
-                            </button>
-                            <button
-                              type="button"
-                              className={`btn-action-icon ${u.status === 1 ? "danger" : ""}`}
-                              title={
-                                u.status === 1
-                                  ? "Khóa tài khoản"
-                                  : "Mở khóa tài khoản"
-                              }
-                              onClick={() => handleToggleUserStatus(u.id)}
-                            >
-                              <i
-                                className={`bi ${u.status === 1
-                                  ? "bi-lock-fill"
-                                  : "bi-unlock-fill"
-                                  }`}
-                              ></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                              {u.status === 1 ? "Đang hoạt động" : "Đã khóa"}
+                            </span>
+                          </td>
+                          <td>
+                            {isTargetAdmin ? (
+                              <span
+                                className="admin-super-action-locked"
+                                title="Tài khoản Quản trị viên tối cao cố định không thể can thiệp"
+                              >
+                                <i className="bi bi-lock-fill"></i> Cố định
+                              </span>
+                            ) : isSelf ? (
+                              <span
+                                className="admin-super-action-locked self"
+                                title="Không thể tự phân quyền hoặc khóa tài khoản của chính mình"
+                              >
+                                <i className="bi bi-person-check-fill"></i> Chính bạn
+                              </span>
+                            ) : canManageUsers ? (
+                              <div className="admin-action-btn-group">
+                                {u.role !== "CUSTOMER" && (
+                                  <button
+                                    type="button"
+                                    className="btn-action-icon primary"
+                                    title="Phân quyền chi tiết cho nhân sự"
+                                    onClick={() => handleOpenRoleModal(u)}
+                                  >
+                                    <i className="bi bi-shield-lock-fill"></i>
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  className={`btn-action-icon ${u.status === 1 ? "danger" : ""}`}
+                                  title={
+                                    u.status === 1
+                                      ? "Khóa tài khoản"
+                                      : "Mở khóa tài khoản"
+                                  }
+                                  onClick={() => handleToggleUserStatus(u.id)}
+                                >
+                                  <i
+                                    className={`bi ${u.status === 1
+                                      ? "bi-lock-fill"
+                                      : "bi-unlock-fill"
+                                      }`}
+                                  ></i>
+                                </button>
+                              </div>
+                            ) : (
+                              <span style={{ color: "#9ca3af", fontSize: "13px" }}>—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -2501,45 +2687,38 @@ export default function AdminDashboard() {
                         <span>Quản lý sản phẩm và đơn hàng</span>
                       </div>
                     </label>
-
-                    <label className={`role-radio-card ${roleForm.role === "ADMIN" ? "active" : ""}`}>
-                      <input
-                        type="radio"
-                        name="modalRole"
-                        value="ADMIN"
-                        checked={roleForm.role === "ADMIN"}
-                        onChange={(e) => setRoleForm({ ...roleForm, role: e.target.value })}
-                      />
-                      <div className="role-card-info">
-                        <strong>ADMIN (Quản trị viên)</strong>
-                        <span>Toàn quyền quản trị hệ thống</span>
-                      </div>
-                    </label>
                   </div>
                 </div>
 
                 <div className="admin-form-group margin-top">
                   <label className="admin-form-label">Danh Sách Quyền Hạn Chi Tiết (Permissions):</label>
-                  <div className="permissions-grid">
-                    {[
-                      { key: "manage_products", label: "Quản lý Sản Phẩm & Giá", desc: "Thêm, sửa, xóa danh mục và giá sản phẩm" },
-                      { key: "manage_orders", label: "Quản lý Đơn Hàng", desc: "Xem, cập nhật trạng thái giao hàng" },
-                      { key: "manage_coupons", label: "Quản lý Mã Giảm Giá", desc: "Tạo và bật/tắt voucher khuyến mãi" },
-                      { key: "manage_users", label: "Quản lý Người Dùng & Phân Quyền", desc: "Xem danh sách và đổi quyền tài khoản" },
-                    ].map((perm) => (
-                      <label key={perm.key} className="permission-item-box">
-                        <input
-                          type="checkbox"
-                          checked={roleForm.permissions.includes(perm.key)}
-                          onChange={() => handleTogglePermission(perm.key)}
-                        />
-                        <div className="perm-text">
-                          <strong>{perm.label}</strong>
-                          <span>{perm.desc}</span>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
+                  {roleForm.role === "CUSTOMER" ? (
+                    <div style={{ padding: "14px 16px", backgroundColor: "#f8fafc", borderRadius: "10px", border: "1px dashed #cbd5e1", color: "#64748b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <i className="bi bi-info-circle-fill" style={{ color: "#2563eb", fontSize: "16px" }}></i>
+                      <span>Tài khoản Khách hàng (CUSTOMER) chỉ có quyền mua hàng và không có quyền truy cập quản trị hệ thống.</span>
+                    </div>
+                  ) : (
+                    <div className="permissions-grid">
+                      {[
+                        { key: "manage_products", label: "Quản lý Sản Phẩm & Giá", desc: "Thêm, sửa, xóa danh mục và giá sản phẩm" },
+                        { key: "manage_orders", label: "Quản lý Đơn Hàng", desc: "Xem, cập nhật trạng thái giao hàng" },
+                        { key: "manage_coupons", label: "Quản lý Mã Giảm Giá", desc: "Tạo và bật/tắt voucher khuyến mãi" },
+                        { key: "manage_users", label: "Quản lý Người Dùng & Phân Quyền", desc: "Xem danh sách và đổi quyền tài khoản" },
+                      ].map((perm) => (
+                        <label key={perm.key} className="permission-item-box">
+                          <input
+                            type="checkbox"
+                            checked={roleForm.permissions.includes(perm.key)}
+                            onChange={() => handleTogglePermission(perm.key)}
+                          />
+                          <div className="perm-text">
+                            <strong>{perm.label}</strong>
+                            <span>{perm.desc}</span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 

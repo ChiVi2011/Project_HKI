@@ -138,6 +138,23 @@ const authController = {
         Status: true,
       });
 
+      // Tự động tặng thông báo mã giảm giá chào mừng thành viên mới (NEWMEMBER)
+      try {
+        const Notification = require("../models/notificationModel");
+        await Notification.create({
+          title: "Quà chào mừng thành viên mới 🎉",
+          message: `Chào mừng ${newUser.FullName} gia nhập ViDairy! Tặng bạn mã ưu đãi NEWMEMBER giảm 15% cho đơn hàng đầu tiên.`,
+          type: "promotion",
+          couponCode: "NEWMEMBER",
+          actionText: "Dùng ngay",
+          link: "/products",
+          isRead: false,
+          userId: String(newUser._id),
+        });
+      } catch (notifErr) {
+        console.warn("Lỗi khi tạo notification chào mừng:", notifErr.message);
+      }
+
       // Xóa OTP sau khi xác thực thành công
       await OtpVerification.deleteMany({ Email: cleanEmail });
 
@@ -326,9 +343,9 @@ const authController = {
         return res.status(401).json({ success: false, message: "Yêu cầu đăng nhập!" });
       }
 
-      // Kiểm tra quyền Admin
-      if (decoded.Role !== "ADMIN") {
-        return res.status(403).json({ success: false, message: "Quyền truy cập bị từ chối. Chỉ dành cho Quản trị viên!" });
+      // Kiểm tra quyền Quản trị / Nhân sự
+      if (!["ADMIN", "MANAGER", "STAFF"].includes(decoded.Role)) {
+        return res.status(403).json({ success: false, message: "Quyền truy cập bị từ chối. Chỉ dành cho Quản trị viên và Nhân sự!" });
       }
 
       const users = await User.find().select("-PasswordHash").sort({ createdAt: -1 }).lean();
@@ -348,14 +365,33 @@ const authController = {
   async toggleUserStatus(req, res) {
     try {
       const decoded = getUserFromToken(req);
-      if (!decoded || decoded.Role !== "ADMIN") {
-        return res.status(403).json({ success: false, message: "Chỉ Quản trị viên mới có quyền chuyển đổi trạng thái!" });
+      if (!decoded || !["ADMIN", "MANAGER"].includes(decoded.Role)) {
+        return res.status(403).json({
+          success: false,
+          message: "Chỉ Quản trị viên và Quản lý mới có quyền chuyển đổi trạng thái tài khoản!",
+        });
       }
 
       const { id } = req.params;
       const user = await User.findById(id);
       if (!user) {
         return res.status(404).json({ success: false, message: "Không tìm thấy người dùng!" });
+      }
+
+      // Bảo vệ: Tuyệt đối không can thiệp hoặc khóa tài khoản Quản trị viên duy nhất
+      if (user.Role === "ADMIN" || user.Email === "admin@vidairy.vn") {
+        return res.status(403).json({
+          success: false,
+          message: "Không thể khóa tài khoản Quản trị viên duy nhất của hệ thống!",
+        });
+      }
+
+      // Bảo vệ: Không cho phép tự khóa tài khoản của chính mình
+      if (String(user._id) === String(decoded.UserID)) {
+        return res.status(403).json({
+          success: false,
+          message: "Bạn không thể tự khóa tài khoản của chính mình!",
+        });
       }
 
       // Đảo ngược trạng thái
@@ -380,21 +416,53 @@ const authController = {
   async updateUserRole(req, res) {
     try {
       const decoded = getUserFromToken(req);
-      if (!decoded || decoded.Role !== "ADMIN") {
+      if (!decoded || !["ADMIN", "MANAGER"].includes(decoded.Role)) {
         return res.status(403).json({
           success: false,
-          message: "Chỉ Quản trị viên (ADMIN) mới có quyền phân quyền tài khoản!",
+          message: "Chỉ Quản trị viên và Quản lý mới có quyền phân quyền tài khoản!",
         });
       }
 
       const { id } = req.params;
       const { role, permissions } = req.body;
 
-      const validRoles = ["CUSTOMER", "STAFF", "MANAGER", "ADMIN"];
+      // Không cho phép bất kỳ ai gán thêm vai trò ADMIN cho tài khoản khác
+      if (role === "ADMIN") {
+        return res.status(400).json({
+          success: false,
+          message: "Không thể gán vai trò Admin. Hệ thống chỉ có 1 tài khoản Quản trị viên VitaDairy duy nhất!",
+        });
+      }
+
+      const validRoles = ["CUSTOMER", "STAFF", "MANAGER"];
       if (role && !validRoles.includes(role)) {
         return res.status(400).json({
           success: false,
-          message: "Vai trò người dùng không hợp lệ!",
+          message: "Vai trò người dùng không hợp lệ! Chỉ có thể đặt vai trò là Khách hàng (CUSTOMER), Nhân viên (STAFF) hoặc Quản lý (MANAGER).",
+        });
+      }
+
+      const targetUser = await User.findById(id);
+      if (!targetUser) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy tài khoản người dùng!",
+        });
+      }
+
+      // Bảo vệ: Tuyệt đối không can thiệp hoặc thay đổi tài khoản ADMIN duy nhất
+      if (targetUser.Role === "ADMIN" || targetUser.Email === "admin@vidairy.vn") {
+        return res.status(403).json({
+          success: false,
+          message: "Không thể can thiệp, thay đổi vai trò hoặc phân quyền của tài khoản Quản trị viên duy nhất!",
+        });
+      }
+
+      // Bảo vệ: Không cho phép tự đặt vai trò hoặc tự phân quyền cho chính mình
+      if (String(targetUser._id) === String(decoded.UserID)) {
+        return res.status(403).json({
+          success: false,
+          message: "Bạn không thể tự thay đổi vai trò hoặc tự phân quyền cho chính mình!",
         });
       }
 
@@ -405,13 +473,6 @@ const authController = {
       const updatedUser = await User.findByIdAndUpdate(id, updateFields, { new: true })
         .select("-PasswordHash")
         .lean();
-
-      if (!updatedUser) {
-        return res.status(404).json({
-          success: false,
-          message: "Không tìm thấy tài khoản người dùng!",
-        });
-      }
 
       updatedUser.UserID = updatedUser._id;
       return res.status(200).json({

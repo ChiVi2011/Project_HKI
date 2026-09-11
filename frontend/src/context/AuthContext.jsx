@@ -18,6 +18,11 @@ export function AuthProvider({ children }) {
 
   const isLoggedIn = Boolean(token && user);
   const isAdmin = Boolean(user && user.Role === "ADMIN");
+  const isStaff = Boolean(user && user.Role === "STAFF");
+  const isManager = Boolean(user && user.Role === "MANAGER");
+  const canAccessAdmin = Boolean(
+    user && (user.Role === "ADMIN" || user.Role === "STAFF" || user.Role === "MANAGER")
+  );
 
   // Đồng bộ với localStorage khi có thay đổi
   useEffect(() => {
@@ -93,6 +98,9 @@ export function AuthProvider({ children }) {
         user,
         isLoggedIn,
         isAdmin,
+        isStaff,
+        isManager,
+        canAccessAdmin,
         login,
         logout,
         updateUser,

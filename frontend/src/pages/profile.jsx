@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import "../style/profile.css";
 
 export default function Profile() {
-  const { user, token, isLoggedIn, isAdmin, logout, updateUser } = useAuth();
+  const { user, token, isLoggedIn, isAdmin, canAccessAdmin, logout, updateUser } = useAuth();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("info"); // 'info' | 'orders'
@@ -140,14 +140,20 @@ export default function Profile() {
             <div className="avatar-circle">
               {user.FullName ? user.FullName.charAt(0).toUpperCase() : "U"}
             </div>
-            {isAdmin && <span className="admin-star" title="Quản trị viên">★</span>}
+            {canAccessAdmin && <span className="admin-star" title="Nhân sự Quản trị">★</span>}
           </div>
 
           <div className="profile-header-info">
             <div className="profile-name-row">
               <h2>{user.FullName}</h2>
               <span className={`badge-role ${user.Role?.toLowerCase()}`}>
-                {user.Role === "ADMIN" ? "Quản trị viên hệ thống" : "Khách hàng thân thiết"}
+                {user.Role === "ADMIN"
+                  ? "Quản trị viên hệ thống"
+                  : user.Role === "MANAGER"
+                  ? "Quản lý cửa hàng"
+                  : user.Role === "STAFF"
+                  ? "Nhân viên CSKH"
+                  : "Khách hàng thân thiết"}
               </span>
               <span className={`badge-status ${user.Status ? "active" : "blocked"}`}>
                 <i className={`bi ${user.Status ? "bi-check-circle-fill" : "bi-slash-circle-fill"}`}></i>
@@ -174,7 +180,7 @@ export default function Profile() {
           </div>
 
           <div className="profile-header-actions">
-            {isAdmin && (
+            {canAccessAdmin && (
               <button
                 type="button"
                 className="btn-switch-admin"

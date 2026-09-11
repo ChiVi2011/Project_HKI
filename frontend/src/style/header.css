@@ -122,9 +122,46 @@ header {
   align-items: center;
   gap: 18px;
 }
+.notification-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 .notification {
   font-size: 20px;
   color: red;
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.notification:hover {
+  transform: scale(1.15);
+}
+.notification.has-unread {
+  transform-origin: top center;
+  animation: bellWiggle 3.5s infinite ease-in-out;
+}
+@keyframes bellWiggle {
+  0%, 80%, 100% {
+    transform: rotate(0deg);
+  }
+  84% {
+    transform: rotate(14deg);
+  }
+  88% {
+    transform: rotate(-12deg);
+  }
+  92% {
+    transform: rotate(8deg);
+  }
+  96% {
+    transform: rotate(-6deg);
+  }
 }
 .cart {
   font-size: 20px;
@@ -152,6 +189,19 @@ header {
   color: #f9fafb;
   font-size: 11px;
   font-weight: bold;
+}
+.notification .badge {
+  top: 50%;
+  left: 50%;
+  right: auto;
+  transform: translate(-50%, -46%);
+  width: 14px;
+  height: 14px;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+  text-align: center;
 }
 
 .header-user-badge {
@@ -194,5 +244,45 @@ header {
   padding: 1px 6px;
   border-radius: 6px;
   text-transform: uppercase;
+}
+
+.admin-pill.manager {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+}
+
+.admin-pill.staff {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+}
+
+.header-admin-quick-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.btn-header-admin {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #23408e 0%, #1e3a8a 100%);
+  color: #ffffff !important;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 20px;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(35, 64, 142, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.btn-header-admin:hover {
+  background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(35, 64, 142, 0.35);
+  color: #ffffff !important;
+}
+
+.btn-header-admin i {
+  font-size: 13px;
 }
 
