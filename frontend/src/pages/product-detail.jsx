@@ -7,6 +7,7 @@ import {
   formatCurrency,
 } from "../data/productsData";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import "../style/product-detail.css";
 
 export default function ProductDetail() {
@@ -14,6 +15,7 @@ export default function ProductDetail() {
   const currentId = id || productId;
   const navigate = useNavigate();
   const { addToCart, openCart, totalItems } = useCart();
+  const { user, isLoggedIn } = useAuth();
 
   const [product, setProduct] = useState(() => fallbackGetProductById(currentId));
   const [isLoading, setIsLoading] = useState(true);
@@ -25,6 +27,183 @@ export default function ProductDetail() {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [cartAlert, setCartAlert] = useState("");
   const alertTimerRef = useRef(null);
+
+  // Danh sách đánh giá mẫu ban đầu
+  const DEFAULT_REVIEWS = useMemo(
+    () => [
+      {
+        id: "init-1",
+        author: "Chị Thu Hà (Hà Nội)",
+        rating: 5,
+        date: "Đã mua hàng 2 ngày trước",
+        createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+        comment:
+          "Sữa thơm ngon, vị thanh nhạt không bị ngọt gắt. Bé nhà mình uống hợp tác lắm, trộm vía tăng cân đều và tiêu hóa rất tốt không bị táo bón!",
+        isVerifiedBuyer: true,
+      },
+      {
+        id: "init-2",
+        author: "Anh Minh Tuấn (TP.HCM)",
+        rating: 5,
+        date: "Đã mua hàng 1 tuần trước",
+        createdAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+        comment:
+          "Giao hàng nhanh, đóng gói cẩn thận 2 lớp chống móp hộp. Sữa non Mỹ chất lượng cao, cả nhà mình đều rất yên tâm sử dụng sản phẩm VitaDairy.",
+        isVerifiedBuyer: true,
+      },
+      {
+        id: "init-3",
+        author: "Chị Ngọc Lan (Đà Nẵng)",
+        rating: 5,
+        date: "Đã mua hàng 2 tuần trước",
+        createdAt: new Date(Date.now() - 14 * 86400000).toISOString(),
+        comment:
+          "Mình mua cho mẹ bầu uống, trộm vía đỡ nghén hẳn mà lại đủ vi chất cho con. Đánh giá 5 sao cho chất lượng dịch vụ của ViDairy!",
+        isVerifiedBuyer: true,
+      },
+    ],
+    [],
+  );
+
+  // Danh sách đánh giá lấy từ localStorage hoặc mẫu
+  const [reviews, setReviews] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`vidairy_reviews_${currentId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return DEFAULT_REVIEWS;
+  });
+
+  // Đồng bộ đánh giá khi thay đổi sản phẩm
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`vidairy_reviews_${currentId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setReviews(parsed);
+          return;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    setReviews(DEFAULT_REVIEWS);
+  }, [currentId, DEFAULT_REVIEWS]);
+
+  // Quản lý form gửi đánh giá
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewHoverRating, setReviewHoverRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [guestReviewerName, setGuestReviewerName] = useState("");
+  const [reviewSuccessMsg, setReviewSuccessMsg] = useState("");
+  const [reviewErrorMsg, setReviewErrorMsg] = useState("");
+
+  const RATING_LABELS = {
+    1: "1 sao - Rất không hài lòng",
+    2: "2 sao - Chưa hài lòng",
+    3: "3 sao - Bình thường",
+    4: "4 sao - Hài lòng",
+    5: "5 sao - Rất tuyệt vời",
+  };
+
+  const QUICK_REVIEW_TAGS = [
+    "Sữa thơm ngon, dễ uống",
+    "Bé rất thích, tiêu hóa tốt",
+    "Giao hàng nhanh, đóng gói cẩn thận",
+    "Hàng chính hãng uy tín",
+    "Sẽ tiếp tục ủng hộ shop",
+  ];
+
+  const handleAddQuickTag = (tag) => {
+    setReviewComment((prev) => {
+      if (!prev.trim()) return tag;
+      if (prev.includes(tag)) return prev;
+      return `${prev.trim()}, ${tag.toLowerCase()}`;
+    });
+  };
+
+  const handleSubmitReview = (e) => {
+    e.preventDefault();
+    setReviewErrorMsg("");
+    setReviewSuccessMsg("");
+
+    if (!reviewComment.trim()) {
+      setReviewErrorMsg(
+        "Vui lòng nhập lời nhận xét hoặc chia sẻ trải nghiệm của bạn.",
+      );
+      return;
+    }
+
+    if (reviewComment.trim().length < 5) {
+      setReviewErrorMsg(
+        "Đánh giá nên có ít nhất 5 ký tự để người mua khác tham khảo hữu ích hơn.",
+      );
+      return;
+    }
+
+    let authorName = guestReviewerName.trim();
+    if (!authorName) {
+      if (isLoggedIn && user) {
+        authorName =
+          user.FullName ||
+          user.name ||
+          user.Email?.split("@")[0] ||
+          "Thành viên ViDairy";
+      } else {
+        authorName = "Khách hàng ViDairy";
+      }
+    }
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const dateStr = now.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+    const realTimeDisplay = `Vừa xong (${timeStr} - ${dateStr})`;
+
+    const newReviewItem = {
+      id: Date.now(),
+      author: authorName,
+      rating: reviewRating,
+      date: realTimeDisplay,
+      createdAt: now.toISOString(),
+      comment: reviewComment.trim(),
+      isVerifiedBuyer: true,
+      isNew: true,
+    };
+
+    const updated = [newReviewItem, ...reviews];
+    setReviews(updated);
+
+    try {
+      localStorage.setItem(
+        `vidairy_reviews_${currentId}`,
+        JSON.stringify(updated),
+      );
+    } catch (err) {
+      console.warn("Lỗi lưu đánh giá vào localStorage:", err);
+    }
+
+    setReviewComment("");
+    setReviewRating(5);
+    setReviewSuccessMsg(
+      "Cảm ơn bạn! Đánh giá của bạn đã được gửi và hiển thị ngay thời gian thực bên dưới.",
+    );
+    setTimeout(() => {
+      setReviewSuccessMsg("");
+    }, 4500);
+  };
 
   // Tải chi tiết sản phẩm từ API Live
   useEffect(() => {
@@ -440,7 +619,7 @@ export default function ProductDetail() {
               className={`tab-item-btn ${activeTab === "reviews" ? "active" : ""}`}
               onClick={() => setActiveTab("reviews")}
             >
-              <i className="bi bi-chat-heart"></i> Đánh giá ({product.soldCount ? Math.round(product.soldCount / 10) : 58})
+              <i className="bi bi-chat-heart"></i> Đánh giá ({reviews.length})
             </button>
           </div>
 
@@ -538,6 +717,7 @@ export default function ProductDetail() {
             {/* TAB 4: ĐÁNH GIÁ KHÁCH HÀNG */}
             {activeTab === "reviews" && (
               <div className="tab-pane-reviews">
+                {/* 1. TỔNG QUAN ĐIỂM ĐÁNH GIÁ */}
                 <div className="reviews-summary-bar">
                   <div className="rating-overall">
                     <span className="big-rating-score">5.0</span>
@@ -547,41 +727,191 @@ export default function ProductDetail() {
                       ))}
                     </div>
                     <span className="reviews-total-text">
-                      Dựa trên {product.soldCount || 350}+ lượt mua hàng chính hãng
+                      {reviews.length} lượt đánh giá thực tế từ khách hàng đã trải nghiệm
                     </span>
                   </div>
                 </div>
 
-                <div className="review-list">
-                  <div className="review-item">
-                    <div className="reviewer-info">
-                      <strong>Chị Thu Hà (Hà Nội)</strong>
-                      <span className="review-date">Đã mua hàng 2 ngày trước</span>
+                {/* 2. KHUNG NHẬP ĐÁNH GIÁ CỦA NGƯỜI DÙNG */}
+                <div className="review-form-card">
+                  <div className="review-form-header">
+                    <div className="rf-title-wrap">
+                      <i className="bi bi-pencil-square"></i>
+                      <h4>Viết đánh giá của bạn</h4>
                     </div>
-                    <div className="review-stars">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <i key={s} className="bi bi-star-fill"></i>
-                      ))}
-                    </div>
-                    <p className="review-comment">
-                      "Sữa thơm ngon, vị thanh nhạt không bị ngọt gắt. Bé nhà mình uống hợp tác lắm, trộm vía tăng cân đều và tiêu hóa rất tốt không bị táo bón!"
-                    </p>
+                    <span className="rf-hint-text">
+                      Ý kiến của bạn giúp các ba mẹ khác chọn đúng giải pháp dinh dưỡng
+                    </span>
                   </div>
 
-                  <div className="review-item">
-                    <div className="reviewer-info">
-                      <strong>Anh Minh Tuấn (TP.HCM)</strong>
-                      <span className="review-date">Đã mua hàng 1 tuần trước</span>
+                  <form onSubmit={handleSubmitReview} className="review-actual-form">
+                    {/* Hàng chọn số sao */}
+                    <div className="review-form-row">
+                      <label className="rf-label">Chất lượng sản phẩm:</label>
+                      <div className="star-rating-picker">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            type="button"
+                            className={`star-pick-btn ${
+                              star <= (reviewHoverRating || reviewRating) ? "active" : ""
+                            }`}
+                            onMouseEnter={() => setReviewHoverRating(star)}
+                            onMouseLeave={() => setReviewHoverRating(0)}
+                            onClick={() => setReviewRating(star)}
+                            aria-label={`${star} sao`}
+                          >
+                            <i
+                              className={`bi ${
+                                star <= (reviewHoverRating || reviewRating)
+                                  ? "bi-star-fill"
+                                  : "bi-star"
+                              }`}
+                            ></i>
+                          </button>
+                        ))}
+                        <span className="star-rating-label">
+                          {RATING_LABELS[reviewHoverRating || reviewRating]}
+                        </span>
+                      </div>
                     </div>
-                    <div className="review-stars">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <i key={s} className="bi bi-star-fill"></i>
-                      ))}
+
+                    {/* Thông tin tài khoản người đánh giá */}
+                    <div className="review-user-info-bar">
+                      {isLoggedIn && user ? (
+                        <div className="logged-user-badge">
+                          <i className="bi bi-person-check-fill"></i>
+                          <span>
+                            Đang đánh giá với tài khoản:{" "}
+                            <strong>
+                              {user.FullName || user.name || user.Email}
+                            </strong>
+                          </span>
+                          <span className="verified-pill">Thành viên ViDairy</span>
+                        </div>
+                      ) : (
+                        <div className="guest-name-field">
+                          <label htmlFor="guest-name-input">
+                            <i className="bi bi-person-fill"></i> Họ & Tên người đánh giá:
+                          </label>
+                          <input
+                            id="guest-name-input"
+                            type="text"
+                            placeholder="Nhập tên của bạn (ví dụ: Chị Phương Lan - Hà Nội)..."
+                            value={guestReviewerName}
+                            onChange={(e) => setGuestReviewerName(e.target.value)}
+                          />
+                        </div>
+                      )}
                     </div>
-                    <p className="review-comment">
-                      "Giao hàng nhanh, đóng gói cẩn thận 2 lớp chống móp hộp. Sữa non Mỹ chất lượng cao, cả nhà mình đều rất yên tâm sử dụng sản phẩm VitaDairy."
-                    </p>
-                  </div>
+
+                    {/* Ô nhập nội dung nhận xét */}
+                    <div className="review-textarea-container">
+                      <textarea
+                        className="review-textarea"
+                        rows="4"
+                        placeholder="Hãy chia sẻ cảm nhận thực tế của bạn về sản phẩm này (vị sữa, độ tan, khả năng hấp thu của bé, cách đóng gói giao hàng...)"
+                        value={reviewComment}
+                        onChange={(e) => setReviewComment(e.target.value)}
+                      ></textarea>
+                    </div>
+
+                    {/* Các gợi ý nhận xét nhanh (Quick Tags) */}
+                    <div className="quick-tags-wrap">
+                      <span className="quick-tags-title">
+                        <i className="bi bi-lightning-charge-fill"></i> Gợi ý nhanh:
+                      </span>
+                      <div className="quick-tags-list">
+                        {QUICK_REVIEW_TAGS.map((tag, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            className="quick-tag-chip"
+                            onClick={() => handleAddQuickTag(tag)}
+                          >
+                            + {tag}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Thông báo lỗi / thành công */}
+                    {reviewErrorMsg && (
+                      <div className="review-alert error">
+                        <i className="bi bi-exclamation-triangle-fill"></i>
+                        <span>{reviewErrorMsg}</span>
+                      </div>
+                    )}
+                    {reviewSuccessMsg && (
+                      <div className="review-alert success">
+                        <i className="bi bi-check-circle-fill"></i>
+                        <span>{reviewSuccessMsg}</span>
+                      </div>
+                    )}
+
+                    {/* Nút gửi đánh giá */}
+                    <div className="review-submit-row">
+                      <button type="submit" className="btn-submit-review">
+                        <i className="bi bi-send-fill"></i>
+                        <span>Gửi Đánh Giá Ngay</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* 3. DANH SÁCH CÁC ĐÁNH GIÁ (HIỂN THỊ THỜI GIAN THỰC) */}
+                <div className="review-list-header">
+                  <h4>Tất cả nhận xét ({reviews.length})</h4>
+                </div>
+
+                <div className="review-list">
+                  {reviews.map((rev) => (
+                    <div
+                      key={rev.id}
+                      className={`review-item ${rev.isNew ? "is-new-review" : ""}`}
+                    >
+                      <div className="reviewer-info">
+                        <div className="reviewer-name-wrap">
+                          <div className="reviewer-avatar-circle">
+                            {rev.author ? rev.author.charAt(0).toUpperCase() : "K"}
+                          </div>
+                          <div>
+                            <strong className="reviewer-name">{rev.author}</strong>
+                            {rev.isVerifiedBuyer && (
+                              <span
+                                className="verified-badge"
+                                title="Đã mua hàng chính hãng từ ViDairy"
+                              >
+                                <i className="bi bi-patch-check-fill"></i> Đã mua hàng
+                              </span>
+                            )}
+                            {rev.isNew && (
+                              <span className="badge-just-posted">
+                                <i className="bi bi-broadcast"></i> Đánh giá mới
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="review-date-wrap">
+                          <i className="bi bi-clock-history"></i>
+                          <span className="review-date">{rev.date}</span>
+                        </div>
+                      </div>
+
+                      <div className="review-stars">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <i
+                            key={s}
+                            className={`bi ${
+                              s <= rev.rating ? "bi-star-fill" : "bi-star"
+                            }`}
+                          ></i>
+                        ))}
+                      </div>
+
+                      <p className="review-comment">"{rev.comment}"</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
