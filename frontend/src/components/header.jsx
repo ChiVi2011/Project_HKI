@@ -23,7 +23,10 @@ function Header() {
     const fetchNotifications = async () => {
       try {
         const currentUserId = user?.UserID || user?.id || user?._id || null;
-        const res = await notificationService.getNotifications(token, currentUserId);
+        const res = await notificationService.getNotifications(
+          token,
+          currentUserId,
+        );
         if (isMounted && res) {
           setNotifications(res.notifications || []);
           setUnreadCount(res.unreadCount ?? 0);
@@ -47,8 +50,8 @@ function Header() {
     await notificationService.markAsRead(id, token, currentUserId);
     setNotifications((prev) =>
       prev.map((item) =>
-        item._id === id || item.id === id ? { ...item, isRead: true } : item
-      )
+        item._id === id || item.id === id ? { ...item, isRead: true } : item,
+      ),
     );
     setUnreadCount((prev) => Math.max(0, prev - 1));
   };
@@ -182,20 +185,22 @@ function Header() {
           title={
             isLoggedIn
               ? `Tài khoản: ${user?.FullName || "Thành viên"} (${
-                  user?.Role === "ADMIN"
-                    ? "Quản trị viên"
-                    : user?.Role === "MANAGER"
-                    ? "Quản lý"
-                    : user?.Role === "STAFF"
-                    ? "Nhân viên"
-                    : "Khách hàng"
+                  user?.Role === "SUPERADMIN"
+                    ? "Cấp tối cao (SuperAdmin)"
+                    : user?.Role === "ADMIN"
+                      ? "Quản trị viên"
+                      : user?.Role === "MANAGER"
+                        ? "Quản lý"
+                        : "Khách hàng"
                 })`
               : "Đăng nhập tài khoản"
           }
         >
           <Link
             to={isLoggedIn ? "/profile" : "/login"}
-            className={isLoggedIn ? "user-avatar-link logged-in" : "user-avatar-link"}
+            className={
+              isLoggedIn ? "user-avatar-link logged-in" : "user-avatar-link"
+            }
             aria-label={isLoggedIn ? "Trang cá nhân" : "Đăng nhập"}
           >
             {isLoggedIn ? (
@@ -204,9 +209,20 @@ function Header() {
                 <span className="user-short-name">
                   {user?.FullName?.split(" ").pop() || "User"}
                 </span>
-                {user?.Role === "ADMIN" && <span className="admin-pill">Admin</span>}
-                {user?.Role === "MANAGER" && <span className="admin-pill manager">Quản lý</span>}
-                {user?.Role === "STAFF" && <span className="admin-pill staff">Nhân viên</span>}
+                {user?.Role === "SUPERADMIN" && (
+                  <span
+                    className="admin-pill"
+                    style={{ backgroundColor: "#eab308", color: "#ffffff" }}
+                  >
+                    SuperAdmin
+                  </span>
+                )}
+                {user?.Role === "ADMIN" && (
+                  <span className="admin-pill">Admin</span>
+                )}
+                {user?.Role === "MANAGER" && (
+                  <span className="admin-pill manager">Quản lý</span>
+                )}
               </div>
             ) : (
               <i className="bi bi-person-circle"></i>

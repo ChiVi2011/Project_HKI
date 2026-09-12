@@ -15,16 +15,28 @@ function Login() {
   const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login, isLoggedIn } = useAuth();
+  const { login, isLoggedIn, user, canAccessAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Nếu đã đăng nhập thì tự động chuyển sang trang cá nhân
+  // Nếu đã đăng nhập: Superadmin / Quản trị viên -> vào thẳng /admin, Khách hàng -> /profile
   useEffect(() => {
-    if (isLoggedIn) {
-      navigate("/profile");
+    if (isLoggedIn && user) {
+      const roleUpper = user.Role ? String(user.Role).toUpperCase() : "";
+      const isSuperAdminOrAdmin =
+        roleUpper === "SUPERADMIN" ||
+        roleUpper === "ADMIN" ||
+        roleUpper === "MANAGER" ||
+        user.Email === "admin@vidairy.vn" ||
+        user.Email === "superadmin@vidairy.vn";
+
+      if (isSuperAdminOrAdmin) {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate("/profile", { replace: true });
+      }
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, user, navigate]);
 
   // Tự động xóa lỗi sau 5 giây nếu có lỗi
   useEffect(() => {
@@ -70,15 +82,32 @@ function Login() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin!");
+        throw new Error(
+          data.message ||
+            "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin!",
+        );
       }
 
       // Lưu phiên đăng nhập
       login(data.token, data.user);
 
-      // Chuyển hướng tới trang thông tin người dùng hoặc trang trước đó
-      const redirectUrl = location.state?.from || "/profile";
-      navigate(redirectUrl);
+      // Phân quyền chuyển hướng: Nếu là SuperAdmin / Admin / Staff / Manager -> Vào thẳng trang /admin
+      const roleUpper = data.user?.Role
+        ? String(data.user.Role).toUpperCase()
+        : "";
+      const isSuperAdminOrAdmin =
+        roleUpper === "SUPERADMIN" ||
+        roleUpper === "ADMIN" ||
+        roleUpper === "MANAGER" ||
+        data.user?.Email === "admin@vidairy.vn" ||
+        data.user?.Email === "superadmin@vidairy.vn";
+
+      if (isSuperAdminOrAdmin) {
+        navigate("/admin", { replace: true });
+      } else {
+        const redirectUrl = location.state?.from || "/profile";
+        navigate(redirectUrl, { replace: true });
+      }
     } catch (err) {
       setServerError(err.message);
     } finally {
@@ -107,7 +136,10 @@ function Login() {
                   fontSize: "13.5px",
                 }}
               >
-                <i className="bi bi-exclamation-circle-fill" style={{ marginRight: "6px" }}></i>
+                <i
+                  className="bi bi-exclamation-circle-fill"
+                  style={{ marginRight: "6px" }}
+                ></i>
                 {serverError}
               </div>
             )}

@@ -32,7 +32,7 @@ function useSliderScroll(sliderRef, deps = []) {
   const handleScroll = (direction) => {
     if (sliderRef.current) {
       const card = sliderRef.current.querySelector(
-        ".product-card, .promo-card, .product-skeleton-card"
+        ".product-card, .promo-card, .product-skeleton-card",
       );
       const cardWidth = card ? card.offsetWidth + 24 : 418;
       sliderRef.current.scrollBy({
@@ -213,7 +213,8 @@ function PromotionRowSlider({ promotions, isLoading }) {
           <div>
             <h2 className="section-title">Thông tin khuyến mãi</h2>
             <p className="section-subtitle">
-              Cập nhật các chương trình ưu đãi độc quyền, quà tặng hấp dẫn và chính sách trợ giá mới nhất
+              Cập nhật các chương trình ưu đãi độc quyền, quà tặng hấp dẫn và
+              chính sách trợ giá mới nhất
             </p>
           </div>
         </div>
@@ -309,7 +310,9 @@ function PromotionRowSlider({ promotions, isLoading }) {
               <div className="promo-modal-header-left">
                 <span
                   className="promo-tag-badge-modal"
-                  style={{ backgroundColor: selectedPromo.badgeColor || "#e11d48" }}
+                  style={{
+                    backgroundColor: selectedPromo.badgeColor || "#e11d48",
+                  }}
                 >
                   {selectedPromo.tag}
                 </span>
@@ -338,18 +341,24 @@ function PromotionRowSlider({ promotions, isLoading }) {
               {selectedPromo.details && (
                 <div className="promo-details-box">
                   <h4 className="promo-details-title">
-                    <i className="bi bi-info-circle-fill" style={{ color: "#23408e" }}></i>{" "}
+                    <i
+                      className="bi bi-info-circle-fill"
+                      style={{ color: "#23408e" }}
+                    ></i>{" "}
                     Thể lệ & Điều kiện áp dụng
                   </h4>
                   <ul className="promo-details-list">
                     <li>
-                      <strong>Điều kiện áp dụng:</strong> {selectedPromo.details.condition}
+                      <strong>Điều kiện áp dụng:</strong>{" "}
+                      {selectedPromo.details.condition}
                     </li>
                     <li>
-                      <strong>Quà tặng / Ưu đãi:</strong> {selectedPromo.details.gift}
+                      <strong>Quà tặng / Ưu đãi:</strong>{" "}
+                      {selectedPromo.details.gift}
                     </li>
                     <li>
-                      <strong>Cách thức tham gia:</strong> {selectedPromo.details.howToJoin}
+                      <strong>Cách thức tham gia:</strong>{" "}
+                      {selectedPromo.details.howToJoin}
                     </li>
                     <li>
                       <strong>Lưu ý:</strong> {selectedPromo.details.note}
@@ -396,32 +405,39 @@ export default function Products() {
   const [promotions, setPromotions] = useState(mockPromotions);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [siteSettings, setSiteSettings] = useState(null);
 
   // Bộ lọc từ URL
   const initialCategory =
     searchParams.get("category") ||
     (location.hash ? location.hash.replace("#", "") : "all");
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
-  const [searchKeyword, setSearchKeyword] = useState(() => searchParams.get("search") || "");
-  const [sortBy, setSortBy] = useState(() => searchParams.get("sort") || "default");
+  const [searchKeyword, setSearchKeyword] = useState(
+    () => searchParams.get("search") || "",
+  );
+  const [sortBy, setSortBy] = useState(
+    () => searchParams.get("sort") || "default",
+  );
 
-  // 1. Tải danh mục và khuyến mãi từ API khi mount
+  // 1. Tải danh mục, khuyến mãi và cài đặt hệ thống từ API khi mount
   useEffect(() => {
     let isMounted = true;
 
     async function loadInitialData() {
       try {
-        const [catRes, promoRes] = await Promise.all([
+        const [catRes, promoRes, settingsRes] = await Promise.all([
           productService.getCategories(),
           productService.getPromotions(),
+          productService.getSettings(),
         ]);
 
         if (isMounted) {
-          if (catRes.data?.length) setCategories(catRes.data);
-          if (promoRes.data?.length) setPromotions(promoRes.data);
+          if (catRes?.data?.length) setCategories(catRes.data);
+          if (promoRes?.data?.length) setPromotions(promoRes.data);
+          if (settingsRes?.data) setSiteSettings(settingsRes.data);
         }
       } catch (err) {
-        console.error("Lỗi tải danh mục / khuyến mãi:", err);
+        console.error("Lỗi tải danh mục / khuyến mãi / cài đặt:", err);
       }
     }
 
@@ -517,7 +533,7 @@ export default function Products() {
   const getProductsForCategory = useCallback(
     (catId) => {
       let items = products.filter(
-        (p) => String(p.categoryId) === String(catId)
+        (p) => String(p.categoryId) === String(catId),
       );
 
       if (selectedCategory === "all") {
@@ -527,7 +543,7 @@ export default function Products() {
 
       return items;
     },
-    [products, selectedCategory]
+    [products, selectedCategory],
   );
 
   // Danh mục hiển thị trên giao diện
@@ -542,9 +558,10 @@ export default function Products() {
       {/* ================= HERO BANNER ================= */}
       <section
         className="product-hero-banner"
-        style={bannerMotherBaby ? { backgroundImage: `url(${bannerMotherBaby})` } : undefined}
-      >
-      </section>
+        style={{
+          backgroundImage: `url(${siteSettings?.productPageBanner || bannerMotherBaby})`,
+        }}
+      ></section>
 
       {/* ================= PHẦN THÂN TRANG ================= */}
       <div className="product-main-content">
@@ -655,13 +672,9 @@ export default function Products() {
           {/* Mục khuyến mãi */}
           {(selectedCategory === "all" ||
             selectedCategory === "thong-tin-khuyen-mai") && (
-            <PromotionRowSlider
-              promotions={promotions}
-              isLoading={isLoading}
-            />
+            <PromotionRowSlider promotions={promotions} isLoading={isLoading} />
           )}
         </main>
-
       </div>
     </div>
   );

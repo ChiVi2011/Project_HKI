@@ -19,7 +19,8 @@ export function normalizeProduct(raw) {
   if (!raw) return null;
 
   // Lấy ID
-  const id = raw.ProductID || raw.id || `sp-${Math.random().toString(36).substr(2, 9)}`;
+  const id =
+    raw.ProductID || raw.id || `sp-${Math.random().toString(36).substr(2, 9)}`;
 
   // Lấy Category ID
   let categoryId = raw.CategoryID || raw.categoryId || "san-pham-cho-be";
@@ -40,7 +41,10 @@ export function normalizeProduct(raw) {
     price = Number(raw.Price);
   } else if (raw.price !== undefined && raw.price !== null) {
     price = Number(raw.price);
-  } else if (Array.isArray(raw.ProductVariants) && raw.ProductVariants.length > 0) {
+  } else if (
+    Array.isArray(raw.ProductVariants) &&
+    raw.ProductVariants.length > 0
+  ) {
     price = Number(raw.ProductVariants[0].Price || 0);
   }
 
@@ -52,7 +56,10 @@ export function normalizeProduct(raw) {
     packaging = raw.packaging;
   } else if (raw.unit) {
     packaging = raw.unit;
-  } else if (Array.isArray(raw.ProductVariants) && raw.ProductVariants.length > 0) {
+  } else if (
+    Array.isArray(raw.ProductVariants) &&
+    raw.ProductVariants.length > 0
+  ) {
     packaging = raw.ProductVariants[0].VariantName || packaging;
   }
 
@@ -61,7 +68,11 @@ export function normalizeProduct(raw) {
     categoryId: String(categoryId),
     brand: raw.BrandName || raw.brand || "VitaDairy",
     name: raw.ProductName || raw.name || "Sản phẩm Dinh dưỡng VitaDairy",
-    slogan: raw.slogan || raw.Slogan || raw.Tagline || "Dinh dưỡng chuẩn y học cho cả gia đình",
+    slogan:
+      raw.slogan ||
+      raw.Slogan ||
+      raw.Tagline ||
+      "Dinh dưỡng chuẩn y học cho cả gia đình",
     description:
       raw.Description ||
       raw.description ||
@@ -99,7 +110,8 @@ export function normalizeCategory(raw) {
       "Dinh dưỡng toàn diện và chuyên biệt cho từng thành viên",
     icon: raw.icon || "bi-grid-fill",
     color: raw.color || "#23408e",
-    bgGradient: raw.bgGradient || "linear-gradient(135deg, #f0f7ff 0%, #e0eeff 100%)",
+    bgGradient:
+      raw.bgGradient || "linear-gradient(135deg, #f0f7ff 0%, #e0eeff 100%)",
     brandTags: raw.brandTags || ["Tất cả"],
     bannerDesc: raw.bannerDesc || raw.Description || "",
   };
@@ -112,22 +124,38 @@ export function normalizePromotion(raw) {
   if (!raw) return null;
 
   return {
-    id: String(raw.id || raw.PromotionID || `promo-${Math.random().toString(36).substr(2, 5)}`),
+    id: String(
+      raw.id ||
+        raw.PromotionID ||
+        `promo-${Math.random().toString(36).substr(2, 5)}`,
+    ),
     title: raw.title || raw.Title || raw.Name || "Ưu đãi đặc biệt từ VitaDairy",
-    summary: raw.summary || raw.Description || "Nhận ngay quà tặng và khuyến mãi độc quyền",
+    summary:
+      raw.summary ||
+      raw.Description ||
+      "Nhận ngay quà tặng và khuyến mãi độc quyền",
     tag: raw.tag || raw.DiscountType || "Khuyến mãi",
     badgeColor: raw.badgeColor || "#e11d48",
-    date: raw.date || (raw.StartDate ? `${raw.StartDate || ""} - ${raw.EndDate || ""}` : "Đang áp dụng"),
+    date:
+      raw.date ||
+      (raw.StartDate
+        ? `${raw.StartDate || ""} - ${raw.EndDate || ""}`
+        : "Đang áp dụng"),
     imageUrl:
       raw.imageUrl ||
       raw.ImageURL ||
       raw.bannerUrl ||
       "/products/colosbaby-gold.jpg",
     details: raw.details || {
-      condition: raw.Condition || "Áp dụng cho tất cả khách hàng khi mua các sản phẩm chính hãng",
+      condition:
+        raw.Condition ||
+        "Áp dụng cho tất cả khách hàng khi mua các sản phẩm chính hãng",
       gift: raw.Gift || "Nhiều phần quà giá trị cao từ VitaDairy",
-      howToJoin: raw.HowToJoin || "Mua hàng trực tiếp tại cửa hàng hoặc đặt online",
-      note: raw.Note || "Số lượng quà tặng có hạn, chương trình có thể kết thúc sớm",
+      howToJoin:
+        raw.HowToJoin || "Mua hàng trực tiếp tại cửa hàng hoặc đặt online",
+      note:
+        raw.Note ||
+        "Số lượng quà tặng có hạn, chương trình có thể kết thúc sớm",
     },
   };
 }
@@ -142,7 +170,11 @@ export const productService = {
 
     try {
       const query = new URLSearchParams();
-      if (category && category !== "all" && category !== "thong-tin-khuyen-mai") {
+      if (
+        category &&
+        category !== "all" &&
+        category !== "thong-tin-khuyen-mai"
+      ) {
         query.append("category", category);
       }
       if (search) query.append("search", search);
@@ -167,7 +199,9 @@ export const productService = {
       }
 
       const json = await response.json();
-      const rawList = Array.isArray(json) ? json : json.data || json.products || [];
+      const rawList = Array.isArray(json)
+        ? json
+        : json.data || json.products || [];
 
       if (Array.isArray(rawList) && rawList.length > 0) {
         return {
@@ -179,13 +213,17 @@ export const productService = {
     } catch (err) {
       console.warn(
         "[productService] API chưa sẵn sàng hoặc gặp lỗi kết nối. Đang sử dụng dữ liệu mẫu dự phòng:",
-        err.message
+        err.message,
       );
       // Fallback về mock data
       let items = mockProducts.map(normalizeProduct);
 
       // Áp dụng bộ lọc local nếu dùng fallback
-      if (category && category !== "all" && category !== "thong-tin-khuyen-mai") {
+      if (
+        category &&
+        category !== "all" &&
+        category !== "thong-tin-khuyen-mai"
+      ) {
         items = items.filter((p) => p.categoryId === category);
       }
       if (search && search.trim()) {
@@ -195,7 +233,7 @@ export const productService = {
             p.name.toLowerCase().includes(kw) ||
             p.slogan.toLowerCase().includes(kw) ||
             p.description.toLowerCase().includes(kw) ||
-            p.targetUser.toLowerCase().includes(kw)
+            p.targetUser.toLowerCase().includes(kw),
         );
       }
       if (sort === "price-asc") {
@@ -230,7 +268,9 @@ export const productService = {
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const json = await response.json();
-      const list = Array.isArray(json) ? json : json.data || json.categories || [];
+      const list = Array.isArray(json)
+        ? json
+        : json.data || json.categories || [];
 
       if (Array.isArray(list) && list.length > 0) {
         return {
@@ -239,7 +279,10 @@ export const productService = {
         };
       }
     } catch (err) {
-      console.warn("[productService] Fallback categories về dữ liệu mẫu:", err.message);
+      console.warn(
+        "[productService] Fallback categories về dữ liệu mẫu:",
+        err.message,
+      );
     }
 
     return {
@@ -266,7 +309,9 @@ export const productService = {
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const json = await response.json();
-      const list = Array.isArray(json) ? json : json.data || json.promotions || [];
+      const list = Array.isArray(json)
+        ? json
+        : json.data || json.promotions || [];
 
       if (Array.isArray(list) && list.length > 0) {
         return {
@@ -275,7 +320,10 @@ export const productService = {
         };
       }
     } catch (err) {
-      console.warn("[productService] Fallback promotions về dữ liệu mẫu:", err.message);
+      console.warn(
+        "[productService] Fallback promotions về dữ liệu mẫu:",
+        err.message,
+      );
     }
 
     return {
@@ -298,10 +346,13 @@ export const productService = {
         }
       }
     } catch (err) {
-      console.warn(`[productService] Không tải được sản phẩm ${id} từ API, dùng fallback:`, err.message);
+      console.warn(
+        `[productService] Không tải được sản phẩm ${id} từ API, dùng fallback:`,
+        err.message,
+      );
     }
     const found = mockProducts.find(
-      (p) => String(p.id) === String(id) || String(p.ProductID) === String(id)
+      (p) => String(p.id) === String(id) || String(p.ProductID) === String(id),
     );
     return found ? normalizeProduct(found) : null;
   },
@@ -355,7 +406,9 @@ export const productService = {
    */
   async getOrders(params = {}) {
     const query = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_BASE_URL}/orders${query ? `?${query}` : ""}`);
+    const response = await fetch(
+      `${API_BASE_URL}/orders${query ? `?${query}` : ""}`,
+    );
     return await response.json();
   },
 
@@ -445,8 +498,8 @@ export const productService = {
    * Định dạng tiền tệ VND
    */
   /**
- * [ADMIN] Cập nhật vai trò và phân quyền người dùng
- */
+   * [ADMIN] Cập nhật vai trò và phân quyền người dùng
+   */
   async updateUserRole(userId, role, permissions, token) {
     const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
       method: "PATCH",
@@ -455,6 +508,136 @@ export const productService = {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({ role, permissions }),
+    });
+    return await response.json();
+  },
+
+  /**
+   * [ADMIN] Quản lý Danh mục
+   */
+  async createCategory(categoryData) {
+    const response = await fetch(`${API_BASE_URL}/categories`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(categoryData),
+    });
+    return await response.json();
+  },
+
+  async updateCategory(id, categoryData) {
+    const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(categoryData),
+    });
+    return await response.json();
+  },
+
+  async toggleCategoryStatus(id) {
+    const response = await fetch(`${API_BASE_URL}/categories/${id}/status`, {
+      method: "PATCH",
+    });
+    return await response.json();
+  },
+
+  async deleteCategory(id) {
+    const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+      method: "DELETE",
+    });
+    return await response.json();
+  },
+
+  /**
+   * [ADMIN] Quản lý Banners
+   */
+  async getBanners(params = {}) {
+    try {
+      const query = new URLSearchParams(params).toString();
+      const response = await fetch(
+        `${API_BASE_URL}/banners${query ? `?${query}` : ""}`,
+      );
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (err) {
+      console.warn("[productService] Lỗi khi tải banners từ API:", err.message);
+    }
+    return { success: false, data: [] };
+  },
+
+  async createBanner(bannerData) {
+    const response = await fetch(`${API_BASE_URL}/banners`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bannerData),
+    });
+    return await response.json();
+  },
+
+  async updateBanner(id, bannerData) {
+    const response = await fetch(`${API_BASE_URL}/banners/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bannerData),
+    });
+    return await response.json();
+  },
+
+  async toggleBannerStatus(id) {
+    const response = await fetch(`${API_BASE_URL}/banners/${id}/status`, {
+      method: "PATCH",
+    });
+    return await response.json();
+  },
+
+  async deleteBanner(id) {
+    const response = await fetch(`${API_BASE_URL}/banners/${id}`, {
+      method: "DELETE",
+    });
+    return await response.json();
+  },
+
+  /**
+   * [ADMIN] Quản lý Cài đặt hệ thống (Settings)
+   */
+  async getSettings() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/settings`);
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (err) {
+      console.warn(
+        "[productService] Lỗi khi tải settings từ API:",
+        err.message,
+      );
+    }
+    return {
+      success: true,
+      data: {
+        settingKey: "general_settings",
+        siteName: "ViDairy - Sữa Dinh Dưỡng Chuẩn Y Học",
+        logoUrl: "/src/assets/img/logo.png",
+        productPageBanner: "/src/assets/img/mother_baby_banner.jpg",
+        productPageTitle: "VitaDairy Luôn Đồng Hành Cùng Mẹ Và Bé",
+        productPageDescription:
+          "ViDairy hướng tới sản xuất các sản phẩm sữa chăm sóc sức khỏe người tiêu dùng ở nhiều lứa tuổi...",
+      },
+    };
+  },
+
+  async updateSettings(settingsData) {
+    const response = await fetch(`${API_BASE_URL}/settings`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settingsData),
+    });
+    return await response.json();
+  },
+
+  async resetSettings() {
+    const response = await fetch(`${API_BASE_URL}/settings/reset`, {
+      method: "POST",
     });
     return await response.json();
   },

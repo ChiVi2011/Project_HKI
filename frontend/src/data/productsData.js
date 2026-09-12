@@ -8,45 +8,59 @@ export const categoriesData = [
     id: "san-pham-cho-me",
     name: "Sản phẩm cho mẹ",
     title: "Sản Phẩm Cho Mẹ Bầu & Sau Sinh",
-    subTitle: "Dinh dưỡng chuẩn vàng hỗ trợ mẹ giảm ốm vặt thai kỳ, ngừa thiếu máu, thai nhi phát triển khỏe mạnh",
+    subTitle:
+      "Dinh dưỡng chuẩn vàng hỗ trợ mẹ giảm ốm vặt thai kỳ, ngừa thiếu máu, thai nhi phát triển khỏe mạnh",
     icon: "bi-heart-fill",
     color: "#e11d48",
     bgGradient: "linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)",
     brandTags: ["Tất cả", "ColosBaby Mum", "Oggi Mum", "Mama Care"],
-    bannerDesc: "Bộ sản phẩm dinh dưỡng chuyên biệt dành riêng cho phụ nữ chuẩn bị mang thai, đang trong thai kỳ và thời kỳ cho con bú. Bổ sung kháng thể IgG từ sữa non Mỹ cùng Axit Folic và Sắt hữu cơ.",
+    bannerDesc:
+      "Bộ sản phẩm dinh dưỡng chuyên biệt dành riêng cho phụ nữ chuẩn bị mang thai, đang trong thai kỳ và thời kỳ cho con bú. Bổ sung kháng thể IgG từ sữa non Mỹ cùng Axit Folic và Sắt hữu cơ.",
   },
   {
     id: "san-pham-cho-be",
     name: "Sản phẩm cho bé",
     title: "Sản Phẩm Dinh Dưỡng Cho Bé",
-    subTitle: "Đa dạng giải pháp dinh dưỡng giúp trẻ miễn dịch khỏe, tiêu hóa tốt, tăng cân & cao lớn vượt trội",
+    subTitle:
+      "Đa dạng giải pháp dinh dưỡng giúp trẻ miễn dịch khỏe, tiêu hóa tốt, tăng cân & cao lớn vượt trội",
     icon: "bi-emoji-smile-fill",
     color: "#2563eb",
     bgGradient: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
     brandTags: ["Tất cả", "ColosBaby", "Oggi", "Calokid", "Vitagrow"],
-    bannerDesc: "Các dòng sữa công thức bổ sung sữa non ColosIgG 24h, 2'-FL HMO, DHA từ tảo thiên nhiên và Canxi MK7 giúp bé phát triển toàn diện cả thể chất lẫn trí tuệ.",
+    bannerDesc:
+      "Các dòng sữa công thức bổ sung sữa non ColosIgG 24h, 2'-FL HMO, DHA từ tảo thiên nhiên và Canxi MK7 giúp bé phát triển toàn diện cả thể chất lẫn trí tuệ.",
   },
   {
     id: "san-pham-cho-nguoi-lon-tuoi",
     name: "Sản phẩm cho người lớn tuổi",
     title: "Sản Phẩm Cho Người Lớn Tuổi & Bệnh Lý",
-    subTitle: "Dinh dưỡng chuyên biệt hỗ trợ tim mạch, xương khớp dẻo dai, tiểu đường và bệnh nhân suy thận",
+    subTitle:
+      "Dinh dưỡng chuyên biệt hỗ trợ tim mạch, xương khớp dẻo dai, tiểu đường và bệnh nhân suy thận",
     icon: "bi-shield-fill-check",
     color: "#059669",
     bgGradient: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
     brandTags: ["Tất cả", "CaloSure", "Nepro", "Gluvita", "Fohepta"],
-    bannerDesc: "Giải pháp dinh dưỡng y học chuyên biệt giúp phục hồi sức khỏe người lớn tuổi, ổn định đường huyết, kiểm soát huyết áp và giảm tải cho thận.",
+    bannerDesc:
+      "Giải pháp dinh dưỡng y học chuyên biệt giúp phục hồi sức khỏe người lớn tuổi, ổn định đường huyết, kiểm soát huyết áp và giảm tải cho thận.",
   },
   {
     id: "dung-kem",
     name: "Sản phẩm dùng kèm",
     title: "Sản Phẩm Tăng Cường Miễn Dịch Dùng Kèm",
-    subTitle: "100% Sữa non nguyên chất nhập khẩu từ Mỹ bổ sung kháng thể IgG tự nhiên cho cả gia đình",
+    subTitle:
+      "100% Sữa non nguyên chất nhập khẩu từ Mỹ bổ sung kháng thể IgG tự nhiên cho cả gia đình",
     icon: "bi-plus-circle-fill",
     color: "#d97706",
     bgGradient: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
-    brandTags: ["Tất cả", "ColosIgG 24h", "ColosImmune", "Viên ngậm", "Bột dinh dưỡng"],
-    bannerDesc: "Nguồn sữa non 24h quý giá từ các trang trại bò sữa hạng A tại Mỹ, tiện lợi pha kèm sữa, bột ăn dặm hoặc thức uống hằng ngày.",
+    brandTags: [
+      "Tất cả",
+      "ColosIgG 24h",
+      "ColosImmune",
+      "Viên ngậm",
+      "Bột dinh dưỡng",
+    ],
+    bannerDesc:
+      "Nguồn sữa non 24h quý giá từ các trang trại bò sữa hạng A tại Mỹ, tiện lợi pha kèm sữa, bột ăn dặm hoặc thức uống hằng ngày.",
   },
 ];
 
@@ -63,7 +77,8 @@ export const productsData = [
     brand: "ColosBaby Mum",
     name: "ColosBaby Gold for Mum (Lon 800g)",
     slogan: "Giảm ốm vặt thai kỳ - Cần sữa non ColosIgG 24h",
-    description: "Kháng thể IgG tự nhiên từ sữa non Mỹ 24h kết hợp Axit Folic, Sắt, Canxi ngừa dị tật và FOS/Inulin chống táo bón cho mẹ bầu.",
+    description:
+      "Kháng thể IgG tự nhiên từ sữa non Mỹ 24h kết hợp Axit Folic, Sắt, Canxi ngừa dị tật và FOS/Inulin chống táo bón cho mẹ bầu.",
     packaging: "Lon thiếc 800g",
     targetUser: "Mẹ mang thai & sau sinh cho con bú",
     price: 445000,
@@ -79,7 +94,8 @@ export const productsData = [
     brand: "ColosBaby Mum",
     name: "ColosBaby Gold for Mum (Lon 400g)",
     slogan: "Dinh dưỡng chuẩn cho mẹ bầu & thai nhi",
-    description: "Hương vị thanh nhạt dễ uống, giảm cảm giác thai nghén, cung cấp trọn vẹn 25 vitamin & khoáng chất thiết yếu.",
+    description:
+      "Hương vị thanh nhạt dễ uống, giảm cảm giác thai nghén, cung cấp trọn vẹn 25 vitamin & khoáng chất thiết yếu.",
     packaging: "Lon thiếc 400g",
     targetUser: "Phụ nữ mang thai & cho con bú",
     price: 245000,
@@ -95,7 +111,8 @@ export const productsData = [
     brand: "Oggi Mum",
     name: "Oggi Mum Bổ Não & Khỏe Xương (Lon 900g)",
     slogan: "Thai kỳ khỏe mạnh - Bé phát triển thông minh",
-    description: "Bổ sung hệ dưỡng chất DHA, Choline, Canxi và Vitamin D3 giúp thai nhi phát triển não bộ và mẹ có hệ xương vững chắc.",
+    description:
+      "Bổ sung hệ dưỡng chất DHA, Choline, Canxi và Vitamin D3 giúp thai nhi phát triển não bộ và mẹ có hệ xương vững chắc.",
     packaging: "Lon thiếc 900g",
     targetUser: "Phụ nữ dự định mang thai và đang mang thai",
     price: 395000,
@@ -111,7 +128,8 @@ export const productsData = [
     brand: "Oggi Mum",
     name: "Oggi Mum Pha Sẵn Tiện Lợi (Lốc 4x180ml)",
     slogan: "Dinh dưỡng tiện lợi mọi lúc mọi nơi cho mẹ",
-    description: "Dạng hộp pha sẵn tiệt trùng tiện lợi mang đi làm, bổ sung vi chất đầy đủ không lo mệt mỏi thai kỳ.",
+    description:
+      "Dạng hộp pha sẵn tiệt trùng tiện lợi mang đi làm, bổ sung vi chất đầy đủ không lo mệt mỏi thai kỳ.",
     packaging: "Lốc 4 hộp x 180ml",
     targetUser: "Mẹ bầu năng động, bận rộn",
     price: 52000,
@@ -127,7 +145,8 @@ export const productsData = [
     brand: "Mama Care",
     name: "Mama Care Plus Dinh Dưỡng Toàn Diện (Lon 400g)",
     slogan: "Bổ sung Sắt & Axit Folic ngừa thiếu máu",
-    description: "Công thức tối ưu hàm lượng Sắt hữu cơ và Kẽm, hỗ trợ mẹ tái tạo hồng cầu và phục hồi thể trạng sau sinh nhanh chóng.",
+    description:
+      "Công thức tối ưu hàm lượng Sắt hữu cơ và Kẽm, hỗ trợ mẹ tái tạo hồng cầu và phục hồi thể trạng sau sinh nhanh chóng.",
     packaging: "Lon thiếc 400g",
     targetUser: "Mẹ mang thai và sau sinh",
     price: 280000,
@@ -144,7 +163,8 @@ export const productsData = [
     brand: "ColosBaby Mum",
     name: "ColosBaby Mum Bio Hấp Thu & Chống Táo Bón (800g)",
     slogan: "Tiêu hóa êm ái - Hấp thu trọn vẹn dưỡng chất",
-    description: "Bổ sung phức hợp 2'-FL HMO và Lợi khuẩn Bifidobacterium cao cấp giúp mẹ bầu xóa tan nỗi lo táo bón suốt thai kỳ.",
+    description:
+      "Bổ sung phức hợp 2'-FL HMO và Lợi khuẩn Bifidobacterium cao cấp giúp mẹ bầu xóa tan nỗi lo táo bón suốt thai kỳ.",
     packaging: "Lon thiếc 800g",
     targetUser: "Mẹ bầu có hệ tiêu hóa nhạy cảm",
     price: 465000,
@@ -160,7 +180,8 @@ export const productsData = [
     brand: "Mama Care",
     name: "Dầu Ăn Dinh Dưỡng Mama Gold Bổ Sung DHA (Chai 250ml)",
     slogan: "Giàu Omega 3-6-9 từ dầu hạt lanh và cá hồi",
-    description: "Dầu ăn dinh dưỡng tinh khiết dùng trộn salad, cháo, súp cung cấp nguồn chất béo chưa bão hòa quý giá cho thai nhi.",
+    description:
+      "Dầu ăn dinh dưỡng tinh khiết dùng trộn salad, cháo, súp cung cấp nguồn chất béo chưa bão hòa quý giá cho thai nhi.",
     packaging: "Chai thủy tinh 250ml",
     targetUser: "Mẹ mang thai và bé tập ăn dặm",
     price: 88000,
@@ -176,7 +197,8 @@ export const productsData = [
     brand: "Mama Care",
     name: "Trà Thảo Mộc Lợi Sữa Mama Tea (Hộp 20 gói)",
     slogan: "Thảo mộc tự nhiên kích thích sữa mẹ dồi dào",
-    description: "Chiết xuất 100% hoa cúc, tiểu hồi và thì là hữu cơ giúp mẹ sau sinh thư giãn tinh thần và gọi sữa về dồi dào, thơm mát.",
+    description:
+      "Chiết xuất 100% hoa cúc, tiểu hồi và thì là hữu cơ giúp mẹ sau sinh thư giãn tinh thần và gọi sữa về dồi dào, thơm mát.",
     packaging: "Hộp 20 gói túi lọc",
     targetUser: "Mẹ sau sinh đang cho con bú",
     price: 125000,
@@ -192,7 +214,8 @@ export const productsData = [
     brand: "Mama Care",
     name: "Ngũ Cốc Dinh Dưỡng Hạt Cao Cấp Cho Mẹ Bầu (Hộp 500g)",
     slogan: "Bữa phụ thơm ngon giàu chất xơ & đạm thực vật",
-    description: "Kết hợp từ 12 loại hạt dinh dưỡng (Óc chó, Hạnh nhân, Yến mạch, Macca) bổ sung năng lượng thanh lành cho mẹ bầu.",
+    description:
+      "Kết hợp từ 12 loại hạt dinh dưỡng (Óc chó, Hạnh nhân, Yến mạch, Macca) bổ sung năng lượng thanh lành cho mẹ bầu.",
     packaging: "Hộp thiếc 500g",
     targetUser: "Phụ nữ mang thai và mẹ cho con bú",
     price: 185000,
@@ -212,7 +235,8 @@ export const productsData = [
     brand: "ColosBaby",
     name: "ColosBaby Gold 1+ (Lon 800g)",
     slogan: "Miễn dịch khỏe - Tăng cân tốt",
-    description: "Sữa non ColosIgG 24h nhập khẩu độc quyền từ Mỹ, giúp bé tăng cường miễn dịch, giảm ốm vặt và tăng cân đều.",
+    description:
+      "Sữa non ColosIgG 24h nhập khẩu độc quyền từ Mỹ, giúp bé tăng cường miễn dịch, giảm ốm vặt và tăng cân đều.",
     packaging: "Lon thiếc 800g",
     targetUser: "Trẻ từ 1 - 2 tuổi",
     price: 485000,
@@ -228,7 +252,8 @@ export const productsData = [
     brand: "ColosBaby",
     name: "ColosBaby IQ Gold 2+ (Lon 800g)",
     slogan: "Tăng cường đề kháng - Phát triển trí não",
-    description: "Tăng cường DHA từ tảo biển thiên nhiên, ARA, Choline giúp hoàn thiện thị giác và phát triển trí tuệ nhạy bén.",
+    description:
+      "Tăng cường DHA từ tảo biển thiên nhiên, ARA, Choline giúp hoàn thiện thị giác và phát triển trí tuệ nhạy bén.",
     packaging: "Lon thiếc 800g",
     targetUser: "Trẻ từ 2 tuổi trở lên",
     price: 510000,
@@ -244,7 +269,8 @@ export const productsData = [
     brand: "ColosBaby",
     name: "ColosBaby Bio Gold (Lon 800g)",
     slogan: "Miễn dịch khỏe - Tiêu hóa êm",
-    description: "Bộ ba 2'-FL HMO, Lợi khuẩn Bifidobacterium và FOS/Inulin giúp đường ruột bé khỏe mạnh, êm bụng ngủ ngon.",
+    description:
+      "Bộ ba 2'-FL HMO, Lợi khuẩn Bifidobacterium và FOS/Inulin giúp đường ruột bé khỏe mạnh, êm bụng ngủ ngon.",
     packaging: "Lon thiếc 800g",
     targetUser: "Trẻ từ 1 - 3 tuổi",
     price: 495000,
@@ -260,7 +286,8 @@ export const productsData = [
     brand: "Oggi",
     name: "Oggi Gold PRO Tăng Cân Nhanh (Lon 900g)",
     slogan: "Tăng cân nhanh - Ngừa táo bón",
-    description: "Dinh dưỡng giàu năng lượng chuyên biệt cho trẻ nhẹ cân, gầy còm cần bắt kịp đà tăng trưởng chuẩn.",
+    description:
+      "Dinh dưỡng giàu năng lượng chuyên biệt cho trẻ nhẹ cân, gầy còm cần bắt kịp đà tăng trưởng chuẩn.",
     packaging: "Lon thiếc 900g",
     targetUser: "Trẻ từ 1 tuổi trở lên",
     price: 360000,
@@ -276,7 +303,8 @@ export const productsData = [
     brand: "Calokid",
     name: "Calokid Gold Cao Năng Lượng (Lon 800g)",
     slogan: "Dinh dưỡng cao năng lượng cho trẻ biếng ăn",
-    description: "Đậm độ năng lượng chuẩn 1.0 kcal/ml kết hợp đạm Whey thủy phân giúp bù đắp năng lượng thiếu hụt cho bé.",
+    description:
+      "Đậm độ năng lượng chuẩn 1.0 kcal/ml kết hợp đạm Whey thủy phân giúp bù đắp năng lượng thiếu hụt cho bé.",
     packaging: "Lon thiếc 800g",
     targetUser: "Trẻ suy dinh dưỡng, nhẹ cân",
     price: 450000,
@@ -293,7 +321,8 @@ export const productsData = [
     brand: "ColosBaby",
     name: "ColosBaby Gold Pedia Chuyên Biệt Cho Bé Biếng Ăn (800g)",
     slogan: "Kích thích ngon miệng - Bắt kịp đà tăng trưởng",
-    description: "Hệ vitamin nhóm B, Kẽm và Lysine hàm lượng cao giúp bé ăn ngon miệng tự nhiên, bổ sung năng lượng cao phục hồi thể trạng.",
+    description:
+      "Hệ vitamin nhóm B, Kẽm và Lysine hàm lượng cao giúp bé ăn ngon miệng tự nhiên, bổ sung năng lượng cao phục hồi thể trạng.",
     packaging: "Lon thiếc 800g",
     targetUser: "Trẻ biếng ăn từ 1 - 10 tuổi",
     price: 530000,
@@ -309,7 +338,8 @@ export const productsData = [
     brand: "Oggi",
     name: "Oggi Gold GROW Phát Triển Chiều Cao (Lon 900g)",
     slogan: "Hệ dưỡng chất Canxi hữu cơ & Vitamin MK7",
-    description: "Công thức tối ưu hóa Canxi và Vitamin D3 kết hợp MK7 giúp xương chắc khỏe, thúc đẩy bé cao lớn vượt trội.",
+    description:
+      "Công thức tối ưu hóa Canxi và Vitamin D3 kết hợp MK7 giúp xương chắc khỏe, thúc đẩy bé cao lớn vượt trội.",
     packaging: "Lon thiếc 900g",
     targetUser: "Trẻ từ 1 - 9 tuổi",
     price: 370000,
@@ -325,7 +355,8 @@ export const productsData = [
     brand: "Oggi",
     name: "Sữa Trái Cây Oggi Vị Cam & Dâu Tươi Mát (Lốc 4x180ml)",
     slogan: "Năng lượng sảng khoái - Bổ sung vitamin A & C",
-    description: "Sự kết hợp tuyệt vời giữa nguồn sữa thơm ngon và nước ép trái cây tự nhiên giúp bé luôn tràn đầy hứng khởi.",
+    description:
+      "Sự kết hợp tuyệt vời giữa nguồn sữa thơm ngon và nước ép trái cây tự nhiên giúp bé luôn tràn đầy hứng khởi.",
     packaging: "Lốc 4 hộp x 180ml",
     targetUser: "Trẻ em trên 1 tuổi",
     price: 48000,
@@ -341,7 +372,8 @@ export const productsData = [
     brand: "Vitagrow",
     name: "Vitagrow Plus Đột Phá Chiều Cao 100% MK7 (Lon 900g)",
     slogan: "Vươn tầm vóc chuẩn - Tăng trưởng vượt bậc",
-    description: "Chứa 100% MK7 nguồn gốc tự nhiên giúp hấp thu Canxi tối đa vào xương, định hình khung xương vững vàng cho bé.",
+    description:
+      "Chứa 100% MK7 nguồn gốc tự nhiên giúp hấp thu Canxi tối đa vào xương, định hình khung xương vững vàng cho bé.",
     packaging: "Lon thiếc 900g",
     targetUser: "Trẻ từ 1 - 3 tuổi",
     price: 465000,
@@ -361,7 +393,8 @@ export const productsData = [
     brand: "CaloSure",
     name: "CaloSure America (Lon 800g)",
     slogan: "Tăng cường miễn dịch - Bảo vệ tim mạch",
-    description: "Giàu kháng thể IgG từ sữa non Mỹ, Plant Sterols giảm mỡ máu, bảo vệ tim mạch và hỗ trợ giấc ngủ ngon.",
+    description:
+      "Giàu kháng thể IgG từ sữa non Mỹ, Plant Sterols giảm mỡ máu, bảo vệ tim mạch và hỗ trợ giấc ngủ ngon.",
     packaging: "Lon thiếc 800g",
     targetUser: "Người lớn tuổi, người cần phục hồi sức khỏe",
     price: 520000,
@@ -377,7 +410,8 @@ export const productsData = [
     brand: "CaloSure",
     name: "CaloSure Gold (Lon 900g)",
     slogan: "Xương khớp dẻo dai - 100% không Lactose",
-    description: "Không chứa đường Lactose tránh rối loạn tiêu hóa, bổ sung Glucosamine và Canxi cho sụn khớp linh hoạt.",
+    description:
+      "Không chứa đường Lactose tránh rối loạn tiêu hóa, bổ sung Glucosamine và Canxi cho sụn khớp linh hoạt.",
     packaging: "Lon thiếc 900g",
     targetUser: "Người cao tuổi, người có vấn đề khớp",
     price: 460000,
@@ -393,7 +427,8 @@ export const productsData = [
     brand: "Nepro",
     name: "Nepro 1 Dành Cho Người Suy Thận (Lon 400g)",
     slogan: "Dinh dưỡng giảm Protein cho bệnh nhân thận",
-    description: "Hàm lượng đạm thấp, giảm tải gánh nặng cho thận, kiểm soát chặt chẽ Natri, Kali, Photpho chuẩn y khoa.",
+    description:
+      "Hàm lượng đạm thấp, giảm tải gánh nặng cho thận, kiểm soát chặt chẽ Natri, Kali, Photpho chuẩn y khoa.",
     packaging: "Lon thiếc 400g",
     targetUser: "Người suy thận giai đoạn trước lọc máu",
     price: 250000,
@@ -409,7 +444,8 @@ export const productsData = [
     brand: "Nepro",
     name: "Nepro 2 Cho Người Chạy Thận (Lon 400g)",
     slogan: "Dinh dưỡng giàu Protein sau lọc máu",
-    description: "Hàm lượng protein cao bù đắp lượng đạm thất thoát sau khi lọc máu định kỳ, giúp hồi phục thể lực nhanh.",
+    description:
+      "Hàm lượng protein cao bù đắp lượng đạm thất thoát sau khi lọc máu định kỳ, giúp hồi phục thể lực nhanh.",
     packaging: "Lon thiếc 400g",
     targetUser: "Bệnh nhân chạy thận nhân tạo chu kỳ",
     price: 265000,
@@ -425,7 +461,8 @@ export const productsData = [
     brand: "Gluvita",
     name: "Gluvita Gold Cho Người Tiểu Đường (Lon 900g)",
     slogan: "Kiểm soát đường huyết - Ổn định tim mạch",
-    description: "Hệ đường bột tiên tiến chỉ số GI thấp giúp ổn định đường huyết, bổ sung chất béo MUFA, PUFA tốt cho tim.",
+    description:
+      "Hệ đường bột tiên tiến chỉ số GI thấp giúp ổn định đường huyết, bổ sung chất béo MUFA, PUFA tốt cho tim.",
     packaging: "Lon thiếc 900g",
     targetUser: "Người bệnh đái tháo đường & tiền đái tháo đường",
     price: 470000,
@@ -442,7 +479,8 @@ export const productsData = [
     brand: "CaloSure",
     name: "CaloSure America Chai Tiệt Trùng 237ml (Lốc 6 chai)",
     slogan: "Bổ sung dinh dưỡng nhanh gọn không cần pha",
-    description: "Dạng chai pha sẵn đóng nắp tiện dụng, cung cấp trọn vẹn kháng thể IgG và năng lượng tức thì khi đi lại.",
+    description:
+      "Dạng chai pha sẵn đóng nắp tiện dụng, cung cấp trọn vẹn kháng thể IgG và năng lượng tức thì khi đi lại.",
     packaging: "Lốc 6 chai x 237ml",
     targetUser: "Người ốm mệt, người cao tuổi bận rộn",
     price: 252000,
@@ -458,7 +496,8 @@ export const productsData = [
     brand: "Fohepta",
     name: "Fohepta Dinh Dưỡng Bảo Vệ & Phục Hồi Gan (Lon 400g)",
     slogan: "Công thức giàu acid amin phân nhánh BCAA",
-    description: "Giúp tăng cường chuyển hóa, giải độc gan, giảm ứ trệ và cải thiện tình trạng dinh dưỡng cho người bệnh gan mãn tính.",
+    description:
+      "Giúp tăng cường chuyển hóa, giải độc gan, giảm ứ trệ và cải thiện tình trạng dinh dưỡng cho người bệnh gan mãn tính.",
     packaging: "Lon thiếc 400g",
     targetUser: "Người viêm gan, xơ gan, men gan cao",
     price: 290000,
@@ -474,7 +513,8 @@ export const productsData = [
     brand: "Gluvita",
     name: "Gluvita Gold Pha Sẵn Cho Người Tiểu Đường (Lốc 4x200ml)",
     slogan: "Kiểm soát đường huyết tiện lợi mọi nơi",
-    description: "Bữa phụ dinh dưỡng chuẩn y khoa đóng hộp tiệt trùng, giúp người đái tháo đường kiểm soát cơn hạ đường huyết.",
+    description:
+      "Bữa phụ dinh dưỡng chuẩn y khoa đóng hộp tiệt trùng, giúp người đái tháo đường kiểm soát cơn hạ đường huyết.",
     packaging: "Lốc 4 hộp x 200ml",
     targetUser: "Bệnh nhân tiểu đường hay di chuyển",
     price: 110000,
@@ -490,7 +530,8 @@ export const productsData = [
     brand: "CaloSure",
     name: "CaloSure Canxi Khớp Dẻo Dai Xương Chắc (Lon 900g)",
     slogan: "Bộ ba Canxi Nano, Collagen Type II & Vitamin K2",
-    description: "Tái tạo mô sụn khớp, giảm đau nhức thoái hóa khớp và phòng ngừa loãng xương hiệu quả ở người sau tuổi 50.",
+    description:
+      "Tái tạo mô sụn khớp, giảm đau nhức thoái hóa khớp và phòng ngừa loãng xương hiệu quả ở người sau tuổi 50.",
     packaging: "Lon thiếc 900g",
     targetUser: "Người cao tuổi đau mỏi khớp xương",
     price: 490000,
@@ -510,7 +551,8 @@ export const productsData = [
     brand: "ColosIgG 24h",
     name: "ColosIgG 24h Dạng Gói (Hộp 60 gói x 1.5g)",
     slogan: "100% Sữa non Mỹ nguyên chất 24h đầu",
-    description: "Kháng thể IgG tự nhiên liều cao, tiện lợi pha cùng nước ấm, sữa tươi hoặc đồ ăn dặm cho mọi lứa tuổi.",
+    description:
+      "Kháng thể IgG tự nhiên liều cao, tiện lợi pha cùng nước ấm, sữa tươi hoặc đồ ăn dặm cho mọi lứa tuổi.",
     packaging: "Hộp 60 gói x 1.5g",
     targetUser: "Mọi lứa tuổi (trẻ em, người lớn, người bệnh)",
     price: 480000,
@@ -526,7 +568,8 @@ export const productsData = [
     brand: "ColosIgG 24h",
     name: "ColosIgG 24h Dạng Gói (Hộp 30 gói x 1.5g)",
     slogan: "Bổ sung kháng thể tự nhiên mỗi ngày",
-    description: "Quy cách hộp 30 gói nhỏ gọn, tiện lợi mang theo khi đi công tác hoặc du lịch, tăng sức đề kháng nhanh.",
+    description:
+      "Quy cách hộp 30 gói nhỏ gọn, tiện lợi mang theo khi đi công tác hoặc du lịch, tăng sức đề kháng nhanh.",
     packaging: "Hộp 30 gói x 1.5g",
     targetUser: "Người có sức đề kháng yếu, hay ốm vặt",
     price: 260000,
@@ -542,7 +585,8 @@ export const productsData = [
     brand: "ColosImmune",
     name: "Sữa Non ColosImmune Plus Tăng Đề Kháng (Hộp 20 gói)",
     slogan: "Đề kháng vững vàng cho cả gia đình",
-    description: "Công thức tăng cường Kẽm, Selen và Vitamin C kết hợp sữa non giúp tăng cường hàng rào miễn dịch tự nhiên.",
+    description:
+      "Công thức tăng cường Kẽm, Selen và Vitamin C kết hợp sữa non giúp tăng cường hàng rào miễn dịch tự nhiên.",
     packaging: "Hộp 20 gói x 2g",
     targetUser: "Trẻ em và người lớn cần tăng miễn dịch",
     price: 210000,
@@ -558,7 +602,8 @@ export const productsData = [
     brand: "Viên ngậm",
     name: "Viên Ngậm Dinh Dưỡng ColosBaby Kháng Khuẩn (60 viên)",
     slogan: "Bảo vệ khoang miệng và hầu họng",
-    description: "Dạng viên ngậm vị sữa ngọt dịu thơm ngon, chứa kháng thể tự nhiên bảo vệ niêm mạc họng cho bé và mẹ.",
+    description:
+      "Dạng viên ngậm vị sữa ngọt dịu thơm ngon, chứa kháng thể tự nhiên bảo vệ niêm mạc họng cho bé và mẹ.",
     packaging: "Hộp 60 viên",
     targetUser: "Trẻ từ 3 tuổi và người lớn",
     price: 135000,
@@ -574,7 +619,8 @@ export const productsData = [
     brand: "Bột dinh dưỡng",
     name: "Bột Dinh Dưỡng Colos Care Bổ Sung Canxi (Hộp 300g)",
     slogan: "Dễ dàng kết hợp cùng mọi thức uống dinh dưỡng",
-    description: "Bột sữa non giàu Canxi nano dễ hòa tan, có thể pha chung với ngũ cốc, nước trái cây hoặc sữa chua.",
+    description:
+      "Bột sữa non giàu Canxi nano dễ hòa tan, có thể pha chung với ngũ cốc, nước trái cây hoặc sữa chua.",
     packaging: "Hộp 300g",
     targetUser: "Mọi thành viên trong gia đình",
     price: 195000,
@@ -591,7 +637,8 @@ export const productsData = [
     brand: "ColosIgG 24h",
     name: "ColosIgG 24h Lon Bột 350g Tiết Kiệm",
     slogan: "Quy cách lon lớn - Tiết kiệm cho cả gia đình",
-    description: "Sữa non 100% nhập khẩu Mỹ dạng lon lớn kèm muỗng đong tiện lợi, dùng pha hằng ngày duy trì kháng thể.",
+    description:
+      "Sữa non 100% nhập khẩu Mỹ dạng lon lớn kèm muỗng đong tiện lợi, dùng pha hằng ngày duy trì kháng thể.",
     packaging: "Lon thiếc 350g",
     targetUser: "Gia đình có nhiều thành viên",
     price: 650000,
@@ -607,7 +654,8 @@ export const productsData = [
     brand: "ColosImmune",
     name: "Men Vi Sinh Bào Tử Lợi Khuẩn Colos Spore (20 ống)",
     slogan: "Khỏe đường ruột - Vững đề kháng tiêu hóa",
-    description: "Bổ sung 3 tỷ bào tử Bacillus Clausii và Bacillus Subtilis dạng nước uống trực tiếp, cân bằng hệ vi sinh đường ruột tức thì.",
+    description:
+      "Bổ sung 3 tỷ bào tử Bacillus Clausii và Bacillus Subtilis dạng nước uống trực tiếp, cân bằng hệ vi sinh đường ruột tức thì.",
     packaging: "Hộp 20 ống x 5ml",
     targetUser: "Trẻ em và người lớn bị rối loạn tiêu hóa",
     price: 160000,
@@ -623,7 +671,8 @@ export const productsData = [
     brand: "ColosImmune",
     name: "Siro Tăng Miễn Dịch & Kích Thích Ăn Ngon ColosZinc (120ml)",
     slogan: "Bổ sung Kẽm sinh học & Lysine cho trẻ",
-    description: "Dạng siro vị dâu thơm ngọt kích thích vị giác giúp bé ăn ngon miệng, tăng cường hấp thu và nâng cao hệ miễn dịch.",
+    description:
+      "Dạng siro vị dâu thơm ngọt kích thích vị giác giúp bé ăn ngon miệng, tăng cường hấp thu và nâng cao hệ miễn dịch.",
     packaging: "Chai 120ml",
     targetUser: "Trẻ biếng ăn, đề kháng kém",
     price: 145000,
@@ -639,7 +688,8 @@ export const productsData = [
     brand: "Viên ngậm",
     name: "Xịt Họng Sữa Non & Keo Ong ColosSpray (Chai 30ml)",
     slogan: "Làm dịu rát họng - Kháng khuẩn tự nhiên",
-    description: "Chiết xuất keo ong đậm đặc kết hợp kháng thể sữa non giúp sát khuẩn vòm họng, giảm ho, ngứa rát họng hiệu quả.",
+    description:
+      "Chiết xuất keo ong đậm đặc kết hợp kháng thể sữa non giúp sát khuẩn vòm họng, giảm ho, ngứa rát họng hiệu quả.",
     packaging: "Chai xịt 30ml",
     targetUser: "Người lớn và trẻ em từ 1 tuổi",
     price: 115000,
@@ -670,14 +720,18 @@ export const promotionsData = [
     badgeColor: "#e11d48",
     title: "CHÀO BẠN MỚI: TẶNG MÃ GIẢM 50.000Đ & FREESHIP ĐƠN ĐẦU TIÊN",
     date: "01/01 - 31/12/2026",
-    summary: "Đăng ký tài khoản thành viên ngay hôm nay để nhận voucher giảm 50.000đ cho đơn hàng đầu tiên cùng đặc quyền miễn phí giao hàng toàn quốc.",
-    imageUrl: "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=700&auto=format&fit=crop&q=80",
+    summary:
+      "Đăng ký tài khoản thành viên ngay hôm nay để nhận voucher giảm 50.000đ cho đơn hàng đầu tiên cùng đặc quyền miễn phí giao hàng toàn quốc.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=700&auto=format&fit=crop&q=80",
     details: {
-      condition: "Dành riêng cho khách hàng tạo tài khoản mới và phát sinh đơn hàng đầu tiên từ 350.000đ.",
+      condition:
+        "Dành riêng cho khách hàng tạo tài khoản mới và phát sinh đơn hàng đầu tiên từ 350.000đ.",
       gift: "Giảm trực tiếp 50.000đ vào tổng hóa đơn + Voucher miễn phí giao hàng tiêu chuẩn toàn quốc.",
-      howToJoin: "Đăng ký tài khoản thành công, nhập mã ưu đãi 'CHAO2026' tại bước thanh toán.",
-      note: "Mỗi khách hàng/số điện thoại chỉ được nhận ưu đãi 01 lần duy nhất trong năm 2026."
-    }
+      howToJoin:
+        "Đăng ký tài khoản thành công, nhập mã ưu đãi 'CHAO2026' tại bước thanh toán.",
+      note: "Mỗi khách hàng/số điện thoại chỉ được nhận ưu đãi 01 lần duy nhất trong năm 2026.",
+    },
   },
   {
     id: "promo-2",
@@ -685,59 +739,78 @@ export const promotionsData = [
     badgeColor: "#2563eb",
     title: "COMBO TIẾT KIỆM: MUA 2 LON SỮA TẶNG BỘ ĐỒ CHƠI LẮP RÁP TRÍ TUỆ",
     date: "01/04 - 30/06/2026",
-    summary: "Khi mua từ 2 lon sữa dinh dưỡng bất kỳ (lon 800g trở lên), ba mẹ sẽ được tặng ngay bộ đồ chơi lắp ráp khối thông minh giúp kích thích tư duy sáng tạo của bé.",
-    imageUrl: "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=700&auto=format&fit=crop&q=80",
+    summary:
+      "Khi mua từ 2 lon sữa dinh dưỡng bất kỳ (lon 800g trở lên), ba mẹ sẽ được tặng ngay bộ đồ chơi lắp ráp khối thông minh giúp kích thích tư duy sáng tạo của bé.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=700&auto=format&fit=crop&q=80",
     details: {
-      condition: "Đơn hàng có từ 2 lon sữa bột dạng lon thiếc (trọng lượng từ 800g trở lên bất kỳ).",
+      condition:
+        "Đơn hàng có từ 2 lon sữa bột dạng lon thiếc (trọng lượng từ 800g trở lên bất kỳ).",
       gift: "01 bộ đồ chơi lắp ghép mô hình trí tuệ bằng nhựa ABS nguyên sinh an toàn (trị giá 180.000đ).",
-      howToJoin: "Thêm đủ 2 lon sữa vào giỏ hàng, hệ thống sẽ tự động thêm quà tặng tương ứng.",
-      note: "Chương trình áp dụng đồng thời với các chính sách miễn phí vận chuyển."
-    }
+      howToJoin:
+        "Thêm đủ 2 lon sữa vào giỏ hàng, hệ thống sẽ tự động thêm quà tặng tương ứng.",
+      note: "Chương trình áp dụng đồng thời với các chính sách miễn phí vận chuyển.",
+    },
   },
   {
     id: "promo-3",
     tag: "Giờ vàng cuối tuần",
     badgeColor: "#059669",
-    title: "NGÀY VÀNG DINH DƯỠNG: GIẢM ĐẾN 15% TOÀN BỘ SỮA MẸ & BÉ VÀO CUỐI TUẦN",
+    title:
+      "NGÀY VÀNG DINH DƯỠNG: GIẢM ĐẾN 15% TOÀN BỘ SỮA MẸ & BÉ VÀO CUỐI TUẦN",
     date: "Thứ 6 - Chủ Nhật hàng tuần",
-    summary: "Săn deal chớp nhoáng mỗi cuối tuần với mức ưu đãi giảm giá lên đến 15% cho các dòng sữa dinh dưỡng công thức, sữa bầu và thực phẩm bổ sung tăng đề kháng.",
-    imageUrl: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=700&auto=format&fit=crop&q=80",
+    summary:
+      "Săn deal chớp nhoáng mỗi cuối tuần với mức ưu đãi giảm giá lên đến 15% cho các dòng sữa dinh dưỡng công thức, sữa bầu và thực phẩm bổ sung tăng đề kháng.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=700&auto=format&fit=crop&q=80",
     details: {
-      condition: "Áp dụng cho mọi đơn hàng đặt mua trong khung giờ vàng từ 00h00 Thứ 6 đến 23h59 Chủ Nhật.",
+      condition:
+        "Áp dụng cho mọi đơn hàng đặt mua trong khung giờ vàng từ 00h00 Thứ 6 đến 23h59 Chủ Nhật.",
       gift: "Giảm ngay 10% cho hóa đơn từ 600.000đ và giảm tới 15% cho hóa đơn từ 1.200.000đ.",
-      howToJoin: "Nhập mã voucher 'WEEKENDGOLD' ở trang Giỏ hàng để được trừ tiền trực tiếp.",
-      note: "Số lượng mã ưu đãi có hạn mỗi đợt cuối tuần, ưu tiên khách đặt mua sớm."
-    }
+      howToJoin:
+        "Nhập mã voucher 'WEEKENDGOLD' ở trang Giỏ hàng để được trừ tiền trực tiếp.",
+      note: "Số lượng mã ưu đãi có hạn mỗi đợt cuối tuần, ưu tiên khách đặt mua sớm.",
+    },
   },
   {
     id: "promo-4",
     tag: "Hội viên thân thiết",
     badgeColor: "#d97706",
-    title: "TÍCH LŨY ĐIỂM THƯỞNG: RINH NGAY XE ĐẨY DU LỊCH & GHẾ ĂN DẶM CAO CẤP",
+    title:
+      "TÍCH LŨY ĐIỂM THƯỞNG: RINH NGAY XE ĐẨY DU LỊCH & GHẾ ĂN DẶM CAO CẤP",
     date: "Xuyên suốt năm 2026",
-    summary: "Mỗi 10.000đ chi tiêu tích lũy ngay 1 điểm thưởng. Đổi ngay hàng ngàn phần quà giá trị cho bé như xe đẩy du lịch gấp gọn, ghế ăn dặm và nồi nấu cháo chậm.",
-    imageUrl: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=700&auto=format&fit=crop&q=80",
+    summary:
+      "Mỗi 10.000đ chi tiêu tích lũy ngay 1 điểm thưởng. Đổi ngay hàng ngàn phần quà giá trị cho bé như xe đẩy du lịch gấp gọn, ghế ăn dặm và nồi nấu cháo chậm.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=700&auto=format&fit=crop&q=80",
     details: {
-      condition: "Tài khoản thành viên mua sắm được tích điểm tự động khi đơn hàng hoàn tất.",
+      condition:
+        "Tài khoản thành viên mua sắm được tích điểm tự động khi đơn hàng hoàn tất.",
       gift: "Mốc 500 điểm: Ghế ăn dặm đa năng; Mốc 1000 điểm: Xe đẩy du lịch gấp gọn siêu nhẹ.",
-      howToJoin: "Vào mục Quản lý tài khoản -> Tích điểm đổi quà để chọn quà và xác nhận giao tận nhà.",
-      note: "Điểm tích lũy có giá trị bảo lưu trong vòng 12 tháng kể từ ngày phát sinh giao dịch."
-    }
+      howToJoin:
+        "Vào mục Quản lý tài khoản -> Tích điểm đổi quà để chọn quà và xác nhận giao tận nhà.",
+      note: "Điểm tích lũy có giá trị bảo lưu trong vòng 12 tháng kể từ ngày phát sinh giao dịch.",
+    },
   },
   {
     id: "promo-5",
     tag: "Đặc quyền an tâm",
     badgeColor: "#7c3aed",
-    title: "MUA SẮM AN TÂM 100%: ĐỔI TRẢ MIỄN PHÍ 7 NGÀY & TƯ VẤN DINH DƯỠNG 1:1",
+    title:
+      "MUA SẮM AN TÂM 100%: ĐỔI TRẢ MIỄN PHÍ 7 NGÀY & TƯ VẤN DINH DƯỠNG 1:1",
     date: "Cam kết đồng hành trọn đời",
-    summary: "Đặc quyền an tâm: Đổi trả sản phẩm miễn phí trong 7 ngày nếu bé không hợp khẩu vị cùng chương trình kết nối 1:1 với chuyên gia dinh dưỡng hướng dẫn chăm con.",
-    imageUrl: "https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?w=700&auto=format&fit=crop&q=80",
+    summary:
+      "Đặc quyền an tâm: Đổi trả sản phẩm miễn phí trong 7 ngày nếu bé không hợp khẩu vị cùng chương trình kết nối 1:1 với chuyên gia dinh dưỡng hướng dẫn chăm con.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1596870230751-ebdfce98ec42?w=700&auto=format&fit=crop&q=80",
     details: {
-      condition: "Sản phẩm còn nguyên tem niêm phong hoặc phát sinh lỗi do quá trình vận chuyển đóng gói.",
+      condition:
+        "Sản phẩm còn nguyên tem niêm phong hoặc phát sinh lỗi do quá trình vận chuyển đóng gói.",
       gift: "Đổi hàng tận nhà miễn phí 100% + Buổi tư vấn dinh dưỡng trực tiếp cùng bác sĩ chuyên khoa nhi.",
-      howToJoin: "Liên hệ Hotline hỗ trợ hoặc để lại số điện thoại tại khung chat để chuyên gia liên hệ lại.",
-      note: "Cam kết 100% hàng chính hãng, bồi hoàn 200% giá trị nếu phát hiện hàng không chuẩn."
-    }
+      howToJoin:
+        "Liên hệ Hotline hỗ trợ hoặc để lại số điện thoại tại khung chat để chuyên gia liên hệ lại.",
+      note: "Cam kết 100% hàng chính hãng, bồi hoàn 200% giá trị nếu phát hiện hàng không chuẩn.",
+    },
   },
 ];
 
@@ -755,7 +828,7 @@ export const formatCurrency = (amount) => {
 export const getProductById = (productId) => {
   if (!productId) return null;
   const product = productsData.find(
-    (p) => p.id === productId || String(p.id) === String(productId)
+    (p) => p.id === productId || String(p.id) === String(productId),
   );
   if (!product) return null;
 
@@ -795,10 +868,18 @@ export const getProductById = (productId) => {
     { name: "Chất béo (Lipid / MUFA)", unit: "g / 100g", value: "22.5" },
     { name: "DHA từ Tảo biển thiên nhiên", unit: "mg / 100g", value: "85" },
     { name: "2'-FL HMO", unit: "mg / 100g", value: "180" },
-    { name: "Canxi Nano & Vitamin D3", unit: "mg / 100g", value: "890 / 350 IU" },
+    {
+      name: "Canxi Nano & Vitamin D3",
+      unit: "mg / 100g",
+      value: "890 / 350 IU",
+    },
     { name: "Vitamin K2 (MK7 tự nhiên)", unit: "mcg / 100g", value: "28" },
     { name: "Chất xơ hòa tan FOS / Inulin", unit: "g / 100g", value: "3.8" },
-    { name: "Kẽm, Selen, Vitamin A, C, E", unit: "mg / 100g", value: "Đầy đủ chuẩn RDA" },
+    {
+      name: "Kẽm, Selen, Vitamin A, C, E",
+      unit: "mg / 100g",
+      value: "Đầy đủ chuẩn RDA",
+    },
   ];
 
   // Các đặc điểm nổi bật

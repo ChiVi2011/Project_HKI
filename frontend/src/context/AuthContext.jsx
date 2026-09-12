@@ -6,7 +6,9 @@ const TOKEN_KEY = "vidairy_auth_token";
 const USER_KEY = "vidairy_auth_user";
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || null);
+  const [token, setToken] = useState(
+    () => localStorage.getItem(TOKEN_KEY) || null,
+  );
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem(USER_KEY);
@@ -17,11 +19,26 @@ export function AuthProvider({ children }) {
   });
 
   const isLoggedIn = Boolean(token && user);
-  const isAdmin = Boolean(user && user.Role === "ADMIN");
-  const isStaff = Boolean(user && user.Role === "STAFF");
-  const isManager = Boolean(user && user.Role === "MANAGER");
+  const roleUpper = user?.Role ? String(user.Role).toUpperCase() : "";
+  const isSuperAdmin = Boolean(
+    user &&
+    (roleUpper === "SUPERADMIN" ||
+      user.Email === "admin@vidairy.vn" ||
+      user.Email === "superadmin@vidairy.vn"),
+  );
+  const isAdmin = Boolean(
+    user &&
+    (roleUpper === "ADMIN" ||
+      roleUpper === "SUPERADMIN" ||
+      user.Email === "admin@vidairy.vn" ||
+      user.Email === "superadmin@vidairy.vn"),
+  );
+  const isManager = Boolean(user && roleUpper === "MANAGER");
   const canAccessAdmin = Boolean(
-    user && (user.Role === "ADMIN" || user.Role === "STAFF" || user.Role === "MANAGER")
+    user &&
+    (["ADMIN", "SUPERADMIN", "MANAGER"].includes(roleUpper) ||
+      user.Email === "admin@vidairy.vn" ||
+      user.Email === "superadmin@vidairy.vn"),
   );
 
   // Đồng bộ với localStorage khi có thay đổi
@@ -97,8 +114,8 @@ export function AuthProvider({ children }) {
         token,
         user,
         isLoggedIn,
+        isSuperAdmin,
         isAdmin,
-        isStaff,
         isManager,
         canAccessAdmin,
         login,

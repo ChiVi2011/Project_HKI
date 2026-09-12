@@ -453,7 +453,7 @@
 }
 
 .breadcrumb-nav a:hover {
-  color: #8AB33F;
+  color: #8ab33f;
   text-decoration: underline;
 }
 
@@ -546,7 +546,7 @@
 }
 
 .category-tabs-list::-webkit-scrollbar-thumb {
-  background-color: #8AB33F;
+  background-color: #8ab33f;
   border-radius: 4px;
 }
 
@@ -572,7 +572,7 @@
 
 .category-tab-btn i {
   font-size: 16px;
-  color: #8AB33F;
+  color: #8ab33f;
   transition: color 0.25s ease;
 }
 
@@ -584,14 +584,14 @@
 }
 
 .category-tab-btn.active {
-  background: linear-gradient(135deg, #23408e 0%, #003DFF 100%);
+  background: linear-gradient(135deg, #23408e 0%, #003dff 100%);
   border-color: #23408e;
   color: #ffffff;
   box-shadow: 0 4px 14px rgba(35, 64, 142, 0.25);
 }
 
 .category-tab-btn.active i {
-  color: #8AB33F;
+  color: #8ab33f;
 }
 
 /* ================= 2.4. TOOLBAR: TÌM KIẾM & SẮP XẾP ================= */
@@ -642,7 +642,7 @@
 }
 
 .toolbar-search input:focus {
-  border-color: #8AB33F;
+  border-color: #8ab33f;
   box-shadow: 0 0 0 4px rgba(138, 179, 63, 0.18);
   background-color: #ffffff;
 }
@@ -688,7 +688,7 @@
 }
 
 .toolbar-sort select:focus {
-  border-color: #8AB33F;
+  border-color: #8ab33f;
 }
 
 .toolbar-count {
@@ -731,7 +731,7 @@
   width: 46px;
   height: 46px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #23408e 0%, #003DFF 100%);
+  background: linear-gradient(135deg, #23408e 0%, #003dff 100%);
   color: #ffffff !important;
   display: flex;
   justify-content: center;
@@ -888,7 +888,7 @@
   position: absolute;
   top: 14px;
   left: 14px;
-  background: linear-gradient(135deg, #8AB33F 0%, #6f952f 100%);
+  background: linear-gradient(135deg, #8ab33f 0%, #6f952f 100%);
   color: #ffffff;
   font-size: 12px;
   font-weight: 700;
@@ -938,7 +938,7 @@
 
 .product-slogan-bar {
   background-color: #f0fdf4;
-  border-left: 3px solid #8AB33F;
+  border-left: 3px solid #8ab33f;
   padding: 8px 12px;
   border-radius: 6px;
   margin-bottom: 12px;
@@ -1040,7 +1040,7 @@
   height: 44px;
   border-radius: 12px;
   border: 1.5px solid #23408e;
-  background: linear-gradient(135deg, #23408e 0%, #003DFF 100%) !important;
+  background: linear-gradient(135deg, #23408e 0%, #003dff 100%) !important;
   color: #ffffff !important;
   font-family: "ViDairy1", sans-serif;
   font-size: 14.5px;
@@ -1069,8 +1069,8 @@
 
 .product-list-page .btn-view-detail-only:hover,
 .btn-view-detail-only:hover {
-  background: linear-gradient(135deg, #8AB33F 0%, #6f952f 100%) !important;
-  border-color: #8AB33F !important;
+  background: linear-gradient(135deg, #8ab33f 0%, #6f952f 100%) !important;
+  border-color: #8ab33f !important;
   color: #ffffff !important;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(138, 179, 63, 0.35);
@@ -1116,7 +1116,9 @@
 .btn-view-more i {
   font-size: 16px;
   color: #23408e;
-  transition: transform 0.25s ease, color 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    color 0.25s ease;
 }
 
 .btn-view-more:hover {
@@ -1290,7 +1292,7 @@
 }
 
 .promo-card:hover .promo-title {
-  color: #8AB33F;
+  color: #8ab33f;
 }
 
 .promo-summary {
@@ -1596,7 +1598,7 @@
 }
 
 .btn-reset-filter:hover {
-  background: #8AB33F;
+  background: #8ab33f;
 }
 
 /* ================= 2.13. FOOTER WRAPPER ================= */

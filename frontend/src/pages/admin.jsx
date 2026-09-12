@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import productService from "../services/productService";
@@ -23,7 +23,13 @@ const INITIAL_ORDERS = [
     paymentStatus: "Completed",
     orderStatus: "Completed",
     createdAt: "2026-09-01 09:30",
-    hasVAT: false,
+    hasVAT: true,
+    vatInfo: {
+      company: "Công Ty Cổ Phần Dinh Dưỡng Quốc Tế Care",
+      taxId: "0108923456",
+      email: "ketoan@careintl.vn",
+      address: "Tầng 5, Tòa nhà Sunwah, Quận 1, TP.HCM",
+    },
   },
   {
     id: 2,
@@ -31,7 +37,8 @@ const INITIAL_ORDERS = [
     customer: "Phạm Thùy Linh",
     phone: "0987654321",
     type: "DELIVERY",
-    shippingAddress: "Tòa nhà Landmark 81, 720A Điện Biên Phủ, P.22, Q.Bình Thạnh, TP.HCM",
+    shippingAddress:
+      "Tòa nhà Landmark 81, 720A Điện Biên Phủ, P.22, Q.Bình Thạnh, TP.HCM",
     items: [
       { name: "Sữa Bột ViDairy Mom Care (Lon 800g)", qty: 2, price: 560000 },
     ],
@@ -69,6 +76,54 @@ const INITIAL_ORDERS = [
     orderStatus: "Processing",
     createdAt: "2026-09-04 08:45",
     hasVAT: false,
+  },
+  {
+    id: 4,
+    orderCode: "VD20260905004",
+    customer: "Trần Bảo Ngọc",
+    phone: "0934567890",
+    type: "DELIVERY",
+    shippingAddress: "25 Hoàng Văn Thụ, P.8, Q.Phú Nhuận, TP.HCM",
+    items: [
+      { name: "Sữa Bột ViDairy Kid Gold (Lon 800g)", qty: 3, price: 580000 },
+    ],
+    subTotal: 1740000,
+    discount: 50000,
+    total: 1690000,
+    paymentMethod: "MOMO",
+    paymentStatus: "Completed",
+    orderStatus: "Completed",
+    createdAt: "2026-09-05 14:20",
+    hasVAT: true,
+    vatInfo: {
+      company: "Trường Quốc Tế Mầm Non Ánh Dương",
+      taxId: "0314778899",
+      email: "taichinh@anhduongschool.edu.vn",
+      address: "Số 25 Hoàng Văn Thụ, P.8, Q.Phú Nhuận, TP.HCM",
+    },
+  },
+  {
+    id: 5,
+    orderCode: "VD20260906005",
+    customer: "Nguyễn Văn Hùng",
+    phone: "0901234567",
+    type: "DELIVERY",
+    shippingAddress: "150 Nguyễn Trãi, Phường 3, Quận 5, TP.HCM",
+    items: [{ name: "Sữa Hạt ViDairy Nutri Organic", qty: 4, price: 480000 }],
+    subTotal: 1920000,
+    discount: 100000,
+    total: 1820000,
+    paymentMethod: "BANKING_QR",
+    paymentStatus: "Completed",
+    orderStatus: "Completed",
+    createdAt: "2026-09-06 16:00",
+    hasVAT: true,
+    vatInfo: {
+      company: "Phòng Khám Đa Khoa Sức Khỏe Vàng",
+      taxId: "0316223344",
+      email: "hoadon@suckhoevang.vn",
+      address: "Số 150 Nguyễn Trãi, Quận 5, TP.HCM",
+    },
   },
 ];
 
@@ -167,7 +222,12 @@ const INITIAL_USERS = [
     email: "admin@vidairy.vn",
     phone: "0989584592",
     role: "ADMIN",
-    permissions: ["manage_products", "manage_orders", "manage_coupons", "manage_users"],
+    permissions: [
+      "manage_products",
+      "manage_orders",
+      "manage_coupons",
+      "manage_users",
+    ],
     status: 1,
     createdAt: "2026-08-01",
   },
@@ -298,7 +358,6 @@ const INITIAL_BRANCHES = [
   },
 ];
 
-
 const PRESET_PRODUCT_IMAGES = [
   { label: "Sữa Trẻ Em", url: "/src/assets/img/cau_be_vidaiary.png" },
   { label: "Sữa Mẹ Bầu", url: "/src/assets/img/me-bau_vidaiary.png" },
@@ -308,18 +367,48 @@ const PRESET_PRODUCT_IMAGES = [
 ];
 
 export default function AdminDashboard() {
-  const { user, isAdmin, canAccessAdmin, token, logout } = useAuth();
+  const { user, isSuperAdmin, isAdmin, canAccessAdmin, token, logout } =
+    useAuth();
   const navigate = useNavigate();
 
-  // Chặn khách hàng (CUSTOMER) truy cập trang Admin
+  const roleUpper = user?.Role
+    ? String(user.Role).toUpperCase()
+    : user?.role
+      ? String(user.role).toUpperCase()
+      : "";
+
+  const isSuper = Boolean(
+    isSuperAdmin ||
+    roleUpper === "SUPERADMIN" ||
+    user?.Email === "superadmin@vidairy.vn",
+  );
+
+  const isManagerUser = Boolean(roleUpper === "MANAGER");
+
+  const isAdminUser = Boolean(
+    isSuper ||
+    isAdmin ||
+    roleUpper === "ADMIN" ||
+    roleUpper === "MANAGER" ||
+    user?.Email === "admin@vidairy.vn",
+  );
+
+  // Chặn người chưa đăng nhập hoặc khách hàng (CUSTOMER) truy cập trang Admin
   useEffect(() => {
+    if (!token && !user) {
+      navigate("/login");
+      return;
+    }
     if (user && user.Role === "CUSTOMER") {
-      alert("⚠️ Tài khoản Khách hàng (CUSTOMER) không có quyền truy cập trang Quản trị!");
+      alert(
+        "⚠️ Tài khoản Khách hàng (CUSTOMER) không có quyền truy cập trang Quản trị!",
+      );
       navigate("/home");
     }
-  }, [user, navigate]);
+  }, [user, token, navigate]);
 
   const [activeTab, setActiveTab] = useState("dashboard");
+
   const [orders, setOrders] = useState(INITIAL_ORDERS);
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
   const [users, setUsers] = useState(INITIAL_USERS);
@@ -335,21 +424,128 @@ export default function AdminDashboard() {
   const [productSearch, setProductSearch] = useState("");
   const [productCategoryFilter, setProductCategoryFilter] = useState("ALL");
 
+  const [invoiceSearch, setInvoiceSearch] = useState("");
+  const [invoiceSortAsc, setInvoiceSortAsc] = useState(true);
+
+  // Timeframe states cho Dashboard (Năm / Quý / Tháng)
+  const [isRevenueModalOpen, setIsRevenueModalOpen] = useState(false);
+  const [dashboardTimeframe, setDashboardTimeframe] = useState("QUARTER"); // "YEAR" | "QUARTER" | "MONTH"
+  const [selectedYear, setSelectedYear] = useState(2026);
+  const [selectedQuarter, setSelectedQuarter] = useState(3);
+  const [selectedMonth, setSelectedMonth] = useState(9);
+
+  // State in hóa đơn VAT
+  const [printableInvoiceOrder, setPrintableInvoiceOrder] = useState(null);
+
+  // State Banners
+  const [banners, setBanners] = useState([
+    {
+      id: "banner-hero-cover",
+      BannerID: "banner-hero-cover",
+      title: "VitaDairy Luôn Đồng Hành Cùng Mẹ Và Bé",
+      position: "Trang Sản Phẩm (Cover Hero)",
+      page: "product-list",
+      imageUrl: "/src/assets/img/mother_baby_banner.jpg",
+      linkUrl: "/products",
+      description:
+        "ViDairy hướng tới sản xuất các sản phẩm sữa chăm sóc sức khỏe người tiêu dùng ở nhiều lứa tuổi...",
+      displayOrder: 1,
+      status: 1,
+    },
+    {
+      id: "banner-home-hero",
+      BannerID: "banner-home-hero",
+      title: "Dinh Dưỡng Vàng Cho Tương Lai Khỏe Mạnh",
+      position: "Trang Chủ (Hero Banner)",
+      page: "home",
+      imageUrl: "/src/assets/img/ViDairy_banner_1536x816.png",
+      linkUrl: "/products",
+      description: "Kháng thể tự nhiên ColosIgG 24h nhập khẩu độc quyền từ Mỹ",
+      displayOrder: 2,
+      status: 1,
+    },
+    {
+      id: "banner-child-care",
+      BannerID: "banner-child-care",
+      title: "Dinh Dưỡng Vượt Trội Cho Bé Yêu",
+      position: "Danh Mục Trẻ Em",
+      page: "product-list",
+      imageUrl: "/src/assets/img/cau_be_vidaiary.png",
+      linkUrl: "/products?category=san-pham-cho-be",
+      description: "Phát triển não bộ và tăng cường miễn dịch",
+      displayOrder: 3,
+      status: 1,
+    },
+    {
+      id: "banner-nut-milk",
+      BannerID: "banner-nut-milk",
+      title: "Sống Khỏe Mỗi Ngày Với Sữa Hạt Tự Nhiên",
+      position: "Danh Mục Sữa Hạt",
+      page: "product-list",
+      imageUrl: "/src/assets/img/sua_hat_vidairy.png",
+      linkUrl: "/products?category=dung-kem",
+      description: "Thuần thực vật thanh nhẹ giàu chất chống oxy hóa",
+      displayOrder: 4,
+      status: 1,
+    },
+  ]);
+
+  // State Cài đặt hệ thống (Settings)
+  const [settings, setSettings] = useState({
+    settingKey: "general_settings",
+    siteName: "ViDairy - Sữa Dinh Dưỡng Chuẩn Y Học",
+    logoUrl: "/src/assets/img/logo.png",
+    faviconUrl: "/src/assets/favicon/favicon.ico",
+    hotline: "0989 584 592",
+    email: "cskh@vidairy.vn",
+    address: "Số 120 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
+    productPageBanner: "/src/assets/img/mother_baby_banner.jpg",
+    productPageTitle: "VitaDairy Luôn Đồng Hành Cùng Mẹ Và Bé",
+    productPageDescription:
+      "ViDairy hướng tới sản xuất các sản phẩm sữa chăm sóc sức khỏe người tiêu dùng ở nhiều lứa tuổi từ những sản phẩm cung cấp năng lượng cho người lớn, sản phẩm chuyên biệt dành cho người bệnh, sản phẩm cho trẻ biếng ăn, suy dinh dưỡng thấp còi đến các dòng sản phẩm giúp bé phát triển trí não, tăng chiều cao...",
+    homeHeroTitle: "Dinh Dưỡng Vàng Cho Tương Lai Khỏe Mạnh",
+    homeHeroSubtitle:
+      "Kháng thể tự nhiên ColosIgG 24h nhập khẩu độc quyền từ Mỹ",
+    homeHeroBanner: "/src/assets/img/ViDairy_banner_1536x816.png",
+    brandSlogan: "ViDairy - Trao Sức Khỏe, Trọn Yêu Thương",
+  });
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // State Banner Modal
+  const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
+  const [editingBanner, setEditingBanner] = useState(null);
+  const [bannerForm, setBannerForm] = useState({
+    title: "",
+    position: "Trang Sản Phẩm (Cover Hero)",
+    page: "product-list",
+    imageUrl: "/src/assets/img/mother_baby_banner.jpg",
+    linkUrl: "/products",
+    description: "",
+    displayOrder: 1,
+    status: 1,
+  });
+
   // State & Handler cho Phân quyền tài khoản (Role & Permissions)
   const [selectedUserForRole, setSelectedUserForRole] = useState(null);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
-  const [roleForm, setRoleForm] = useState({ role: "CUSTOMER", permissions: [] });
+  const [roleForm, setRoleForm] = useState({
+    role: "CUSTOMER",
+    permissions: [],
+  });
 
   // Đổi vai trò nhanh từ dropdown
   const handleQuickRoleChange = async (userId, newRole) => {
     const currentUserId = user?.UserID || user?.id || user?._id;
     const targetUser = users.find((u) => u.id === userId);
 
-    if (
-      targetUser?.role === "ADMIN" ||
-      targetUser?.email === "admin@vidairy.vn"
-    ) {
-      alert("⚠️ Không thể can thiệp hoặc thay đổi vai trò của tài khoản Quản trị viên duy nhất!");
+    const isTargetSuperAdmin =
+      targetUser?.role === "SUPERADMIN" ||
+      targetUser?.email === "superadmin@vidairy.vn";
+
+    if (isTargetSuperAdmin) {
+      alert(
+        "⚠️ Tài khoản Super Admin là cấp cao nhất tối cao của hệ thống, không thể can thiệp!",
+      );
       return;
     }
 
@@ -358,21 +554,48 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (!user || !["ADMIN", "MANAGER"].includes(user.Role)) {
-      alert("⚠️ Chỉ Quản trị viên và Quản lý mới có quyền thay đổi vai trò người dùng!");
+    if (
+      !user ||
+      !["SUPERADMIN", "ADMIN", "MANAGER"].includes(user.Role?.toUpperCase())
+    ) {
+      alert(
+        "⚠️ Chỉ Super Admin, Quản trị viên và Quản lý mới có quyền thay đổi vai trò người dùng!",
+      );
       return;
     }
 
-    if (newRole === "ADMIN") {
-      alert("⚠️ Hệ thống chỉ có 1 tài khoản Quản trị viên duy nhất! Bạn chỉ có thể chọn CUSTOMER, STAFF hoặc MANAGER.");
+    if (newRole === "SUPERADMIN") {
+      alert("⚠️ Vai trò Super Admin là tối cao và duy nhất!");
+      return;
+    }
+
+    if (newRole === "ADMIN" && !isSuper) {
+      alert(
+        "⚠️ Chỉ Super Admin mới có quyền chỉ định vai trò Quản trị viên (ADMIN)!",
+      );
+      return;
+    }
+
+    if (targetUser?.role === "ADMIN" && !isSuper) {
+      alert(
+        "⚠️ Chỉ Super Admin mới có quyền thay đổi vai trò của Quản trị viên (ADMIN)!",
+      );
       return;
     }
 
     try {
-      const res = await productService.updateUserRole(userId, newRole, null, token);
+      const res = await productService.updateUserRole(
+        userId,
+        newRole,
+        null,
+        token,
+      );
       if (res.success) {
         setUsers((prev) =>
-          prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
+          prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
+        );
+        alert(
+          `🎉 Đã cập nhật vai trò của "${targetUser?.fullName}" thành "${newRole}" thành công!`,
         );
       } else {
         alert(res.message || "Không thể cập nhật vai trò!");
@@ -385,11 +608,14 @@ export default function AdminDashboard() {
   // Mở modal phân quyền chi tiết
   const handleOpenRoleModal = (userItem) => {
     const currentUserId = user?.UserID || user?.id || user?._id;
-    if (
-      userItem.role === "ADMIN" ||
-      userItem.email === "admin@vidairy.vn"
-    ) {
-      alert("⚠️ Tài khoản Quản trị viên tối cao có toàn quyền quản trị và không thể can thiệp!");
+    const isTargetSuperAdmin =
+      userItem.role === "SUPERADMIN" ||
+      userItem.email === "superadmin@vidairy.vn";
+
+    if (isTargetSuperAdmin) {
+      alert(
+        "⚠️ Tài khoản Super Admin có toàn quyền tối cao toàn hệ thống và không thể can thiệp!",
+      );
       return;
     }
 
@@ -398,19 +624,33 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (!user || !["ADMIN", "MANAGER"].includes(user.Role)) {
-      alert("⚠️ Chỉ Quản trị viên và Quản lý mới có quyền phân quyền cho tài khoản khác!");
+    if (
+      !user ||
+      !["SUPERADMIN", "ADMIN", "MANAGER"].includes(user.Role?.toUpperCase())
+    ) {
+      alert(
+        "⚠️ Chỉ Super Admin, Quản trị viên và Quản lý mới có quyền phân quyền cho tài khoản khác!",
+      );
+      return;
+    }
+
+    if (userItem.role === "ADMIN" && !isSuper) {
+      alert(
+        "⚠️ Chỉ Super Admin mới có quyền phân quyền cho Quản trị viên (ADMIN)!",
+      );
       return;
     }
 
     if (userItem.role === "CUSTOMER") {
-      alert("⚠️ Tài khoản Khách hàng (CUSTOMER) không có phân quyền chi tiết trong trang quản trị!");
+      alert(
+        "⚠️ Tài khoản Khách hàng (CUSTOMER) không có phân quyền chi tiết trong trang quản trị!",
+      );
       return;
     }
 
     setSelectedUserForRole(userItem);
     setRoleForm({
-      role: userItem.role === "ADMIN" ? "MANAGER" : (userItem.role || "CUSTOMER"),
+      role: userItem.role || "STAFF",
       permissions: userItem.permissions || [],
     });
     setIsRoleModalOpen(true);
@@ -435,37 +675,52 @@ export default function AdminDashboard() {
     if (!selectedUserForRole) return;
 
     const currentUserId = user?.UserID || user?.id || user?._id;
-    if (
-      selectedUserForRole.role === "ADMIN" ||
-      selectedUserForRole.email === "admin@vidairy.vn"
-    ) {
-      alert("⚠️ Tài khoản Quản trị viên tối cao cố định và không thể can thiệp!");
+    const isTargetSuperAdmin =
+      selectedUserForRole.role === "SUPERADMIN" ||
+      selectedUserForRole.email === "superadmin@vidairy.vn";
+
+    if (isTargetSuperAdmin) {
+      alert("⚠️ Tài khoản Super Admin tối cao cố định và không thể can thiệp!");
       return;
     }
 
-    if (currentUserId && String(selectedUserForRole.id) === String(currentUserId)) {
+    if (
+      currentUserId &&
+      String(selectedUserForRole.id) === String(currentUserId)
+    ) {
       alert("⚠️ Bạn không thể tự phân quyền hoặc đổi vai trò cho chính mình!");
       return;
     }
 
-    if (!user || !["ADMIN", "MANAGER"].includes(user.Role)) {
-      alert("⚠️ Chỉ Quản trị viên và Quản lý mới có quyền phân quyền cho tài khoản khác!");
+    if (
+      !user ||
+      !["SUPERADMIN", "ADMIN", "MANAGER"].includes(user.Role?.toUpperCase())
+    ) {
+      alert(
+        "⚠️ Chỉ Super Admin, Quản trị viên và Quản lý mới có quyền phân quyền cho tài khoản khác!",
+      );
       return;
     }
 
-    if (roleForm.role === "ADMIN") {
-      alert("⚠️ Không thể đặt vai trò Quản trị viên (ADMIN)!");
+    if (roleForm.role === "SUPERADMIN") {
+      alert("⚠️ Không thể gán vai trò Super Admin!");
       return;
     }
 
-    const finalPermissions = roleForm.role === "CUSTOMER" ? [] : roleForm.permissions;
+    if (roleForm.role === "ADMIN" && !isSuper) {
+      alert("⚠️ Chỉ Super Admin mới có quyền chỉ định Quản trị viên (ADMIN)!");
+      return;
+    }
+
+    const finalPermissions =
+      roleForm.role === "CUSTOMER" ? [] : roleForm.permissions;
 
     try {
       const res = await productService.updateUserRole(
         selectedUserForRole.id,
         roleForm.role,
         finalPermissions,
-        token
+        token,
       );
 
       if (res.success) {
@@ -473,16 +728,180 @@ export default function AdminDashboard() {
           prev.map((u) =>
             u.id === selectedUserForRole.id
               ? { ...u, role: roleForm.role, permissions: finalPermissions }
-              : u
-          )
+              : u,
+          ),
         );
-        alert(`🎉 Đã cập nhật phân quyền cho người dùng "${selectedUserForRole.fullName}" thành công!`);
+        alert(
+          `🎉 Đã cập nhật phân quyền cho người dùng "${selectedUserForRole.fullName}" thành công!`,
+        );
         setIsRoleModalOpen(false);
       } else {
         alert(res.message || "Lỗi khi cập nhật phân quyền.");
       }
     } catch (err) {
       alert("Lỗi khi kết nối đến máy chủ.");
+    }
+  };
+
+  // Lưu cấu hình cài đặt hệ thống & nội dung
+  const handleSaveSettings = async (e) => {
+    if (e) e.preventDefault();
+    setIsSavingSettings(true);
+    try {
+      const res = await productService.updateSettings(settings);
+      if (res.success) {
+        alert(
+          "🎉 Đã lưu và đồng bộ toàn bộ Cài đặt Hệ thống lên MongoDB Atlas thành công!",
+        );
+      } else {
+        alert(res.message || "Lỗi khi lưu cài đặt.");
+      }
+    } catch (err) {
+      alert("Lỗi kết nối khi lưu cài đặt hệ thống.");
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  // Khôi phục cài đặt mặc định
+  const handleResetSettings = async () => {
+    if (
+      !window.confirm(
+        "Bạn có chắc chắn muốn khôi phục cài đặt hệ thống về mặc định ViDairy?",
+      )
+    )
+      return;
+    try {
+      const res = await productService.resetSettings();
+      if (res.success && res.data) {
+        setSettings(res.data);
+        alert("🎉 Đã khôi phục cài đặt hệ thống về mặc định thành công!");
+      }
+    } catch (err) {
+      alert("Lỗi khi khôi phục cài đặt.");
+    }
+  };
+
+  // Mở modal thêm Banner
+  const handleOpenAddBanner = () => {
+    setEditingBanner(null);
+    setBannerForm({
+      title: "",
+      position: "Trang Sản Phẩm (Cover Hero)",
+      page: "product-list",
+      imageUrl: "/src/assets/img/mother_baby_banner.jpg",
+      linkUrl: "/products",
+      description: "",
+      displayOrder: banners.length + 1,
+      status: 1,
+    });
+    setIsBannerModalOpen(true);
+  };
+
+  // Mở modal sửa Banner
+  const handleOpenEditBanner = (b) => {
+    setEditingBanner(b);
+    setBannerForm({
+      title: b.title || "",
+      position: b.position || "Trang Sản Phẩm (Cover Hero)",
+      page: b.page || "product-list",
+      imageUrl: b.imageUrl || "/src/assets/img/mother_baby_banner.jpg",
+      linkUrl: b.linkUrl || "/products",
+      description: b.description || "",
+      displayOrder: b.displayOrder || 1,
+      status: b.status !== undefined ? b.status : 1,
+    });
+    setIsBannerModalOpen(true);
+  };
+
+  // Lưu Banner (Tạo mới hoặc Sửa)
+  const handleSaveBanner = async (e) => {
+    e.preventDefault();
+    if (!bannerForm.title || !bannerForm.imageUrl) {
+      alert("Vui lòng nhập tiêu đề và link hình ảnh banner!");
+      return;
+    }
+
+    try {
+      if (editingBanner) {
+        const bannerId =
+          editingBanner.BannerID || editingBanner.id || editingBanner._id;
+        const res = await productService.updateBanner(bannerId, bannerForm);
+        if (res.success) {
+          setBanners((prev) =>
+            prev.map((b) =>
+              b.BannerID === bannerId || b.id === bannerId || b._id === bannerId
+                ? { ...b, ...bannerForm }
+                : b,
+            ),
+          );
+          alert(`🎉 Đã cập nhật banner "${bannerForm.title}" thành công!`);
+          setIsBannerModalOpen(false);
+        } else {
+          alert(res.message || "Lỗi khi cập nhật banner.");
+        }
+      } else {
+        const res = await productService.createBanner(bannerForm);
+        if (res.success && res.data) {
+          setBanners((prev) => [res.data, ...prev]);
+          alert(`🎉 Đã tạo banner mới "${bannerForm.title}" thành công!`);
+          setIsBannerModalOpen(false);
+        } else {
+          alert(res.message || "Lỗi khi tạo banner.");
+        }
+      }
+    } catch (err) {
+      alert("Lỗi kết nối khi lưu banner.");
+    }
+  };
+
+  // Bật/tắt trạng thái banner
+  const handleToggleBannerStatus = async (bannerItem) => {
+    const bannerId = bannerItem.BannerID || bannerItem.id || bannerItem._id;
+    try {
+      const res = await productService.toggleBannerStatus(bannerId);
+      if (res.success) {
+        setBanners((prev) =>
+          prev.map((b) =>
+            b.BannerID === bannerId || b.id === bannerId || b._id === bannerId
+              ? { ...b, status: b.status === 1 ? 0 : 1 }
+              : b,
+          ),
+        );
+      } else {
+        alert(res.message || "Lỗi khi đổi trạng thái banner.");
+      }
+    } catch (err) {
+      alert("Lỗi kết nối khi đổi trạng thái banner.");
+    }
+  };
+
+  // Xóa banner
+  const handleDeleteBanner = async (bannerItem) => {
+    if (
+      !window.confirm(
+        `Bạn có chắc muốn xóa banner "${bannerItem.title}" khỏi cơ sở dữ liệu?`,
+      )
+    )
+      return;
+    const bannerId = bannerItem.BannerID || bannerItem.id || bannerItem._id;
+    try {
+      const res = await productService.deleteBanner(bannerId);
+      if (res.success) {
+        setBanners((prev) =>
+          prev.filter(
+            (b) =>
+              b.BannerID !== bannerId &&
+              b.id !== bannerId &&
+              b._id !== bannerId,
+          ),
+        );
+        alert("Đã xóa banner thành công!");
+      } else {
+        alert(res.message || "Lỗi khi xóa banner.");
+      }
+    } catch (err) {
+      alert("Lỗi kết nối khi xóa banner.");
     }
   };
 
@@ -550,26 +969,31 @@ export default function AdminDashboard() {
         imageUrl: editingProduct.img || "/src/assets/img/cau_be_vidaiary.png",
       };
 
-      const res = await productService.updateProduct(editingProduct.id, payload);
+      const res = await productService.updateProduct(
+        editingProduct.id,
+        payload,
+      );
       if (res.success || res.data) {
         setProducts((prev) =>
           prev.map((p) =>
             p.id === editingProduct.id
               ? {
-                ...p,
-                name: editingProduct.name,
-                category: editingProduct.category,
-                brand: editingProduct.brand,
-                variant: editingProduct.variant,
-                price: Number(editingProduct.price),
-                stock: Number(editingProduct.stock),
-                ageGroup: editingProduct.ageGroup,
-                img: editingProduct.img,
-              }
-              : p
-          )
+                  ...p,
+                  name: editingProduct.name,
+                  category: editingProduct.category,
+                  brand: editingProduct.brand,
+                  variant: editingProduct.variant,
+                  price: Number(editingProduct.price),
+                  stock: Number(editingProduct.stock),
+                  ageGroup: editingProduct.ageGroup,
+                  img: editingProduct.img,
+                }
+              : p,
+          ),
         );
-        alert(`🎉 Đã cập nhật thông tin và hình ảnh sản phẩm "${editingProduct.name}" thành công!`);
+        alert(
+          `🎉 Đã cập nhật thông tin và hình ảnh sản phẩm "${editingProduct.name}" thành công!`,
+        );
         setIsEditProductOpen(false);
       } else {
         alert(res.message || "Lỗi khi cập nhật sản phẩm.");
@@ -626,7 +1050,7 @@ export default function AdminDashboard() {
                 hasVAT: o.HasVAT || false,
                 vatInfo: o.VATInfo || {},
                 raw: o,
-              }))
+              })),
             );
           }
         })
@@ -658,9 +1082,13 @@ export default function AdminDashboard() {
                 stock: 150,
                 ageGroup: p.targetUser,
                 status: p.raw?.Status !== false ? 1 : 0,
-                img: p.imageUrl || p.ImageURL || p.img || "/src/assets/img/cau_be_vidaiary.png",
+                img:
+                  p.imageUrl ||
+                  p.ImageURL ||
+                  p.img ||
+                  "/src/assets/img/cau_be_vidaiary.png",
                 raw: p,
-              }))
+              })),
             );
           }
         })
@@ -684,7 +1112,7 @@ export default function AdminDashboard() {
                 permissions: u.Permissions || [],
                 status: u.Status ? 1 : 0,
                 createdAt: new Date(u.createdAt).toLocaleDateString("vi-VN"),
-              }))
+              })),
             );
           }
         })
@@ -710,7 +1138,7 @@ export default function AdminDashboard() {
                 limit: 500,
                 status: c.Status ? 1 : 0,
                 endDate: new Date(c.EndDate).toLocaleDateString("vi-VN"),
-              }))
+              })),
             );
           }
         })
@@ -725,6 +1153,26 @@ export default function AdminDashboard() {
           }
         })
         .catch((err) => console.warn("Lỗi tải branches admin:", err));
+
+      // 6. Tải Banners
+      productService
+        .getBanners()
+        .then((res) => {
+          if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+            setBanners(res.data);
+          }
+        })
+        .catch((err) => console.warn("Lỗi tải banners admin:", err));
+
+      // 7. Tải Cài đặt hệ thống (Settings)
+      productService
+        .getSettings()
+        .then((res) => {
+          if (res.success && res.data) {
+            setSettings(res.data);
+          }
+        })
+        .catch((err) => console.warn("Lỗi tải settings admin:", err));
     } finally {
       setIsLoadingLive(false);
     }
@@ -743,8 +1191,8 @@ export default function AdminDashboard() {
           prev.map((o) =>
             o.id === orderId || o.orderCode === orderId
               ? { ...o, orderStatus: newStatus }
-              : o
-          )
+              : o,
+          ),
         );
         if (
           selectedOrder &&
@@ -766,10 +1214,23 @@ export default function AdminDashboard() {
     const targetUser = users.find((u) => u.id === userId);
 
     if (
-      targetUser?.role === "ADMIN" ||
-      targetUser?.email === "admin@vidairy.vn"
+      targetUser?.role === "SUPERADMIN" ||
+      targetUser?.email === "superadmin@vidairy.vn"
     ) {
-      alert("⚠️ Không thể can thiệp hoặc khóa tài khoản Quản trị viên duy nhất của hệ thống!");
+      alert(
+        "⚠️ Không thể can thiệp hoặc khóa tài khoản Super Admin cấp cao nhất của hệ thống!",
+      );
+      return;
+    }
+
+    if (
+      (targetUser?.role === "ADMIN" ||
+        targetUser?.email === "admin@vidairy.vn") &&
+      !isSuper
+    ) {
+      alert(
+        "⚠️ Chỉ Super Admin mới có quyền khóa hoặc mở khóa tài khoản Quản trị viên (ADMIN)!",
+      );
       return;
     }
 
@@ -778,8 +1239,13 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (!user || !["ADMIN", "MANAGER"].includes(user.Role)) {
-      alert("⚠️ Chỉ Quản trị viên và Quản lý mới có quyền thay đổi trạng thái tài khoản!");
+    if (
+      !user ||
+      !["SUPERADMIN", "ADMIN", "MANAGER"].includes(user.Role?.toUpperCase())
+    ) {
+      alert(
+        "⚠️ Chỉ Super Admin, Quản trị viên và Quản lý mới có quyền thay đổi trạng thái tài khoản!",
+      );
       return;
     }
 
@@ -789,14 +1255,14 @@ export default function AdminDashboard() {
         {
           method: "PATCH",
           headers: token ? { Authorization: `Bearer ${token}` } : {},
-        }
+        },
       );
       const json = await res.json();
       if (json.success) {
         setUsers((prev) =>
           prev.map((u) =>
-            u.id === userId ? { ...u, status: json.data?.Status ? 1 : 0 } : u
-          )
+            u.id === userId ? { ...u, status: json.data?.Status ? 1 : 0 } : u,
+          ),
         );
       } else {
         alert(json.message || "Lỗi khi chuyển trạng thái người dùng.");
@@ -864,8 +1330,8 @@ export default function AdminDashboard() {
       if (res.success) {
         setProducts((prev) =>
           prev.map((p) =>
-            p.id === productId ? { ...p, status: res.data?.Status ? 1 : 0 } : p
-          )
+            p.id === productId ? { ...p, status: res.data?.Status ? 1 : 0 } : p,
+          ),
         );
       }
     } catch (err) {
@@ -875,7 +1341,11 @@ export default function AdminDashboard() {
 
   // Xóa sản phẩm khỏi Database
   const handleDeleteProduct = async (productId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi cơ sở dữ liệu?"))
+    if (
+      !window.confirm(
+        "Bạn có chắc chắn muốn xóa sản phẩm này khỏi cơ sở dữ liệu?",
+      )
+    )
       return;
     try {
       const res = await productService.deleteProduct(productId);
@@ -895,8 +1365,10 @@ export default function AdminDashboard() {
       if (res.success) {
         setCoupons((prev) =>
           prev.map((c) =>
-            c.code === couponCode ? { ...c, status: res.data?.Status ? 1 : 0 } : c
-          )
+            c.code === couponCode
+              ? { ...c, status: res.data?.Status ? 1 : 0 }
+              : c,
+          ),
         );
       }
     } catch (err) {
@@ -925,10 +1397,265 @@ export default function AdminDashboard() {
     return matchCategory && matchSearch;
   });
 
-  // Thống kê nhanh
+  // Hàm tạo & chuẩn hóa số hóa đơn VAT
+  const getInvoiceNumber = (o) => {
+    if (o.invoiceNumber) return o.invoiceNumber;
+    if (o.InvoiceNumber) return o.InvoiceNumber;
+    if (o.vatInfo?.invoiceNumber) return o.vatInfo.invoiceNumber;
+    const digits = (o.orderCode || o.OrderCode || "").replace(/\D/g, "");
+    if (digits.length >= 6) {
+      return `HD-${digits.slice(-8)}`;
+    }
+    const idVal =
+      typeof o.id === "number"
+        ? o.id
+        : parseInt(String(o.id).replace(/\D/g, ""), 10) || 1;
+    return `HD-${String(idVal).padStart(6, "0")}`;
+  };
+
+  // Lọc và sắp xếp danh sách Hóa đơn VAT theo thứ tự số hóa đơn tăng dần (hoặc giảm dần nếu bấm đảo chiều)
+  const vatOrders = orders.filter((o) => o.hasVAT);
+  const filteredVatOrders = vatOrders
+    .filter((o) => {
+      const invNo = getInvoiceNumber(o).toLowerCase();
+      const code = (o.orderCode || "").toLowerCase();
+      const comp = (
+        o.vatInfo?.company ||
+        o.vatInfo?.Company ||
+        ""
+      ).toLowerCase();
+      const tax = (o.vatInfo?.taxId || o.vatInfo?.TaxId || "").toLowerCase();
+      const em = (
+        o.vatInfo?.email ||
+        o.vatInfo?.Email ||
+        o.customer ||
+        ""
+      ).toLowerCase();
+      const q = invoiceSearch.toLowerCase();
+      return (
+        !q ||
+        invNo.includes(q) ||
+        code.includes(q) ||
+        comp.includes(q) ||
+        tax.includes(q) ||
+        em.includes(q)
+      );
+    })
+    .sort((a, b) => {
+      const invA = getInvoiceNumber(a);
+      const invB = getInvoiceNumber(b);
+      const cmp = invA.localeCompare(invB, undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
+      return invoiceSortAsc ? cmp : -cmp;
+    });
+
+  // Thống kê Doanh thu & Đơn hàng theo Năm / Quý / Tháng
+  const dashboardStats = useMemo(() => {
+    const rawYears = orders.map((o) => {
+      const d = new Date(o.createdAt);
+      return isNaN(d.getFullYear()) ? 2026 : d.getFullYear();
+    });
+    const orderYears = Array.from(
+      new Set([2026, 2025, 2024, ...rawYears]),
+    ).sort((a, b) => b - a);
+
+    const filteredOrders = orders.filter((o) => {
+      const d = new Date(o.createdAt);
+      if (isNaN(d.getTime())) return true;
+      const yr = d.getFullYear();
+      const mo = d.getMonth() + 1;
+      const qtr = Math.ceil(mo / 3);
+
+      if (yr !== Number(selectedYear)) return false;
+
+      if (dashboardTimeframe === "QUARTER") {
+        return qtr === Number(selectedQuarter);
+      }
+      if (dashboardTimeframe === "MONTH") {
+        return mo === Number(selectedMonth);
+      }
+      return true; // Mode YEAR
+    });
+
+    const revenue = filteredOrders.reduce(
+      (sum, o) => sum + (Number(o.total) || 0),
+      0,
+    );
+    const orderCount = filteredOrders.length;
+    const completedCount = filteredOrders.filter(
+      (o) => o.orderStatus === "Completed",
+    ).length;
+    const processingCount = filteredOrders.filter(
+      (o) =>
+        o.orderStatus === "Processing" ||
+        o.orderStatus === "Pending" ||
+        o.orderStatus === "Shipping",
+    ).length;
+    const avgOrderValue = orderCount > 0 ? Math.round(revenue / orderCount) : 0;
+
+    // Dữ liệu biểu đồ cột
+    let chartBars = [];
+
+    if (dashboardTimeframe === "YEAR") {
+      const quarterNames = [
+        "Quý 1 (T1-T3)",
+        "Quý 2 (T4-T6)",
+        "Quý 3 (T7-T9)",
+        "Quý 4 (T10-T12)",
+      ];
+      const quarterRevs = [0, 0, 0, 0];
+      const quarterOrders = [0, 0, 0, 0];
+
+      orders.forEach((o) => {
+        const d = new Date(o.createdAt);
+        if (isNaN(d.getTime())) return;
+        if (d.getFullYear() === Number(selectedYear)) {
+          const qIdx = Math.min(
+            3,
+            Math.max(0, Math.ceil((d.getMonth() + 1) / 3) - 1),
+          );
+          quarterRevs[qIdx] += Number(o.total) || 0;
+          quarterOrders[qIdx] += 1;
+        }
+      });
+
+      const maxRev = Math.max(...quarterRevs, 1);
+      chartBars = quarterNames.map((name, idx) => ({
+        label: name,
+        revenue: quarterRevs[idx],
+        orderCount: quarterOrders[idx],
+        heightPercent:
+          quarterRevs[idx] > 0
+            ? Math.max(12, Math.round((quarterRevs[idx] / maxRev) * 100))
+            : 6,
+      }));
+    } else if (dashboardTimeframe === "QUARTER") {
+      const startMonth = (Number(selectedQuarter) - 1) * 3 + 1;
+      const monthNames = [
+        `Tháng ${startMonth}`,
+        `Tháng ${startMonth + 1}`,
+        `Tháng ${startMonth + 2}`,
+      ];
+      const monthRevs = [0, 0, 0];
+      const monthOrders = [0, 0, 0];
+
+      filteredOrders.forEach((o) => {
+        const d = new Date(o.createdAt);
+        if (isNaN(d.getTime())) return;
+        const mo = d.getMonth() + 1;
+        const idx = mo - startMonth;
+        if (idx >= 0 && idx < 3) {
+          monthRevs[idx] += Number(o.total) || 0;
+          monthOrders[idx] += 1;
+        }
+      });
+
+      const maxRev = Math.max(...monthRevs, 1);
+      chartBars = monthNames.map((name, idx) => ({
+        label: name,
+        revenue: monthRevs[idx],
+        orderCount: monthOrders[idx],
+        heightPercent:
+          monthRevs[idx] > 0
+            ? Math.max(12, Math.round((monthRevs[idx] / maxRev) * 100))
+            : 6,
+      }));
+    } else {
+      // Mode MONTH: Chia 4 tuần
+      const weekNames = [
+        "Tuần 1 (1-7)",
+        "Tuần 2 (8-14)",
+        "Tuần 3 (15-21)",
+        "Tuần 4 (22+)",
+      ];
+      const weekRevs = [0, 0, 0, 0];
+      const weekOrders = [0, 0, 0, 0];
+
+      filteredOrders.forEach((o) => {
+        const d = new Date(o.createdAt);
+        if (isNaN(d.getTime())) return;
+        const day = d.getDate();
+        let wIdx = 0;
+        if (day >= 22) wIdx = 3;
+        else if (day >= 15) wIdx = 2;
+        else if (day >= 8) wIdx = 1;
+        else wIdx = 0;
+
+        weekRevs[wIdx] += Number(o.total) || 0;
+        weekOrders[wIdx] += 1;
+      });
+
+      const maxRev = Math.max(...weekRevs, 1);
+      chartBars = weekNames.map((name, idx) => ({
+        label: name,
+        revenue: weekRevs[idx],
+        orderCount: weekOrders[idx],
+        heightPercent:
+          weekRevs[idx] > 0
+            ? Math.max(12, Math.round((weekRevs[idx] / maxRev) * 100))
+            : 6,
+      }));
+    }
+
+    let timeframeLabel = "";
+    if (dashboardTimeframe === "YEAR") {
+      timeframeLabel = `Năm ${selectedYear}`;
+    } else if (dashboardTimeframe === "QUARTER") {
+      timeframeLabel = `Quý ${selectedQuarter}/${selectedYear}`;
+    } else {
+      timeframeLabel = `Tháng ${selectedMonth}/${selectedYear}`;
+    }
+
+    // Top selling trong khoảng thời gian đã chọn
+    const productSalesMap = {};
+    filteredOrders.forEach((o) => {
+      (o.items || []).forEach((it) => {
+        const key = it.name || it.productName || "Sản phẩm";
+        if (!productSalesMap[key]) {
+          productSalesMap[key] = {
+            name: key,
+            qty: 0,
+            revenue: 0,
+            variant: it.variant || "Lon tiêu chuẩn",
+            img: it.img || it.image || "/src/assets/img/product_1.jpg",
+          };
+        }
+        productSalesMap[key].qty += Number(it.qty) || 1;
+        productSalesMap[key].revenue +=
+          (Number(it.price) || 0) * (Number(it.qty) || 1);
+      });
+    });
+
+    const topSelling = Object.values(productSalesMap).sort(
+      (a, b) => b.revenue - a.revenue,
+    );
+
+    return {
+      orderYears,
+      filteredOrders,
+      revenue,
+      orderCount,
+      completedCount,
+      processingCount,
+      avgOrderValue,
+      chartBars,
+      timeframeLabel,
+      topSelling,
+    };
+  }, [
+    orders,
+    dashboardTimeframe,
+    selectedYear,
+    selectedQuarter,
+    selectedMonth,
+  ]);
+
+  // Thống kê nhanh toàn thời gian
   const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
   const pendingOrdersCount = orders.filter(
-    (o) => o.orderStatus === "Processing" || o.orderStatus === "Pending"
+    (o) => o.orderStatus === "Processing" || o.orderStatus === "Pending",
   ).length;
 
   return (
@@ -963,7 +1690,7 @@ export default function AdminDashboard() {
           >
             <div className="admin-nav-item-content">
               <i className="bi bi-box-seam-fill"></i>
-              <span>Đơn hàng</span>
+              <span>Đơn hàng toàn sàn</span>
             </div>
             {pendingOrdersCount > 0 && (
               <span className="admin-nav-badge">{pendingOrdersCount}</span>
@@ -980,31 +1707,6 @@ export default function AdminDashboard() {
               <span>Sản phẩm & Giá</span>
             </div>
             <span className="admin-nav-badge blue">{products.length}</span>
-          </button>
-
-          <span className="admin-nav-section-title">VẬN HÀNH & HỆ THỐNG</span>
-
-          <button
-            type="button"
-            className={`admin-nav-item ${activeTab === "branches" ? "active" : ""}`}
-            onClick={() => setActiveTab("branches")}
-          >
-            <div className="admin-nav-item-content">
-              <i className="bi bi-shop"></i>
-              <span>Chi nhánh (3)</span>
-            </div>
-          </button>
-
-          <span className="admin-nav-section-title">KHÁCH HÀNG & CSKH</span>
-          <button
-            type="button"
-            className={`admin-nav-item ${activeTab === "users" ? "active" : ""}`}
-            onClick={() => setActiveTab("users")}
-          >
-            <div className="admin-nav-item-content">
-              <i className="bi bi-people-fill"></i>
-              <span>Khách hàng & User</span>
-            </div>
           </button>
 
           <button
@@ -1025,7 +1727,59 @@ export default function AdminDashboard() {
           >
             <div className="admin-nav-item-content">
               <i className="bi bi-receipt"></i>
-              <span>Hóa đơn VAT</span>
+              <span>Hóa đơn VAT ({vatOrders.length})</span>
+            </div>
+          </button>
+
+          <span className="admin-nav-section-title">
+            QUẢN TRỊ NỘI DUNG & HỆ THỐNG
+          </span>
+
+          <button
+            type="button"
+            className={`admin-nav-item ${activeTab === "banners" ? "active" : ""}`}
+            onClick={() => setActiveTab("banners")}
+          >
+            <div className="admin-nav-item-content">
+              <i className="bi bi-images"></i>
+              <span>Banner & Hình Ảnh</span>
+            </div>
+            <span className="admin-nav-badge blue">{banners.length}</span>
+          </button>
+
+          <button
+            type="button"
+            className={`admin-nav-item ${activeTab === "settings" ? "active" : ""}`}
+            onClick={() => setActiveTab("settings")}
+          >
+            <div className="admin-nav-item-content">
+              <i className="bi bi-gear-wide-connected"></i>
+              <span>Cài Đặt & Nội Dung</span>
+            </div>
+          </button>
+
+          <span className="admin-nav-section-title">
+            NGƯỜI DÙNG & CHI NHÁNH
+          </span>
+          <button
+            type="button"
+            className={`admin-nav-item ${activeTab === "users" ? "active" : ""}`}
+            onClick={() => setActiveTab("users")}
+          >
+            <div className="admin-nav-item-content">
+              <i className="bi bi-people-fill"></i>
+              <span>Khách hàng & User</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            className={`admin-nav-item ${activeTab === "branches" ? "active" : ""}`}
+            onClick={() => setActiveTab("branches")}
+          >
+            <div className="admin-nav-item-content">
+              <i className="bi bi-shop"></i>
+              <span>Chi nhánh (3)</span>
             </div>
           </button>
         </nav>
@@ -1034,29 +1788,40 @@ export default function AdminDashboard() {
           <div className="admin-user-pill">
             <div
               style={{
-                width: 36,
-                height: 36,
+                width: "36px",
+                height: "36px",
                 borderRadius: "50%",
-                background: "linear-gradient(135deg, #23408e 0%, #003DFF 100%)",
-                color: "#ffffff",
+                backgroundColor: isSuper ? "#fef08a" : "#e0e7ff",
+                color: isSuper ? "#854d0e" : "#3730a3",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontWeight: 700,
-                fontSize: "15px",
-                flexShrink: 0,
+                fontWeight: "700",
+                fontSize: "14px",
               }}
             >
-              {user?.FullName ? user.FullName.charAt(0).toUpperCase() : "A"}
+              {isSuper
+                ? "👑"
+                : user?.FullName
+                  ? user.FullName.charAt(0).toUpperCase()
+                  : "A"}
             </div>
             <div className="admin-user-details">
-              <span className="admin-user-name">{user?.FullName || "Quản trị viên"}</span>
-              <span className="admin-user-role">
-                {user?.Role === "ADMIN"
-                  ? "Quản trị viên (Admin)"
-                  : user?.Role === "MANAGER"
-                  ? "Quản lý (Manager)"
-                  : "Nhân viên hệ thống"}
+              <span
+                className="admin-user-name"
+                style={{ display: "flex", alignItems: "center", gap: "4px" }}
+              >
+                {user?.FullName ||
+                  (isSuper ? "Super Administrator" : "Quản trị viên")}
+              </span>
+              <span
+                style={{
+                  fontSize: "11px",
+                  color: isSuper ? "#eab308" : "#6366f1",
+                  fontWeight: 600,
+                }}
+              >
+                {isSuper ? "Cấp Tối Cao (SuperAdmin)" : "Quản Trị Viên (Admin)"}
               </span>
             </div>
           </div>
@@ -1070,34 +1835,22 @@ export default function AdminDashboard() {
           <div className="admin-topbar-left">
             <h1 className="admin-page-heading">
               {activeTab === "dashboard" && "Bảng Điều Khiển Tổng Quan"}
-              {activeTab === "orders" && "Quản Lý Đơn Đặt Hàng"}
+              {activeTab === "orders" && "Quản Lý Đơn Đặt Hàng Toàn Sàn"}
               {activeTab === "products" && "Danh Mục & Quản Lý Sản Phẩm"}
-              {activeTab === "users" && "Quản Lý Khách Hàng & Phân Quyền"}
+              {activeTab === "users" &&
+                "Quản Lý Khách Hàng & Phân Quyền (Tối Cao)"}
               {activeTab === "coupons" && "Khuyến Mãi & Voucher Giảm Giá"}
-              {activeTab === "invoices" && "Yêu Cầu Xuất Hóa Đơn Doanh Nghiệp (VAT)"}
-              {activeTab === "branches" && "Hệ Thống Chi Nhánh Cửa Hàng ViDairy"}
+              {activeTab === "invoices" &&
+                "Yêu Cầu Xuất Hóa Đơn Doanh Nghiệp (VAT)"}
+              {activeTab === "banners" && "Quản Lý Banner & Hình Ảnh Hệ Thống"}
+              {activeTab === "settings" &&
+                "Cài Đặt Toàn Hệ Thống & Nội Dung Website (MongoDB Atlas)"}
+              {activeTab === "branches" &&
+                "Hệ Thống Chi Nhánh Cửa Hàng ViDairy"}
             </h1>
           </div>
 
           <div className="admin-topbar-right">
-            <Link
-              to="/profile"
-              className="btn-admin-store-link"
-              style={{
-                background: "#eef6ff",
-                color: "#23408e",
-                borderColor: "#bfdbfe",
-                fontWeight: 600,
-              }}
-              title="Chuyển về Trang Thông Tin Người Dùng"
-            >
-              <i className="bi bi-person-circle"></i>
-              <span>Chuyển về Trang User</span>
-            </Link>
-            <Link to="/" className="btn-admin-store-link">
-              <i className="bi bi-arrow-up-right-square"></i>
-              <span>Xem Web Bán Hàng</span>
-            </Link>
             <button
               type="button"
               className="btn-admin-logout"
@@ -1114,7 +1867,6 @@ export default function AdminDashboard() {
               }}
             >
               <i className="bi bi-box-arrow-right"></i>
-              <span>Đăng xuất</span>
             </button>
           </div>
         </header>
@@ -1126,15 +1878,29 @@ export default function AdminDashboard() {
             <div>
               {/* KPI Cards */}
               <div className="admin-kpi-grid">
-                <div className="admin-kpi-card">
+                <div
+                  className="admin-kpi-card"
+                  onClick={() => setIsRevenueModalOpen(true)}
+                  style={{
+                    cursor: "pointer",
+                    position: "relative",
+                    border: "1.5px solid #bfdbfe",
+                    boxShadow: "0 4px 16px rgba(35, 64, 142, 0.08)",
+                    transition: "all 0.2s ease",
+                  }}
+                  title="Nhấn để xem chi tiết theo Quý & Năm"
+                >
                   <div className="admin-kpi-info">
                     <span className="admin-kpi-label">Tổng Doanh Thu</span>
                     <span className="admin-kpi-val">
                       {totalRevenue.toLocaleString("vi-VN")}đ
                     </span>
-                    <span className="admin-kpi-trend up">
-                      <i className="bi bi-arrow-up-circle-fill"></i> +18.5% so
-                      với tuần trước
+                    <span
+                      className="admin-kpi-trend up"
+                      style={{ fontSize: "11.5px" }}
+                    >
+                      <i className="bi bi-pie-chart-fill"></i> Chi tiết theo Quý
+                      / Năm ➔
                     </span>
                   </div>
                   <div className="admin-kpi-icon-box green">
@@ -1158,7 +1924,9 @@ export default function AdminDashboard() {
                 <div className="admin-kpi-card">
                   <div className="admin-kpi-info">
                     <span className="admin-kpi-label">Khách Hàng Đăng Ký</span>
-                    <span className="admin-kpi-val">{users.length} tài khoản</span>
+                    <span className="admin-kpi-val">
+                      {users.length} tài khoản
+                    </span>
                     <span className="admin-kpi-trend up">
                       <i className="bi bi-person-plus-fill"></i> +4 người mới
                     </span>
@@ -1171,7 +1939,9 @@ export default function AdminDashboard() {
                 <div className="admin-kpi-card">
                   <div className="admin-kpi-info">
                     <span className="admin-kpi-label">Sản Phẩm Đang Bán</span>
-                    <span className="admin-kpi-val">{products.length} dòng sữa</span>
+                    <span className="admin-kpi-val">
+                      {products.length} dòng sữa
+                    </span>
                     <span className="admin-kpi-trend up">
                       <i className="bi bi-check-circle-fill"></i> Đang hiển thị
                     </span>
@@ -1186,58 +1956,159 @@ export default function AdminDashboard() {
               <div className="admin-dashboard-split">
                 <div className="admin-card">
                   <div className="admin-card-header">
-                    <h3 className="admin-card-title">
-                      Thống Kê Doanh Thu 7 Ngày Gần Nhất
-                    </h3>
-                    <span className="status-badge active">Tuần Này</span>
+                    <div>
+                      <h3 className="admin-card-title">
+                        Thống Kê Doanh Thu 7 Ngày Gần Nhất
+                      </h3>
+                      <span
+                        style={{
+                          fontSize: "12px",
+                          color: "var(--admin-text-muted)",
+                        }}
+                      >
+                        Biểu đồ tuần hiện tại
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <span className="status-badge active">Tuần Này</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsRevenueModalOpen(true)}
+                        style={{
+                          background: "var(--admin-primary-light)",
+                          color: "var(--admin-primary)",
+                          border: "1px solid #bfdbfe",
+                          padding: "5px 12px",
+                          borderRadius: "6px",
+                          fontSize: "12.5px",
+                          fontWeight: "700",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                        }}
+                      >
+                        <i className="bi bi-pie-chart-fill"></i> Chi tiết Quý /
+                        Năm ➔
+                      </button>
+                    </div>
                   </div>
                   <div className="admin-chart-bars">
-                    <div className="admin-bar-col">
+                    <div className="admin-bar-col" title="Thứ 2: 1.110.000đ">
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          color: "var(--admin-primary)",
+                        }}
+                      >
+                        1.1Tr
+                      </span>
                       <div
                         className="admin-bar-fill"
                         style={{ height: "45%" }}
                       ></div>
                       <span className="admin-bar-label">Thứ 2</span>
                     </div>
-                    <div className="admin-bar-col">
+                    <div className="admin-bar-col" title="Thứ 3: 0đ">
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          color: "#94a3b8",
+                        }}
+                      >
+                        0đ
+                      </span>
                       <div
                         className="admin-bar-fill"
-                        style={{ height: "60%" }}
+                        style={{ height: "15%", background: "#e2e8f0" }}
                       ></div>
                       <span className="admin-bar-label">Thứ 3</span>
                     </div>
-                    <div className="admin-bar-col">
+                    <div className="admin-bar-col" title="Thứ 4: 590.000đ">
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          color: "var(--admin-primary)",
+                        }}
+                      >
+                        590K
+                      </span>
                       <div
                         className="admin-bar-fill"
-                        style={{ height: "80%" }}
+                        style={{ height: "35%" }}
                       ></div>
                       <span className="admin-bar-label">Thứ 4</span>
                     </div>
-                    <div className="admin-bar-col">
+                    <div className="admin-bar-col" title="Thứ 5: 1.690.000đ">
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          color: "var(--admin-primary)",
+                        }}
+                      >
+                        1.7Tr
+                      </span>
                       <div
                         className="admin-bar-fill"
                         style={{ height: "70%" }}
                       ></div>
                       <span className="admin-bar-label">Thứ 5</span>
                     </div>
-                    <div className="admin-bar-col">
+                    <div className="admin-bar-col" title="Thứ 6: 2.760.000đ">
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          color: "var(--admin-primary)",
+                        }}
+                      >
+                        2.8Tr
+                      </span>
                       <div
                         className="admin-bar-fill"
                         style={{ height: "95%" }}
                       ></div>
                       <span className="admin-bar-label">Thứ 6</span>
                     </div>
-                    <div className="admin-bar-col">
-                      <div
-                        className="admin-bar-fill"
-                        style={{ height: "85%" }}
-                      ></div>
-                      <span className="admin-bar-label">Thứ 7</span>
-                    </div>
-                    <div className="admin-bar-col">
+                    <div className="admin-bar-col" title="Thứ 7: 1.820.000đ">
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          color: "var(--admin-primary)",
+                        }}
+                      >
+                        1.8Tr
+                      </span>
                       <div
                         className="admin-bar-fill"
                         style={{ height: "65%" }}
+                      ></div>
+                      <span className="admin-bar-label">Thứ 7</span>
+                    </div>
+                    <div className="admin-bar-col" title="Chủ Nhật: 0đ">
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          color: "#94a3b8",
+                        }}
+                      >
+                        0đ
+                      </span>
+                      <div
+                        className="admin-bar-fill"
+                        style={{ height: "15%", background: "#e2e8f0" }}
                       ></div>
                       <span className="admin-bar-label">CN</span>
                     </div>
@@ -1247,20 +2118,23 @@ export default function AdminDashboard() {
                 <div className="admin-card">
                   <div className="admin-card-header">
                     <h3 className="admin-card-title">Sản Phẩm Bán Chạy</h3>
-                    <i className="bi bi-trophy-fill" style={{ color: "#ff6b00" }}></i>
+                    <i
+                      className="bi bi-trophy-fill"
+                      style={{ color: "#ff6b00", fontSize: "18px" }}
+                    ></i>
                   </div>
                   <div className="top-selling-list">
                     {products.slice(0, 4).map((p) => (
                       <div key={p.id} className="top-selling-item">
                         <img
-                          src={p.img}
+                          src={p.img || "/src/assets/img/product_1.jpg"}
                           alt={p.name}
                           className="top-selling-img"
                         />
                         <div className="top-selling-info">
                           <span className="top-selling-name">{p.name}</span>
                           <span className="top-selling-sales">
-                            Quy cách: {p.variant}
+                            Quy cách: {p.variant || "Chuẩn"}
                           </span>
                         </div>
                         <span className="top-selling-revenue">
@@ -1275,7 +2149,19 @@ export default function AdminDashboard() {
               {/* Recent Orders in Dashboard */}
               <div className="admin-card">
                 <div className="admin-card-header">
-                  <h3 className="admin-card-title">Đơn Hàng Cần Xử Lý Gần Đây</h3>
+                  <div>
+                    <h3 className="admin-card-title">
+                      Đơn Hàng Cần Xử Lý Gần Đây
+                    </h3>
+                    <span
+                      style={{
+                        fontSize: "12.5px",
+                        color: "var(--admin-text-muted)",
+                      }}
+                    >
+                      Tổng cộng {pendingOrdersCount} đơn hàng chờ xử lý
+                    </span>
+                  </div>
                   <button
                     type="button"
                     className="btn-admin-primary"
@@ -1298,14 +2184,16 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {orders.map((o) => (
+                      {orders.slice(0, 6).map((o) => (
                         <tr key={o.id}>
                           <td>
                             <strong>{o.orderCode}</strong>
                           </td>
                           <td>
                             <div>{o.customer}</div>
-                            <small style={{ color: "#64748b" }}>{o.phone}</small>
+                            <small style={{ color: "#64748b" }}>
+                              {o.phone}
+                            </small>
                           </td>
                           <td>
                             {o.type === "DELIVERY" ? (
@@ -1320,12 +2208,16 @@ export default function AdminDashboard() {
                           </td>
                           <td>
                             <strong style={{ color: "#23408e" }}>
-                              {o.total.toLocaleString("vi-VN")}đ
+                              {(Number(o.total) || 0).toLocaleString("vi-VN")}đ
                             </strong>
                           </td>
                           <td>
                             <span
-                              className={`status-badge ${o.paymentStatus === "Completed" ? "completed" : "pending"}`}
+                              className={`status-badge ${
+                                o.paymentStatus === "Completed"
+                                  ? "completed"
+                                  : "pending"
+                              }`}
                             >
                               {o.paymentMethod} (
                               {o.paymentStatus === "Completed"
@@ -1336,16 +2228,19 @@ export default function AdminDashboard() {
                           </td>
                           <td>
                             <span
-                              className={`status-badge ${o.orderStatus === "Completed"
-                                ? "completed"
-                                : o.orderStatus === "Shipping"
-                                  ? "shipping"
-                                  : "processing"
-                                }`}
+                              className={`status-badge ${
+                                o.orderStatus === "Completed"
+                                  ? "completed"
+                                  : o.orderStatus === "Shipping"
+                                    ? "shipping"
+                                    : "processing"
+                              }`}
                             >
                               {o.orderStatus === "Completed" && "Hoàn thành"}
                               {o.orderStatus === "Shipping" && "Đang giao hàng"}
-                              {o.orderStatus === "Processing" && "Đang chuẩn bị"}
+                              {o.orderStatus === "Processing" &&
+                                "Đang chuẩn bị"}
+                              {o.orderStatus === "Pending" && "Chờ xử lý"}
                             </span>
                           </td>
                           <td>
@@ -1388,7 +2283,9 @@ export default function AdminDashboard() {
                     onChange={(e) => setOrderFilterStatus(e.target.value)}
                   >
                     <option value="ALL">Tất cả trạng thái</option>
-                    <option value="Processing">Đang chuẩn bị (Processing)</option>
+                    <option value="Processing">
+                      Đang chuẩn bị (Processing)
+                    </option>
                     <option value="Shipping">Đang giao hàng (Shipping)</option>
                     <option value="Completed">Hoàn thành (Completed)</option>
                     <option value="Cancelled">Đã hủy (Cancelled)</option>
@@ -1516,13 +2413,15 @@ export default function AdminDashboard() {
                     <option value="Sữa Hạt Dinh Dưỡng Tự Nhiên">Sữa Hạt</option>
                   </select>
 
-                  <button
-                    type="button"
-                    className="btn-admin-primary"
-                    onClick={() => setIsAddProductOpen(true)}
-                  >
-                    <i className="bi bi-plus-lg"></i> Thêm Sản Phẩm Mới
-                  </button>
+                  {(!false || isSuper || isAdminUser) && (
+                    <button
+                      type="button"
+                      className="btn-admin-primary"
+                      onClick={() => setIsAddProductOpen(true)}
+                    >
+                      <i className="bi bi-plus-lg"></i> Thêm Sản Phẩm Mới
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1545,11 +2444,16 @@ export default function AdminDashboard() {
                       <tr key={p.id}>
                         <td>
                           <img
-                            src={p.img || p.imageUrl || "/src/assets/img/cau_be_vidaiary.png"}
+                            src={
+                              p.img ||
+                              p.imageUrl ||
+                              "/src/assets/img/cau_be_vidaiary.png"
+                            }
                             alt={p.name}
                             onError={(e) => {
                               e.target.onerror = null;
-                              e.target.src = "/src/assets/img/cau_be_vidaiary.png";
+                              e.target.src =
+                                "/src/assets/img/cau_be_vidaiary.png";
                             }}
                             style={{
                               width: "48px",
@@ -1592,33 +2496,76 @@ export default function AdminDashboard() {
                         <td>
                           <span
                             className={`status-badge ${p.status === 1 ? "active" : "blocked"}`}
-                            style={{ cursor: "pointer" }}
-                            title="Bấm để ẩn / mở bán sản phẩm trên website"
-                            onClick={() => handleToggleProductStatus(p.id)}
+                            style={{
+                              cursor:
+                                false && !isSuper && !isAdminUser
+                                  ? "default"
+                                  : "pointer",
+                            }}
+                            title={
+                              false && !isSuper && !isAdminUser
+                                ? "Trạng thái hiển thị sản phẩm"
+                                : "Bấm để ẩn / mở bán sản phẩm trên website"
+                            }
+                            onClick={() => {
+                              if (!false || isSuper || isAdminUser) {
+                                handleToggleProductStatus(p.id);
+                              }
+                            }}
                           >
-                            <i className={`bi ${p.status === 1 ? "bi-check-circle-fill" : "bi-eye-slash-fill"}`} style={{ marginRight: "4px" }}></i>
+                            <i
+                              className={`bi ${p.status === 1 ? "bi-check-circle-fill" : "bi-eye-slash-fill"}`}
+                              style={{ marginRight: "4px" }}
+                            ></i>
                             {p.status === 1 ? "Đang bán" : "Tạm ngưng"}
                           </span>
                         </td>
                         <td>
-                          <div className="admin-action-btn-group">
+                          {false && !isSuper && !isAdminUser ? (
                             <button
                               type="button"
-                              className="btn-action-icon"
-                              title={p.status === 1 ? "Ẩn khỏi cửa hàng" : "Mở bán lại"}
-                              onClick={() => handleToggleProductStatus(p.id)}
+                              className="btn-admin-primary"
+                              style={{
+                                padding: "5px 10px",
+                                fontSize: "12px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "4px",
+                              }}
+                              onClick={() => {
+                                handlePosAddToCart(p);
+                                setActiveTab("store_pos");
+                              }}
                             >
-                              <i className={`bi ${p.status === 1 ? "bi-eye-slash" : "bi-eye"}`}></i>
+                              <i className="bi bi-cart-plus-fill"></i> Bán tại
+                              quầy
                             </button>
-                            <button
-                              type="button"
-                              className="btn-action-icon danger"
-                              title="Xóa vĩnh viễn khỏi Database"
-                              onClick={() => handleDeleteProduct(p.id)}
-                            >
-                              <i className="bi bi-trash-fill"></i>
-                            </button>
-                          </div>
+                          ) : (
+                            <div className="admin-action-btn-group">
+                              <button
+                                type="button"
+                                className="btn-action-icon"
+                                title={
+                                  p.status === 1
+                                    ? "Ẩn khỏi cửa hàng"
+                                    : "Mở bán lại"
+                                }
+                                onClick={() => handleToggleProductStatus(p.id)}
+                              >
+                                <i
+                                  className={`bi ${p.status === 1 ? "bi-eye-slash" : "bi-eye"}`}
+                                ></i>
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-action-icon danger"
+                                title="Xóa vĩnh viễn khỏi Database"
+                                onClick={() => handleDeleteProduct(p.id)}
+                              >
+                                <i className="bi bi-trash-fill"></i>
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -1627,8 +2574,6 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
-
-
 
           {/* ---------------- 5. TAB: USERS & CUSTOMERS ---------------- */}
           {activeTab === "users" && (
@@ -1654,12 +2599,22 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody>
                     {users.map((u) => {
-                      const currentUserId = user?.UserID || user?.id || user?._id;
+                      const currentUserId =
+                        user?.UserID || user?.id || user?._id;
+                      const isTargetSuperAdmin =
+                        u.role === "SUPERADMIN" ||
+                        u.email === "superadmin@vidairy.vn";
                       const isTargetAdmin =
-                        u.role === "ADMIN" ||
-                        u.email === "admin@vidairy.vn";
-                      const isSelf = Boolean(currentUserId && String(u.id) === String(currentUserId));
-                      const canManageUsers = Boolean(user && ["ADMIN", "MANAGER"].includes(user.Role));
+                        u.role === "ADMIN" || u.email === "admin@vidairy.vn";
+                      const isSelf = Boolean(
+                        currentUserId && String(u.id) === String(currentUserId),
+                      );
+                      const canManageUsers = Boolean(
+                        user &&
+                        ["SUPERADMIN", "ADMIN", "MANAGER"].includes(
+                          user.Role?.toUpperCase(),
+                        ),
+                      );
 
                       return (
                         <tr key={u.id}>
@@ -1667,50 +2622,91 @@ export default function AdminDashboard() {
                             <strong>{u.code}</strong>
                           </td>
                           <td>
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                              <span>{u.fullName}</span>
-                              {isTargetAdmin && (
-                                <span className="admin-pill-unique" title="Tài khoản Quản trị viên duy nhất của hệ thống">
-                                  Admin tối cao
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontWeight: isTargetSuperAdmin ? 700 : 500,
+                                }}
+                              >
+                                {u.fullName}
+                              </span>
+                              {isTargetAdmin && !isTargetSuperAdmin && (
+                                <span
+                                  className="admin-pill-unique"
+                                  title="Tài khoản Quản trị viên hệ thống"
+                                >
+                                  Admin
                                 </span>
                               )}
-                              {isSelf && !isTargetAdmin && (
-                                <span className="admin-pill-self" title="Tài khoản của bạn">
-                                  Bạn
-                                </span>
-                              )}
+
+                              {isSelf &&
+                                !isTargetSuperAdmin &&
+                                !isTargetAdmin && (
+                                  <span
+                                    className="admin-pill-self"
+                                    title="Tài khoản của bạn"
+                                  >
+                                    Bạn
+                                  </span>
+                                )}
                             </div>
                           </td>
                           <td>{u.email}</td>
                           <td>{u.phone}</td>
                           <td>
-                            {isTargetAdmin ? (
-                              <span className="admin-role-badge-super" title="Tài khoản Quản trị viên duy nhất">
-                                <i className="bi bi-shield-fill-check"></i> ADMIN (Quản trị)
+                            {isTargetSuperAdmin ? (
+                              <span
+                                className="admin-role-badge-super"
+                                title="Tài khoản Super Admin có toàn quyền tối cao"
+                              >
+                                <i className="bi bi-shield-fill-check"></i>{" "}
+                                SUPERADMIN
                               </span>
                             ) : isSelf || !canManageUsers ? (
                               <span
                                 className={`admin-role-badge-locked role-${u.role?.toLowerCase()}`}
-                                title={isSelf ? "Không thể tự thay đổi vai trò của chính mình" : "Chỉ Quản trị viên và Quản lý mới có quyền đổi vai trò"}
+                                title={
+                                  isSelf
+                                    ? "Không thể tự thay đổi vai trò của chính mình"
+                                    : "Chỉ Super Admin, Quản trị viên và Quản lý mới có quyền đổi vai trò"
+                                }
                               >
                                 {u.role === "MANAGER"
-                                  ? "MANAGER (Quản lý)"
+                                  ? "MANAGER"
                                   : u.role === "STAFF"
-                                  ? "STAFF (Nhân viên)"
-                                  : u.role === "ADMIN"
-                                  ? "ADMIN (Quản trị)"
-                                  : "CUSTOMER (Khách)"}
+                                    ? "STAFF"
+                                    : u.role === "ADMIN"
+                                      ? "ADMIN"
+                                      : "CUSTOMER"}
+                              </span>
+                            ) : isTargetAdmin && !isSuper ? (
+                              <span
+                                className="admin-role-badge-locked role-admin"
+                                title="Chỉ Super Admin mới có quyền đổi vai trò của Quản trị viên (ADMIN)"
+                              >
+                                ADMIN
                               </span>
                             ) : (
                               <select
                                 value={u.role}
-                                onChange={(e) => handleQuickRoleChange(u.id, e.target.value)}
+                                onChange={(e) =>
+                                  handleQuickRoleChange(u.id, e.target.value)
+                                }
                                 className={`admin-role-select role-${u.role?.toLowerCase()}`}
                                 title="Thay đổi nhanh vai trò"
                               >
-                                <option value="CUSTOMER">CUSTOMER (Khách)</option>
+                                <option value="CUSTOMER">CUSTOMER</option>
                                 <option value="STAFF">STAFF (Nhân viên)</option>
-                                <option value="MANAGER">MANAGER (Quản lý)</option>
+                                <option value="MANAGER">MANAGER</option>
+                                {isSuper && (
+                                  <option value="ADMIN">ADMIN</option>
+                                )}
                               </select>
                             )}
                           </td>
@@ -1723,19 +2719,28 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td>
-                            {isTargetAdmin ? (
+                            {isTargetSuperAdmin ? (
                               <span
                                 className="admin-super-action-locked"
-                                title="Tài khoản Quản trị viên tối cao cố định không thể can thiệp"
+                                title="Tài khoản Super Admin tối cao cố định không thể can thiệp"
                               >
-                                <i className="bi bi-lock-fill"></i> Cố định
+                                <i className="bi bi-shield-fill-check"></i> Toàn
+                                quyền
                               </span>
                             ) : isSelf ? (
                               <span
                                 className="admin-super-action-locked self"
                                 title="Không thể tự phân quyền hoặc khóa tài khoản của chính mình"
                               >
-                                <i className="bi bi-person-check-fill"></i> Chính bạn
+                                <i className="bi bi-person-check-fill"></i>{" "}
+                                Chính bạn
+                              </span>
+                            ) : isTargetAdmin && !isSuper ? (
+                              <span
+                                className="admin-super-action-locked"
+                                title="Chỉ Super Admin mới có quyền can thiệp tài khoản Quản trị viên"
+                              >
+                                <i className="bi bi-lock-fill"></i> Cố định
                               </span>
                             ) : canManageUsers ? (
                               <div className="admin-action-btn-group">
@@ -1760,15 +2765,20 @@ export default function AdminDashboard() {
                                   onClick={() => handleToggleUserStatus(u.id)}
                                 >
                                   <i
-                                    className={`bi ${u.status === 1
-                                      ? "bi-lock-fill"
-                                      : "bi-unlock-fill"
-                                      }`}
+                                    className={`bi ${
+                                      u.status === 1
+                                        ? "bi-lock-fill"
+                                        : "bi-unlock-fill"
+                                    }`}
                                   ></i>
                                 </button>
                               </div>
                             ) : (
-                              <span style={{ color: "#9ca3af", fontSize: "13px" }}>—</span>
+                              <span
+                                style={{ color: "#9ca3af", fontSize: "13px" }}
+                              >
+                                —
+                              </span>
                             )}
                           </td>
                         </tr>
@@ -1784,10 +2794,26 @@ export default function AdminDashboard() {
           {activeTab === "coupons" && (
             <div className="admin-card">
               <div className="admin-card-header">
-                <h3 className="admin-card-title">Quản Lý Mã Giảm Giá & Voucher</h3>
-                <button type="button" className="btn-admin-primary">
-                  <i className="bi bi-plus-lg"></i> Tạo Voucher Mới
-                </button>
+                <div>
+                  <h3 className="admin-card-title">
+                    Quản Lý Mã Giảm Giá & Voucher
+                  </h3>
+                  <p
+                    style={{
+                      margin: "4px 0 0",
+                      fontSize: "13px",
+                      color: "#64748b",
+                    }}
+                  >
+                    Tra cứu và áp dụng các mã khuyến mãi, voucher giảm giá cho
+                    khách hàng mua tại quầy hoặc online.
+                  </p>
+                </div>
+                {(!false || isSuper || isAdminUser) && (
+                  <button type="button" className="btn-admin-primary">
+                    <i className="bi bi-plus-lg"></i> Tạo Voucher Mới
+                  </button>
+                )}
               </div>
               <div className="admin-table-responsive">
                 <table className="admin-table">
@@ -1801,6 +2827,9 @@ export default function AdminDashboard() {
                       <th>ĐÃ DÙNG / GIỚI HẠN</th>
                       <th>HẠN SỬ DỤNG</th>
                       <th>TRẠNG THÁI</th>
+                      {false && !isSuper && !isAdminUser && (
+                        <th>THAO TÁC</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -1826,12 +2855,14 @@ export default function AdminDashboard() {
                         </td>
                         <td>
                           <strong style={{ color: "#ff6b00" }}>
-                            {c.type === "FixedAmount"
-                              ? `${c.value.toLocaleString("vi-VN")}đ`
-                              : `${c.value}%`}
+                            {c.type === "Percent"
+                              ? `${c.value}%`
+                              : `${Number(c.value).toLocaleString("vi-VN")}đ`}
                           </strong>
                         </td>
-                        <td>{c.minOrder.toLocaleString("vi-VN")}đ</td>
+                        <td>
+                          {(Number(c.minOrder) || 0).toLocaleString("vi-VN")}đ
+                        </td>
                         <td>
                           {c.usedCount} / {c.limit} lượt
                         </td>
@@ -1839,13 +2870,47 @@ export default function AdminDashboard() {
                         <td>
                           <span
                             className={`status-badge ${c.status === 1 ? "active" : "blocked"}`}
-                            style={{ cursor: "pointer" }}
-                            title="Nhấp để bật / tắt mã"
-                            onClick={() => handleToggleCouponStatus(c.code)}
+                            style={{
+                              cursor:
+                                false && !isSuper && !isAdminUser
+                                  ? "default"
+                                  : "pointer",
+                            }}
+                            title={
+                              false && !isSuper && !isAdminUser
+                                ? "Trạng thái áp dụng"
+                                : "Nhấp để bật / tắt mã"
+                            }
+                            onClick={() => {
+                              if (!false || isSuper || isAdminUser) {
+                                handleToggleCouponStatus(c.code);
+                              }
+                            }}
                           >
                             {c.status === 1 ? "Đang áp dụng" : "Đã tạm dừng"}
                           </span>
                         </td>
+                        {false && !isSuper && !isAdminUser && (
+                          <td>
+                            <button
+                              type="button"
+                              className="btn-admin-primary"
+                              style={{
+                                padding: "4px 8px",
+                                fontSize: "11.5px",
+                                backgroundColor: "#16a34a",
+                                borderColor: "#16a34a",
+                              }}
+                              onClick={() => {
+                                (() => {})(c.code);
+                                setActiveTab("store_pos");
+                              }}
+                            >
+                              <i className="bi bi-tag-fill"></i> Dùng mã tại
+                              quầy
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -1858,100 +2923,240 @@ export default function AdminDashboard() {
           {activeTab === "invoices" && (
             <div className="admin-card">
               <div className="admin-card-header">
-                <h3 className="admin-card-title">
-                  Yêu Cầu Xuất Hóa Đơn Điện Tử (VAT)
-                </h3>
+                <div>
+                  <h3 className="admin-card-title">
+                    <i
+                      className="bi bi-receipt-cutoff"
+                      style={{ color: "#23408e", marginRight: "8px" }}
+                    ></i>
+                    Yêu Cầu Xuất Hóa Đơn Điện Tử (VAT)
+                  </h3>
+                  <p
+                    style={{
+                      margin: "4px 0 0",
+                      fontSize: "13px",
+                      color: "#64748b",
+                    }}
+                  >
+                    Danh sách hóa đơn được sắp xếp mặc định theo{" "}
+                    <strong>Số hóa đơn tăng dần (HD-...)</strong>
+                  </p>
+                </div>
               </div>
+
+              <div className="admin-table-controls">
+                <div className="admin-search-box" style={{ flex: 1 }}>
+                  <i className="bi bi-search"></i>
+                  <input
+                    type="text"
+                    placeholder="Tìm theo Số hóa đơn (HD-...), Mã đơn, Tên công ty, MST, Email..."
+                    value={invoiceSearch}
+                    onChange={(e) => setInvoiceSearch(e.target.value)}
+                  />
+                </div>
+              </div>
+
               <div className="admin-table-responsive">
                 <table className="admin-table">
                   <thead>
                     <tr>
+                      <th style={{ width: "50px", textAlign: "center" }}>
+                        STT
+                      </th>
+                      <th style={{ minWidth: "140px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            cursor: "pointer",
+                            userSelect: "none",
+                            color: "#23408e",
+                          }}
+                          onClick={() => setInvoiceSortAsc((prev) => !prev)}
+                          title="Bấm để đổi sắp xếp"
+                        >
+                          <span>SỐ HÓA ĐƠN</span>
+                          <i
+                            className={`bi ${
+                              invoiceSortAsc
+                                ? "bi-arrow-up-short"
+                                : "bi-arrow-down-short"
+                            }`}
+                            style={{ fontSize: "16px" }}
+                          ></i>
+                        </div>
+                      </th>
                       <th>MÃ ĐƠN HÀNG</th>
                       <th>TÊN CÔNG TY / ĐƠN VỊ</th>
                       <th>MÃ SỐ THUẾ</th>
                       <th>EMAIL NHẬN HÓA ĐƠN</th>
                       <th>ĐỊA CHỈ GPKD</th>
-                      <th>SỐ HÓA ĐƠN</th>
+                      <th>TỔNG TIỀN (VAT)</th>
                       <th>TRẠNG THÁI</th>
                       <th>THAO TÁC</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.filter((o) => o.hasVAT).length === 0 ? (
+                    {filteredVatOrders.length === 0 ? (
                       <tr>
                         <td
-                          colSpan="8"
+                          colSpan="10"
                           style={{
                             textAlign: "center",
-                            padding: "24px",
-                            color: "#666",
+                            padding: "32px",
+                            color: "#64748b",
                           }}
                         >
-                          Chưa có đơn hàng nào yêu cầu xuất hóa đơn VAT điện tử.
+                          <i
+                            className="bi bi-inbox"
+                            style={{
+                              fontSize: "32px",
+                              display: "block",
+                              marginBottom: "8px",
+                              color: "#94a3b8",
+                            }}
+                          ></i>
+                          Không tìm thấy hóa đơn VAT nào phù hợp với điều kiện
+                          tìm kiếm.
                         </td>
                       </tr>
                     ) : (
-                      orders
-                        .filter((o) => o.hasVAT)
-                        .map((o) => (
-                          <tr key={o.id}>
-                            <td>
-                              <strong>{o.orderCode}</strong>
+                      filteredVatOrders.map((o, idx) => {
+                        const invoiceNo = getInvoiceNumber(o);
+                        return (
+                          <tr key={o.id || o.orderCode}>
+                            <td
+                              style={{
+                                textAlign: "center",
+                                color: "#64748b",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {idx + 1}
                             </td>
-                            <td>
-                              <strong>
-                                {o.vatInfo?.Company || "Chưa cung cấp"}
-                              </strong>
-                            </td>
-                            <td>{o.vatInfo?.TaxId || "Chưa cung cấp"}</td>
-                            <td>
-                              {o.vatInfo?.Email ||
-                                o.customer?.email ||
-                                "Chưa cung cấp"}
-                            </td>
-                            <td>{o.vatInfo?.Address || "Chưa cung cấp"}</td>
                             <td>
                               <span
                                 style={{
                                   fontFamily: "monospace",
                                   fontWeight: 700,
+                                  fontSize: "13.5px",
                                   color: "#23408e",
+                                  backgroundColor: "#eff6ff",
+                                  border: "1px solid #bfdbfe",
+                                  padding: "4px 8px",
+                                  borderRadius: "6px",
+                                  display: "inline-block",
                                 }}
                               >
-                                {`HD-${o.orderCode?.replace(/[^0-9]/g, "").slice(-8) ||
-                                  "202609-001"
-                                  }`}
+                                {invoiceNo}
                               </span>
+                            </td>
+                            <td>
+                              <strong>{o.orderCode}</strong>
+                            </td>
+                            <td>
+                              <strong style={{ color: "#0f172a" }}>
+                                {o.vatInfo?.company ||
+                                  o.vatInfo?.Company ||
+                                  "Chưa cung cấp"}
+                              </strong>
+                            </td>
+                            <td>
+                              <code
+                                style={{
+                                  backgroundColor: "#f1f5f9",
+                                  padding: "2px 6px",
+                                  borderRadius: "4px",
+                                  color: "#334155",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {o.vatInfo?.taxId ||
+                                  o.vatInfo?.TaxId ||
+                                  "Chưa cung cấp"}
+                              </code>
+                            </td>
+                            <td>
+                              {o.vatInfo?.email ||
+                                o.vatInfo?.Email ||
+                                o.customer?.email ||
+                                o.customer ||
+                                "Chưa cung cấp"}
+                            </td>
+                            <td>
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  color: "#64748b",
+                                  maxWidth: "220px",
+                                  lineHeight: 1.35,
+                                }}
+                              >
+                                {o.vatInfo?.address ||
+                                  o.vatInfo?.Address ||
+                                  "Chưa cung cấp"}
+                              </div>
+                            </td>
+                            <td>
+                              <strong style={{ color: "#23408e" }}>
+                                {o.total?.toLocaleString("vi-VN")}đ
+                              </strong>
                             </td>
                             <td>
                               <span
-                                className={`status-badge ${o.orderStatus === "Completed"
-                                  ? "completed"
-                                  : "pending"
-                                  }`}
+                                className={`status-badge ${
+                                  o.orderStatus === "Completed"
+                                    ? "completed"
+                                    : "pending"
+                                }`}
                               >
                                 {o.orderStatus === "Completed"
                                   ? "Đã phát hành"
-                                  : "Chờ xử lý"}
+                                  : "Chờ phát hành"}
                               </span>
                             </td>
                             <td>
-                              <button
-                                type="button"
-                                className="btn-action-icon"
-                                title="Gửi lại email hóa đơn"
-                                onClick={() =>
-                                  alert(
-                                    `Đã gửi lại thông tin hóa đơn cho đơn hàng ${o.orderCode} tới ${o.vatInfo?.Email || "email khách hàng"
-                                    }!`
-                                  )
-                                }
-                              >
-                                <i className="bi bi-envelope-check-fill"></i>
-                              </button>
+                              <div className="admin-action-btn-group">
+                                <button
+                                  type="button"
+                                  className="btn-action-icon"
+                                  title="Xem chi tiết đơn hàng"
+                                  onClick={() => setSelectedOrder(o)}
+                                >
+                                  <i className="bi bi-eye-fill"></i>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-action-icon"
+                                  title="In / Xuất Hóa Đơn VAT"
+                                  onClick={() => setPrintableInvoiceOrder(o)}
+                                >
+                                  <i className="bi bi-printer-fill"></i>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-action-icon"
+                                  title="Gửi lại email hóa đơn điện tử"
+                                  onClick={() =>
+                                    alert(
+                                      `🎉 Đã gửi lại hóa đơn điện tử ${invoiceNo} cho đơn hàng ${
+                                        o.orderCode
+                                      } tới email: ${
+                                        o.vatInfo?.email ||
+                                        o.vatInfo?.Email ||
+                                        "email khách hàng"
+                                      }!`,
+                                    )
+                                  }
+                                >
+                                  <i className="bi bi-envelope-check-fill"></i>
+                                </button>
+                              </div>
                             </td>
                           </tr>
-                        ))
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -1995,13 +3200,16 @@ export default function AdminDashboard() {
                         <td>{b.address}</td>
                         <td>{b.city}</td>
                         <td>
-                          <strong style={{ color: "#23408e" }}>{b.phone}</strong>
+                          <strong style={{ color: "#23408e" }}>
+                            {b.phone}
+                          </strong>
                         </td>
                         <td>{b.hours}</td>
                         <td>
                           <span
-                            className={`status-badge ${b.status === 1 ? "active" : "blocked"
-                              }`}
+                            className={`status-badge ${
+                              b.status === 1 ? "active" : "blocked"
+                            }`}
                           >
                             {b.status === 1 ? "Đang mở cửa" : "Tạm đóng cửa"}
                           </span>
@@ -2011,6 +3219,791 @@ export default function AdminDashboard() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* ---------------- 9. TAB: BANNERS & MEDIA (SUPER ADMIN / ADMIN) ---------------- */}
+          {activeTab === "banners" && (
+            <div className="admin-card">
+              <div className="admin-card-header">
+                <div>
+                  <h3 className="admin-card-title">
+                    <i
+                      className="bi bi-images"
+                      style={{ color: "#23408e", marginRight: "8px" }}
+                    ></i>
+                    Quản Lý Banner & Hình Ảnh Hệ Thống
+                  </h3>
+                  <p
+                    style={{
+                      margin: "4px 0 0",
+                      fontSize: "13px",
+                      color: "#64748b",
+                    }}
+                  >
+                    Tùy chỉnh các banner quảng cáo, cover trang sản phẩm, hero
+                    trang chủ và pop-up khuyến mãi trên toàn hệ thống.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="btn-admin-primary"
+                  onClick={handleOpenAddBanner}
+                >
+                  <i className="bi bi-plus-lg"></i> Thêm Banner Mới
+                </button>
+              </div>
+
+              <div className="admin-table-responsive">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: "50px", textAlign: "center" }}>
+                        STT
+                      </th>
+                      <th style={{ width: "160px" }}>HÌNH ẢNH BANNER</th>
+                      <th>TIÊU ĐỀ & MÔ TẢ</th>
+                      <th>VỊ TRÍ HIỂN THỊ</th>
+                      <th>ĐƯỜNG DẪN LIÊN KẾT</th>
+                      <th style={{ textAlign: "center" }}>THỨ TỰ</th>
+                      <th>TRẠNG THÁI</th>
+                      <th style={{ textAlign: "center" }}>THAO TÁC</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {banners.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan="8"
+                          style={{
+                            textAlign: "center",
+                            padding: "32px",
+                            color: "#64748b",
+                          }}
+                        >
+                          <i
+                            className="bi bi-card-image"
+                            style={{
+                              fontSize: "32px",
+                              display: "block",
+                              marginBottom: "8px",
+                              color: "#94a3b8",
+                            }}
+                          ></i>
+                          Chưa có banner nào. Hãy nhấp "Thêm Banner Mới" để tạo
+                          banner cho hệ thống!
+                        </td>
+                      </tr>
+                    ) : (
+                      banners.map((b, idx) => (
+                        <tr key={b.BannerID || b.id || b._id || idx}>
+                          <td
+                            style={{
+                              textAlign: "center",
+                              color: "#64748b",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {idx + 1}
+                          </td>
+                          <td>
+                            <div
+                              style={{
+                                width: "130px",
+                                height: "64px",
+                                borderRadius: "8px",
+                                overflow: "hidden",
+                                border: "1px solid #e2e8f0",
+                                backgroundColor: "#f8fafc",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <img
+                                src={b.imageUrl}
+                                alt={b.title}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src =
+                                    "/src/assets/img/mother_baby_banner.jpg";
+                                }}
+                              />
+                            </div>
+                          </td>
+                          <td>
+                            <strong
+                              style={{
+                                color: "#0f172a",
+                                fontSize: "14px",
+                                display: "block",
+                              }}
+                            >
+                              {b.title}
+                            </strong>
+                            {b.description && (
+                              <span
+                                style={{
+                                  fontSize: "12px",
+                                  color: "#64748b",
+                                  display: "block",
+                                  marginTop: "2px",
+                                }}
+                              >
+                                {b.description}
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            <span
+                              style={{
+                                backgroundColor: "#eff6ff",
+                                color: "#1e40af",
+                                padding: "4px 8px",
+                                borderRadius: "6px",
+                                fontSize: "12px",
+                                fontWeight: 600,
+                                display: "inline-block",
+                                border: "1px solid #bfdbfe",
+                              }}
+                            >
+                              {b.position || "Trang Sản Phẩm (Cover Hero)"}
+                            </span>
+                          </td>
+                          <td>
+                            <code
+                              style={{
+                                fontSize: "12px",
+                                color: "#475569",
+                                backgroundColor: "#f1f5f9",
+                                padding: "2px 6px",
+                                borderRadius: "4px",
+                              }}
+                            >
+                              {b.linkUrl || "/products"}
+                            </code>
+                          </td>
+                          <td
+                            style={{
+                              textAlign: "center",
+                              fontWeight: 700,
+                              color: "#23408e",
+                            }}
+                          >
+                            {b.displayOrder || 1}
+                          </td>
+                          <td>
+                            <span
+                              className={`status-badge ${b.status === 1 ? "active" : "blocked"}`}
+                              style={{ cursor: "pointer" }}
+                              title="Bấm để bật / tắt hiển thị banner"
+                              onClick={() => handleToggleBannerStatus(b)}
+                            >
+                              {b.status === 1 ? "Đang hiển thị" : "Đã ẩn"}
+                            </span>
+                          </td>
+                          <td>
+                            <div
+                              className="admin-action-btn-group"
+                              style={{ justifyContent: "center" }}
+                            >
+                              <button
+                                type="button"
+                                className="btn-action-icon primary"
+                                title="Chỉnh sửa banner"
+                                onClick={() => handleOpenEditBanner(b)}
+                              >
+                                <i className="bi bi-pencil-square"></i>
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-action-icon danger"
+                                title="Xóa banner khỏi hệ thống"
+                                onClick={() => handleDeleteBanner(b)}
+                              >
+                                <i className="bi bi-trash-fill"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ---------------- 10. TAB: SYSTEM & CONTENT SETTINGS (SUPER ADMIN SUPREME) ---------------- */}
+          {activeTab === "settings" && (
+            <div className="admin-card">
+              <div className="admin-card-header">
+                <div>
+                  <h3 className="admin-card-title">
+                    <i
+                      className="bi bi-gear-wide-connected"
+                      style={{ color: "#23408e", marginRight: "8px" }}
+                    ></i>
+                    Cài Đặt Toàn Bộ Hệ Thống & Nội Dung Website
+                  </h3>
+                  <p
+                    style={{
+                      margin: "4px 0 0",
+                      fontSize: "13px",
+                      color: "#64748b",
+                    }}
+                  >
+                    Quyền hạn tối cao Super Admin: Tùy chỉnh thông tin thương
+                    hiệu, hình ảnh trang sản phẩm, banner trang chủ và lưu trực
+                    tiếp lên cơ sở dữ liệu MongoDB Atlas.
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    type="button"
+                    className="btn-admin-secondary"
+                    onClick={handleResetSettings}
+                    title="Khôi phục nội dung về mặc định ban đầu"
+                  >
+                    <i className="bi bi-arrow-counterclockwise"></i> Khôi Phục
+                    Mặc Định
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-admin-primary"
+                    onClick={handleSaveSettings}
+                    disabled={isSavingSettings}
+                  >
+                    {isSavingSettings ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm"
+                          role="status"
+                          aria-hidden="true"
+                          style={{
+                            width: 16,
+                            height: 16,
+                            border: "2px solid #fff",
+                            borderTopColor: "transparent",
+                            borderRadius: "50%",
+                            display: "inline-block",
+                          }}
+                        ></span>{" "}
+                        Đang Lưu MongoDB...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-cloud-arrow-up-fill"></i> Lưu & Đồng
+                        Bộ Hệ Thống
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <form
+                onSubmit={handleSaveSettings}
+                style={{ padding: "20px 24px" }}
+              >
+                {/* SECTION 1: THÔNG TIN DOANH NGHIỆP & THƯƠNG HIỆU */}
+                <div
+                  style={{
+                    marginBottom: "28px",
+                    backgroundColor: "#f8fafc",
+                    padding: "20px",
+                    borderRadius: "12px",
+                    border: "1px solid #e2e8f0",
+                  }}
+                >
+                  <h4
+                    style={{
+                      fontFamily: "ViDairy1",
+                      fontSize: "16px",
+                      color: "#1e3a8a",
+                      margin: "0 0 16px 0",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <i
+                      className="bi bi-building-fill"
+                      style={{ color: "#2563eb" }}
+                    ></i>{" "}
+                    1. Thông Tin Doanh Nghiệp & Thương Hiệu
+                  </h4>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "16px",
+                    }}
+                  >
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#334155",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        Tên Website / Thương Hiệu{" "}
+                        <span style={{ color: "red" }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="admin-select"
+                        style={{ width: "100%", boxSizing: "border-box" }}
+                        value={settings.siteName || ""}
+                        onChange={(e) =>
+                          setSettings({ ...settings, siteName: e.target.value })
+                        }
+                        placeholder="VD: ViDairy - Sữa Dinh Dưỡng Chuẩn Y Học"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#334155",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        Slogan Thương Hiệu
+                      </label>
+                      <input
+                        type="text"
+                        className="admin-select"
+                        style={{ width: "100%", boxSizing: "border-box" }}
+                        value={settings.brandSlogan || ""}
+                        onChange={(e) =>
+                          setSettings({
+                            ...settings,
+                            brandSlogan: e.target.value,
+                          })
+                        }
+                        placeholder="VD: ViDairy - Trao Sức Khỏe, Trọn Yêu Thương"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#334155",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        Hotline Tổng Đài CSKH
+                      </label>
+                      <input
+                        type="text"
+                        className="admin-select"
+                        style={{ width: "100%", boxSizing: "border-box" }}
+                        value={settings.hotline || ""}
+                        onChange={(e) =>
+                          setSettings({ ...settings, hotline: e.target.value })
+                        }
+                        placeholder="VD: 0989 584 592 hoặc 1900 633 559"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#334155",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        Email Hỗ Trợ Khách Hàng
+                      </label>
+                      <input
+                        type="email"
+                        className="admin-select"
+                        style={{ width: "100%", boxSizing: "border-box" }}
+                        value={settings.email || ""}
+                        onChange={(e) =>
+                          setSettings({ ...settings, email: e.target.value })
+                        }
+                        placeholder="VD: cskh@vidairy.vn"
+                      />
+                    </div>
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#334155",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        Địa Chỉ Trụ Sở Doanh Nghiệp
+                      </label>
+                      <input
+                        type="text"
+                        className="admin-select"
+                        style={{ width: "100%", boxSizing: "border-box" }}
+                        value={settings.address || ""}
+                        onChange={(e) =>
+                          setSettings({ ...settings, address: e.target.value })
+                        }
+                        placeholder="VD: Số 120 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SECTION 2: TÙY CHỈNH TRANG SẢN PHẨM (PRODUCT PAGE) */}
+                <div
+                  style={{
+                    marginBottom: "28px",
+                    backgroundColor: "#f8fafc",
+                    padding: "20px",
+                    borderRadius: "12px",
+                    border: "1px solid #e2e8f0",
+                  }}
+                >
+                  <h4
+                    style={{
+                      fontFamily: "ViDairy1",
+                      fontSize: "16px",
+                      color: "#1e3a8a",
+                      margin: "0 0 16px 0",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <i
+                      className="bi bi-cart-check-fill"
+                      style={{ color: "#2563eb" }}
+                    ></i>{" "}
+                    2. Tùy Chỉnh Trang Danh Sách Sản Phẩm (Product Page)
+                  </h4>
+
+                  {/* Banner Image Upload & Preview */}
+                  <div
+                    className="product-img-upload-box"
+                    style={{ marginBottom: "16px" }}
+                  >
+                    <label className="admin-form-label">
+                      <i className="bi bi-image-fill text-blue"></i> Ảnh Cover
+                      Hero Banner Trang Sản Phẩm
+                    </label>
+                    <div className="img-upload-row">
+                      <div
+                        className="img-preview-card"
+                        style={{ width: "220px", height: "85px" }}
+                      >
+                        {settings.productPageBanner ? (
+                          <img
+                            src={settings.productPageBanner}
+                            alt="Product Banner Preview"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src =
+                                "/src/assets/img/mother_baby_banner.jpg";
+                            }}
+                          />
+                        ) : (
+                          <div className="no-img-text">Chưa có ảnh</div>
+                        )}
+                      </div>
+                      <div className="img-upload-controls">
+                        <label className="btn-upload-file">
+                          <i className="bi bi-cloud-arrow-up-fill"></i> Tải ảnh
+                          banner từ máy tính...
+                          <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: "none" }}
+                            onChange={(e) =>
+                              handleImageFileUpload(e, (url) =>
+                                setSettings({
+                                  ...settings,
+                                  productPageBanner: url,
+                                }),
+                              )
+                            }
+                          />
+                        </label>
+                        <input
+                          type="text"
+                          className="admin-select"
+                          style={{ width: "100%", fontSize: "12.5px" }}
+                          value={settings.productPageBanner || ""}
+                          onChange={(e) =>
+                            setSettings({
+                              ...settings,
+                              productPageBanner: e.target.value,
+                            })
+                          }
+                          placeholder="Hoặc dán trực tiếp đường dẫn URL ảnh banner tại đây..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "14px",
+                    }}
+                  >
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#334155",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        Tiêu Đề Banner Trang Sản Phẩm
+                      </label>
+                      <input
+                        type="text"
+                        className="admin-select"
+                        style={{ width: "100%", boxSizing: "border-box" }}
+                        value={settings.productPageTitle || ""}
+                        onChange={(e) =>
+                          setSettings({
+                            ...settings,
+                            productPageTitle: e.target.value,
+                          })
+                        }
+                        placeholder="VD: VitaDairy Luôn Đồng Hành Cùng Mẹ Và Bé"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#334155",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        Mô Tả Giới Thiệu Dòng Sản Phẩm
+                      </label>
+                      <textarea
+                        className="admin-select"
+                        rows="3"
+                        style={{
+                          width: "100%",
+                          boxSizing: "border-box",
+                          resize: "vertical",
+                        }}
+                        value={settings.productPageDescription || ""}
+                        onChange={(e) =>
+                          setSettings({
+                            ...settings,
+                            productPageDescription: e.target.value,
+                          })
+                        }
+                        placeholder="Nhập đoạn mô tả giới thiệu tổng quan về các sản phẩm dinh dưỡng ViDairy..."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SECTION 3: TÙY CHỈNH TRANG CHỦ (HOMEPAGE HERO) */}
+                <div
+                  style={{
+                    marginBottom: "28px",
+                    backgroundColor: "#f8fafc",
+                    padding: "20px",
+                    borderRadius: "12px",
+                    border: "1px solid #e2e8f0",
+                  }}
+                >
+                  <h4
+                    style={{
+                      fontFamily: "ViDairy1",
+                      fontSize: "16px",
+                      color: "#1e3a8a",
+                      margin: "0 0 16px 0",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <i
+                      className="bi bi-house-door-fill"
+                      style={{ color: "#2563eb" }}
+                    ></i>{" "}
+                    3. Tùy Chỉnh Trang Chủ (Hero Banner & Thông Điệp)
+                  </h4>
+
+                  {/* Home Hero Image Upload & Preview */}
+                  <div
+                    className="product-img-upload-box"
+                    style={{ marginBottom: "16px" }}
+                  >
+                    <label className="admin-form-label">
+                      <i className="bi bi-image-fill text-blue"></i> Ảnh Banner
+                      Chính Trang Chủ
+                    </label>
+                    <div className="img-upload-row">
+                      <div
+                        className="img-preview-card"
+                        style={{ width: "220px", height: "85px" }}
+                      >
+                        {settings.homeHeroBanner ? (
+                          <img
+                            src={settings.homeHeroBanner}
+                            alt="Home Banner Preview"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src =
+                                "/src/assets/img/ViDairy_banner_1536x816.png";
+                            }}
+                          />
+                        ) : (
+                          <div className="no-img-text">Chưa có ảnh</div>
+                        )}
+                      </div>
+                      <div className="img-upload-controls">
+                        <label className="btn-upload-file">
+                          <i className="bi bi-cloud-arrow-up-fill"></i> Tải
+                          banner trang chủ từ máy tính...
+                          <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: "none" }}
+                            onChange={(e) =>
+                              handleImageFileUpload(e, (url) =>
+                                setSettings({
+                                  ...settings,
+                                  homeHeroBanner: url,
+                                }),
+                              )
+                            }
+                          />
+                        </label>
+                        <input
+                          type="text"
+                          className="admin-select"
+                          style={{ width: "100%", fontSize: "12.5px" }}
+                          value={settings.homeHeroBanner || ""}
+                          onChange={(e) =>
+                            setSettings({
+                              ...settings,
+                              homeHeroBanner: e.target.value,
+                            })
+                          }
+                          placeholder="Hoặc dán URL ảnh banner trang chủ tại đây..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "16px",
+                    }}
+                  >
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#334155",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        Tiêu Đề Nổi Bật Trang Chủ
+                      </label>
+                      <input
+                        type="text"
+                        className="admin-select"
+                        style={{ width: "100%", boxSizing: "border-box" }}
+                        value={settings.homeHeroTitle || ""}
+                        onChange={(e) =>
+                          setSettings({
+                            ...settings,
+                            homeHeroTitle: e.target.value,
+                          })
+                        }
+                        placeholder="VD: Dinh Dưỡng Vàng Cho Tương Lai Khỏe Mạnh"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#334155",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        Thông Điệp Phụ / Phụ Đề
+                      </label>
+                      <input
+                        type="text"
+                        className="admin-select"
+                        style={{ width: "100%", boxSizing: "border-box" }}
+                        value={settings.homeHeroSubtitle || ""}
+                        onChange={(e) =>
+                          setSettings({
+                            ...settings,
+                            homeHeroSubtitle: e.target.value,
+                          })
+                        }
+                        placeholder="VD: Kháng thể tự nhiên ColosIgG 24h nhập khẩu độc quyền từ Mỹ"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* BOTTOM SAVE BUTTON */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "12px",
+                    borderTop: "1px solid #e2e8f0",
+                    paddingTop: "16px",
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="btn-admin-secondary"
+                    onClick={handleResetSettings}
+                  >
+                    Khôi Phục Mặc Định
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-admin-primary"
+                    disabled={isSavingSettings}
+                  >
+                    <i className="bi bi-cloud-arrow-up-fill"></i> Lưu Tất Cả Cài
+                    Đặt (MongoDB Atlas)
+                  </button>
+                </div>
+              </form>
             </div>
           )}
         </div>
@@ -2081,7 +4074,13 @@ export default function AdminDashboard() {
                 >
                   Danh Sách Sản Phẩm Đã Đặt:
                 </h4>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                  }}
+                >
                   {selectedOrder.items.map((it, idx) => (
                     <div
                       key={idx}
@@ -2097,7 +4096,9 @@ export default function AdminDashboard() {
                       <span>
                         {it.name} <strong>x{it.qty}</strong>
                       </span>
-                      <strong>{(it.price * it.qty).toLocaleString("vi-VN")}đ</strong>
+                      <strong>
+                        {(it.price * it.qty).toLocaleString("vi-VN")}đ
+                      </strong>
                     </div>
                   ))}
                 </div>
@@ -2113,7 +4114,9 @@ export default function AdminDashboard() {
                   fontSize: "13.5px",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
                   <span>Tiền hàng:</span>
                   <span>{selectedOrder.subTotal.toLocaleString("vi-VN")}đ</span>
                 </div>
@@ -2126,7 +4129,9 @@ export default function AdminDashboard() {
                     }}
                   >
                     <span>Giảm giá voucher:</span>
-                    <span>-{selectedOrder.discount.toLocaleString("vi-VN")}đ</span>
+                    <span>
+                      -{selectedOrder.discount.toLocaleString("vi-VN")}đ
+                    </span>
                   </div>
                 )}
                 <div
@@ -2153,13 +4158,55 @@ export default function AdminDashboard() {
                     fontSize: "13px",
                   }}
                 >
-                  <strong style={{ color: "#1e40af" }}>
-                    <i className="bi bi-receipt"></i> Thông Tin Hóa Đơn VAT:
-                  </strong>
-                  <div>Công ty: {selectedOrder.vatInfo?.company}</div>
-                  <div>Mã số thuế: {selectedOrder.vatInfo?.taxId}</div>
-                  <div>Email nhận: {selectedOrder.vatInfo?.email}</div>
-                  <div>Địa chỉ: {selectedOrder.vatInfo?.address}</div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    <strong style={{ color: "#1e40af" }}>
+                      <i className="bi bi-receipt"></i> Thông Tin Hóa Đơn VAT:
+                    </strong>
+                    <span
+                      style={{
+                        fontFamily: "monospace",
+                        fontWeight: 700,
+                        backgroundColor: "#23408e",
+                        color: "#ffffff",
+                        padding: "2px 8px",
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                      }}
+                    >
+                      {getInvoiceNumber(selectedOrder)}
+                    </span>
+                  </div>
+                  <div>
+                    Công ty:{" "}
+                    <strong>
+                      {selectedOrder.vatInfo?.company ||
+                        selectedOrder.vatInfo?.Company}
+                    </strong>
+                  </div>
+                  <div>
+                    Mã số thuế:{" "}
+                    <code>
+                      {selectedOrder.vatInfo?.taxId ||
+                        selectedOrder.vatInfo?.TaxId}
+                    </code>
+                  </div>
+                  <div>
+                    Email nhận:{" "}
+                    {selectedOrder.vatInfo?.email ||
+                      selectedOrder.vatInfo?.Email}
+                  </div>
+                  <div>
+                    Địa chỉ:{" "}
+                    {selectedOrder.vatInfo?.address ||
+                      selectedOrder.vatInfo?.Address}
+                  </div>
                 </div>
               )}
             </div>
@@ -2213,7 +4260,8 @@ export default function AdminDashboard() {
                 {/* Phần Quản Lý & Tải Ảnh Sản Phẩm */}
                 <div className="product-img-upload-box">
                   <label className="admin-form-label">
-                    <i className="bi bi-image-fill text-blue"></i> Hình Ảnh Sản Phẩm <span style={{ color: "red" }}>*</span>
+                    <i className="bi bi-image-fill text-blue"></i> Hình Ảnh Sản
+                    Phẩm <span style={{ color: "red" }}>*</span>
                   </label>
 
                   <div className="img-upload-row">
@@ -2225,7 +4273,8 @@ export default function AdminDashboard() {
                           alt="Preview"
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = "/src/assets/img/cau_be_vidaiary.png";
+                            e.target.src =
+                              "/src/assets/img/cau_be_vidaiary.png";
                           }}
                         />
                       ) : (
@@ -2236,12 +4285,17 @@ export default function AdminDashboard() {
                     <div className="img-upload-controls">
                       {/* Nút Tải ảnh từ máy tính */}
                       <label className="btn-upload-file">
-                        <i className="bi bi-cloud-arrow-up-fill"></i> Tải ảnh từ máy tính...
+                        <i className="bi bi-cloud-arrow-up-fill"></i> Tải ảnh từ
+                        máy tính...
                         <input
                           type="file"
                           accept="image/*"
                           style={{ display: "none" }}
-                          onChange={(e) => handleImageFileUpload(e, (url) => setNewProduct({ ...newProduct, img: url }))}
+                          onChange={(e) =>
+                            handleImageFileUpload(e, (url) =>
+                              setNewProduct({ ...newProduct, img: url }),
+                            )
+                          }
                         />
                       </label>
                       {/* Thư viện ảnh gợi ý có sẵn */}
@@ -2294,7 +4348,10 @@ export default function AdminDashboard() {
                       style={{ width: "100%", boxSizing: "border-box" }}
                       value={newProduct.category}
                       onChange={(e) =>
-                        setNewProduct({ ...newProduct, category: e.target.value })
+                        setNewProduct({
+                          ...newProduct,
+                          category: e.target.value,
+                        })
                       }
                     >
                       <option value="Sữa Bột Trẻ Em">Sữa Bột Trẻ Em</option>
@@ -2304,7 +4361,9 @@ export default function AdminDashboard() {
                       <option value="Sữa Dinh Dưỡng Người Cao Tuổi">
                         Sữa Người Cao Tuổi
                       </option>
-                      <option value="Sữa Hạt Dinh Dưỡng Tự Nhiên">Sữa Hạt</option>
+                      <option value="Sữa Hạt Dinh Dưỡng Tự Nhiên">
+                        Sữa Hạt
+                      </option>
                     </select>
                   </div>
 
@@ -2358,7 +4417,10 @@ export default function AdminDashboard() {
                       placeholder="VD: Lon 800g"
                       value={newProduct.variant}
                       onChange={(e) =>
-                        setNewProduct({ ...newProduct, variant: e.target.value })
+                        setNewProduct({
+                          ...newProduct,
+                          variant: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -2383,7 +4445,10 @@ export default function AdminDashboard() {
                       placeholder="VD: 1 - 3 tuổi"
                       value={newProduct.ageGroup}
                       onChange={(e) =>
-                        setNewProduct({ ...newProduct, ageGroup: e.target.value })
+                        setNewProduct({
+                          ...newProduct,
+                          ageGroup: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -2446,7 +4511,8 @@ export default function AdminDashboard() {
           >
             <div className="admin-modal-header">
               <h3 className="admin-modal-title">
-                <i className="bi bi-pencil-square text-blue"></i> Chỉnh Sửa Sản Phẩm & Hình Ảnh
+                <i className="bi bi-pencil-square text-blue"></i> Chỉnh Sửa Sản
+                Phẩm & Hình Ảnh
               </h3>
               <button
                 type="button"
@@ -2462,7 +4528,8 @@ export default function AdminDashboard() {
                 {/* Phần Tải & Đổi Ảnh Sản Phẩm */}
                 <div className="product-img-upload-box">
                   <label className="admin-form-label">
-                    <i className="bi bi-image-fill text-blue"></i> Hình Ảnh Sản Phẩm
+                    <i className="bi bi-image-fill text-blue"></i> Hình Ảnh Sản
+                    Phẩm
                   </label>
 
                   <div className="img-upload-row">
@@ -2473,7 +4540,8 @@ export default function AdminDashboard() {
                           alt="Preview"
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = "/src/assets/img/cau_be_vidaiary.png";
+                            e.target.src =
+                              "/src/assets/img/cau_be_vidaiary.png";
                           }}
                         />
                       ) : (
@@ -2483,22 +4551,40 @@ export default function AdminDashboard() {
 
                     <div className="img-upload-controls">
                       <label className="btn-upload-file">
-                        <i className="bi bi-cloud-arrow-up-fill"></i> Tải ảnh mới từ máy tính...
+                        <i className="bi bi-cloud-arrow-up-fill"></i> Tải ảnh
+                        mới từ máy tính...
                         <input
                           type="file"
                           accept="image/*"
                           style={{ display: "none" }}
-                          onChange={(e) => handleImageFileUpload(e, (url) => setEditingProduct({ ...editingProduct, img: url }))}
+                          onChange={(e) =>
+                            handleImageFileUpload(e, (url) =>
+                              setEditingProduct({
+                                ...editingProduct,
+                                img: url,
+                              }),
+                            )
+                          }
                         />
                       </label>
 
                       <input
                         type="text"
                         className="admin-select"
-                        style={{ width: "100%", marginTop: "6px", boxSizing: "border-box", fontSize: "13px" }}
+                        style={{
+                          width: "100%",
+                          marginTop: "6px",
+                          boxSizing: "border-box",
+                          fontSize: "13px",
+                        }}
                         placeholder="Hoặc dán URL hình ảnh mới"
                         value={editingProduct.img || ""}
-                        onChange={(e) => setEditingProduct({ ...editingProduct, img: e.target.value })}
+                        onChange={(e) =>
+                          setEditingProduct({
+                            ...editingProduct,
+                            img: e.target.value,
+                          })
+                        }
                       />
 
                       <div className="preset-img-chips">
@@ -2508,7 +4594,12 @@ export default function AdminDashboard() {
                             key={idx}
                             type="button"
                             className={`chip-btn ${editingProduct.img === preset.url ? "active" : ""}`}
-                            onClick={() => setEditingProduct({ ...editingProduct, img: preset.url })}
+                            onClick={() =>
+                              setEditingProduct({
+                                ...editingProduct,
+                                img: preset.url,
+                              })
+                            }
                           >
                             {preset.label}
                           </button>
@@ -2525,24 +4616,42 @@ export default function AdminDashboard() {
                     className="admin-select"
                     style={{ width: "100%", boxSizing: "border-box" }}
                     value={editingProduct.name}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                    onChange={(e) =>
+                      setEditingProduct({
+                        ...editingProduct,
+                        name: e.target.value,
+                      })
+                    }
                     required
                   />
                 </div>
 
-                <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+                <div
+                  style={{ display: "flex", gap: "12px", marginTop: "12px" }}
+                >
                   <div style={{ flex: 1 }}>
                     <label className="admin-form-label">Danh Mục</label>
                     <select
                       className="admin-select"
                       style={{ width: "100%", boxSizing: "border-box" }}
                       value={editingProduct.category}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                      onChange={(e) =>
+                        setEditingProduct({
+                          ...editingProduct,
+                          category: e.target.value,
+                        })
+                      }
                     >
                       <option value="Sữa Bột Trẻ Em">Sữa Bột Trẻ Em</option>
-                      <option value="Sữa Cho Mẹ Bầu & Sau Sinh">Sữa Cho Mẹ Bầu</option>
-                      <option value="Sữa Dinh Dưỡng Người Cao Tuổi">Sữa Người Cao Tuổi</option>
-                      <option value="Sữa Hạt Dinh Dưỡng Tự Nhiên">Sữa Hạt</option>
+                      <option value="Sữa Cho Mẹ Bầu & Sau Sinh">
+                        Sữa Cho Mẹ Bầu
+                      </option>
+                      <option value="Sữa Dinh Dưỡng Người Cao Tuổi">
+                        Sữa Người Cao Tuổi
+                      </option>
+                      <option value="Sữa Hạt Dinh Dưỡng Tự Nhiên">
+                        Sữa Hạt
+                      </option>
                     </select>
                   </div>
 
@@ -2552,7 +4661,12 @@ export default function AdminDashboard() {
                       className="admin-select"
                       style={{ width: "100%", boxSizing: "border-box" }}
                       value={editingProduct.brand}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
+                      onChange={(e) =>
+                        setEditingProduct({
+                          ...editingProduct,
+                          brand: e.target.value,
+                        })
+                      }
                     >
                       <option value="ViDairy">ViDairy</option>
                       <option value="NutralisBaby">NutralisBaby</option>
@@ -2562,7 +4676,9 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+                <div
+                  style={{ display: "flex", gap: "12px", marginTop: "12px" }}
+                >
                   <div style={{ flex: 1 }}>
                     <label className="admin-form-label">Quy Cách</label>
                     <input
@@ -2570,17 +4686,29 @@ export default function AdminDashboard() {
                       className="admin-select"
                       style={{ width: "100%", boxSizing: "border-box" }}
                       value={editingProduct.variant}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, variant: e.target.value })}
+                      onChange={(e) =>
+                        setEditingProduct({
+                          ...editingProduct,
+                          variant: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label className="admin-form-label">Độ Tuổi / Đối Tượng</label>
+                    <label className="admin-form-label">
+                      Độ Tuổi / Đối Tượng
+                    </label>
                     <input
                       type="text"
                       className="admin-select"
                       style={{ width: "100%", boxSizing: "border-box" }}
                       value={editingProduct.ageGroup}
-                      onChange={(e) => setEditingProduct({ ...editingProduct, ageGroup: e.target.value })}
+                      onChange={(e) =>
+                        setEditingProduct({
+                          ...editingProduct,
+                          ageGroup: e.target.value,
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -2592,7 +4720,12 @@ export default function AdminDashboard() {
                     className="admin-select"
                     style={{ width: "100%", boxSizing: "border-box" }}
                     value={editingProduct.price}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, price: e.target.value })}
+                    onChange={(e) =>
+                      setEditingProduct({
+                        ...editingProduct,
+                        price: e.target.value,
+                      })
+                    }
                     required
                   />
                 </div>
@@ -2617,11 +4750,18 @@ export default function AdminDashboard() {
 
       {/* ================= MODAL PHÂN QUYỀN TÀI KHOẢN ================= */}
       {isRoleModalOpen && selectedUserForRole && (
-        <div className="admin-modal-overlay" onClick={() => setIsRoleModalOpen(false)}>
-          <div className="admin-modal-content role-modal" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="admin-modal-overlay"
+          onClick={() => setIsRoleModalOpen(false)}
+        >
+          <div
+            className="admin-modal-content role-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="admin-modal-header">
               <h3>
-                <i className="bi bi-shield-lock-fill text-blue"></i> Phân Quyền Tài Khoản
+                <i className="bi bi-shield-lock-fill text-blue"></i> Phân Quyền
+                Tài Khoản
               </h3>
               <button
                 type="button"
@@ -2635,24 +4775,35 @@ export default function AdminDashboard() {
               <div className="admin-modal-body">
                 <div className="role-user-summary">
                   <div className="user-avatar-circle">
-                    {selectedUserForRole.fullName ? selectedUserForRole.fullName.charAt(0).toUpperCase() : "U"}
+                    {selectedUserForRole.fullName
+                      ? selectedUserForRole.fullName.charAt(0).toUpperCase()
+                      : "U"}
                   </div>
                   <div className="user-info-text">
                     <h4>{selectedUserForRole.fullName}</h4>
-                    <p>{selectedUserForRole.email} &bull; Mã: {selectedUserForRole.code}</p>
+                    <p>
+                      {selectedUserForRole.email} &bull; Mã:{" "}
+                      {selectedUserForRole.code}
+                    </p>
                   </div>
                 </div>
 
                 <div className="admin-form-group margin-top">
-                  <label className="admin-form-label">Chọn Vai Trò Hệ Thống (Role):</label>
+                  <label className="admin-form-label">
+                    Chọn Vai Trò Hệ Thống (Role):
+                  </label>
                   <div className="role-radio-group">
-                    <label className={`role-radio-card ${roleForm.role === "CUSTOMER" ? "active" : ""}`}>
+                    <label
+                      className={`role-radio-card ${roleForm.role === "CUSTOMER" ? "active" : ""}`}
+                    >
                       <input
                         type="radio"
                         name="modalRole"
                         value="CUSTOMER"
                         checked={roleForm.role === "CUSTOMER"}
-                        onChange={(e) => setRoleForm({ ...roleForm, role: e.target.value })}
+                        onChange={(e) =>
+                          setRoleForm({ ...roleForm, role: e.target.value })
+                        }
                       />
                       <div className="role-card-info">
                         <strong>CUSTOMER (Khách hàng)</strong>
@@ -2660,13 +4811,17 @@ export default function AdminDashboard() {
                       </div>
                     </label>
 
-                    <label className={`role-radio-card ${roleForm.role === "STAFF" ? "active" : ""}`}>
+                    <label
+                      className={`role-radio-card ${roleForm.role === "STAFF" ? "active" : ""}`}
+                    >
                       <input
                         type="radio"
                         name="modalRole"
                         value="STAFF"
                         checked={roleForm.role === "STAFF"}
-                        onChange={(e) => setRoleForm({ ...roleForm, role: e.target.value })}
+                        onChange={(e) =>
+                          setRoleForm({ ...roleForm, role: e.target.value })
+                        }
                       />
                       <div className="role-card-info">
                         <strong>STAFF (Nhân viên CSKH)</strong>
@@ -2674,36 +4829,105 @@ export default function AdminDashboard() {
                       </div>
                     </label>
 
-                    <label className={`role-radio-card ${roleForm.role === "MANAGER" ? "active" : ""}`}>
+                    <label
+                      className={`role-radio-card ${roleForm.role === "MANAGER" ? "active" : ""}`}
+                    >
                       <input
                         type="radio"
                         name="modalRole"
                         value="MANAGER"
                         checked={roleForm.role === "MANAGER"}
-                        onChange={(e) => setRoleForm({ ...roleForm, role: e.target.value })}
+                        onChange={(e) =>
+                          setRoleForm({ ...roleForm, role: e.target.value })
+                        }
                       />
                       <div className="role-card-info">
                         <strong>MANAGER (Quản lý cửa hàng)</strong>
                         <span>Quản lý sản phẩm và đơn hàng</span>
                       </div>
                     </label>
+
+                    {isSuper && (
+                      <label
+                        className={`role-radio-card ${roleForm.role === "ADMIN" ? "active" : ""}`}
+                        style={{
+                          borderColor:
+                            roleForm.role === "ADMIN" ? "#2563eb" : "#93c5fd",
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="modalRole"
+                          value="ADMIN"
+                          checked={roleForm.role === "ADMIN"}
+                          onChange={(e) =>
+                            setRoleForm({ ...roleForm, role: e.target.value })
+                          }
+                        />
+                        <div className="role-card-info">
+                          <strong style={{ color: "#1e40af" }}>
+                            👑 ADMIN (Quản trị viên)
+                          </strong>
+                          <span>
+                            Toàn quyền quản trị kinh doanh, sản phẩm, đơn hàng &
+                            nhân sự
+                          </span>
+                        </div>
+                      </label>
+                    )}
                   </div>
                 </div>
 
                 <div className="admin-form-group margin-top">
-                  <label className="admin-form-label">Danh Sách Quyền Hạn Chi Tiết (Permissions):</label>
+                  <label className="admin-form-label">
+                    Danh Sách Quyền Hạn Chi Tiết (Permissions):
+                  </label>
                   {roleForm.role === "CUSTOMER" ? (
-                    <div style={{ padding: "14px 16px", backgroundColor: "#f8fafc", borderRadius: "10px", border: "1px dashed #cbd5e1", color: "#64748b", fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
-                      <i className="bi bi-info-circle-fill" style={{ color: "#2563eb", fontSize: "16px" }}></i>
-                      <span>Tài khoản Khách hàng (CUSTOMER) chỉ có quyền mua hàng và không có quyền truy cập quản trị hệ thống.</span>
+                    <div
+                      style={{
+                        padding: "14px 16px",
+                        backgroundColor: "#f8fafc",
+                        borderRadius: "10px",
+                        border: "1px dashed #cbd5e1",
+                        color: "#64748b",
+                        fontSize: "13px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <i
+                        className="bi bi-info-circle-fill"
+                        style={{ color: "#2563eb", fontSize: "16px" }}
+                      ></i>
+                      <span>
+                        Tài khoản Khách hàng (CUSTOMER) chỉ có quyền mua hàng và
+                        không có quyền truy cập quản trị hệ thống.
+                      </span>
                     </div>
                   ) : (
                     <div className="permissions-grid">
                       {[
-                        { key: "manage_products", label: "Quản lý Sản Phẩm & Giá", desc: "Thêm, sửa, xóa danh mục và giá sản phẩm" },
-                        { key: "manage_orders", label: "Quản lý Đơn Hàng", desc: "Xem, cập nhật trạng thái giao hàng" },
-                        { key: "manage_coupons", label: "Quản lý Mã Giảm Giá", desc: "Tạo và bật/tắt voucher khuyến mãi" },
-                        { key: "manage_users", label: "Quản lý Người Dùng & Phân Quyền", desc: "Xem danh sách và đổi quyền tài khoản" },
+                        {
+                          key: "manage_products",
+                          label: "Quản lý Sản Phẩm & Giá",
+                          desc: "Thêm, sửa, xóa danh mục và giá sản phẩm",
+                        },
+                        {
+                          key: "manage_orders",
+                          label: "Quản lý Đơn Hàng",
+                          desc: "Xem, cập nhật trạng thái giao hàng",
+                        },
+                        {
+                          key: "manage_coupons",
+                          label: "Quản lý Mã Giảm Giá",
+                          desc: "Tạo và bật/tắt voucher khuyến mãi",
+                        },
+                        {
+                          key: "manage_users",
+                          label: "Quản lý Người Dùng & Phân Quyền",
+                          desc: "Xem danh sách và đổi quyền tài khoản",
+                        },
                       ].map((perm) => (
                         <label key={perm.key} className="permission-item-box">
                           <input
@@ -2738,8 +4962,1563 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* ================= MODAL: ADD / EDIT BANNER ================= */}
+      {isBannerModalOpen && (
+        <div
+          className="admin-modal-overlay"
+          onClick={() => setIsBannerModalOpen(false)}
+        >
+          <div
+            className="admin-modal-card"
+            style={{ maxWidth: "600px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="admin-modal-header">
+              <h3 className="admin-modal-title">
+                <i
+                  className="bi bi-images text-blue"
+                  style={{ marginRight: "8px" }}
+                ></i>
+                {editingBanner ? "Chỉnh Sửa Banner" : "Thêm Banner Mới"}
+              </h3>
+              <button
+                type="button"
+                className="btn-modal-close"
+                onClick={() => setIsBannerModalOpen(false)}
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveBanner}>
+              <div className="admin-modal-body">
+                {/* Upload & Preview */}
+                <div className="product-img-upload-box">
+                  <label className="admin-form-label">
+                    <i className="bi bi-image-fill text-blue"></i> Hình Ảnh
+                    Banner <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <div className="img-upload-row">
+                    <div
+                      className="img-preview-card"
+                      style={{ width: "160px", height: "70px" }}
+                    >
+                      {bannerForm.imageUrl ? (
+                        <img
+                          src={bannerForm.imageUrl}
+                          alt="Banner Preview"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src =
+                              "/src/assets/img/mother_baby_banner.jpg";
+                          }}
+                        />
+                      ) : (
+                        <div className="no-img-text">Chưa có ảnh</div>
+                      )}
+                    </div>
+                    <div className="img-upload-controls">
+                      <label className="btn-upload-file">
+                        <i className="bi bi-cloud-arrow-up-fill"></i> Tải ảnh từ
+                        máy tính...
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={(e) =>
+                            handleImageFileUpload(e, (url) =>
+                              setBannerForm({ ...bannerForm, imageUrl: url }),
+                            )
+                          }
+                        />
+                      </label>
+                      <input
+                        type="text"
+                        className="admin-select"
+                        style={{ width: "100%", fontSize: "12px" }}
+                        placeholder="Hoặc dán URL ảnh tại đây..."
+                        value={bannerForm.imageUrl}
+                        onChange={(e) =>
+                          setBannerForm({
+                            ...bannerForm,
+                            imageUrl: e.target.value,
+                          })
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color: "#334155",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      Tiêu Đề Banner <span style={{ color: "red" }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="admin-select"
+                      style={{ width: "100%", boxSizing: "border-box" }}
+                      placeholder="VD: Khuyến Mãi Sữa Bột ViDairy Kid..."
+                      value={bannerForm.title}
+                      onChange={(e) =>
+                        setBannerForm({ ...bannerForm, title: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "12px",
+                    }}
+                  >
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#334155",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        Vị Trí Hiển Thị
+                      </label>
+                      <select
+                        className="admin-select"
+                        style={{ width: "100%" }}
+                        value={bannerForm.position}
+                        onChange={(e) =>
+                          setBannerForm({
+                            ...bannerForm,
+                            position: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="Trang Sản Phẩm (Cover Hero)">
+                          Trang Sản Phẩm (Cover Hero)
+                        </option>
+                        <option value="Trang Chủ (Hero Slider)">
+                          Trang Chủ (Hero Slider)
+                        </option>
+                        <option value="Trang Chủ (Banner Phụ)">
+                          Trang Chủ (Banner Phụ)
+                        </option>
+                        <option value="Popup Khuyến Mãi">
+                          Popup Khuyến Mãi
+                        </option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#334155",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        Trang Áp Dụng
+                      </label>
+                      <select
+                        className="admin-select"
+                        style={{ width: "100%" }}
+                        value={bannerForm.page}
+                        onChange={(e) =>
+                          setBannerForm({
+                            ...bannerForm,
+                            page: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="product-list">
+                          Trang Sản Phẩm (product-list)
+                        </option>
+                        <option value="home">Trang Chủ (home)</option>
+                        <option value="all">Toàn Bộ Hệ Thống (all)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "2fr 1fr",
+                      gap: "12px",
+                    }}
+                  >
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#334155",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        Đường Dẫn Liên Kết (Link)
+                      </label>
+                      <input
+                        type="text"
+                        className="admin-select"
+                        style={{ width: "100%", boxSizing: "border-box" }}
+                        placeholder="VD: /products hoặc /products/san-pham-cho-be"
+                        value={bannerForm.linkUrl}
+                        onChange={(e) =>
+                          setBannerForm({
+                            ...bannerForm,
+                            linkUrl: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#334155",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        Thứ Tự Hiển Thị
+                      </label>
+                      <input
+                        type="number"
+                        className="admin-select"
+                        style={{ width: "100%", boxSizing: "border-box" }}
+                        min="1"
+                        value={bannerForm.displayOrder}
+                        onChange={(e) =>
+                          setBannerForm({
+                            ...bannerForm,
+                            displayOrder: Number(e.target.value),
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color: "#334155",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      Mô Tả Phụ (Tùy chọn)
+                    </label>
+                    <textarea
+                      className="admin-select"
+                      rows="2"
+                      style={{
+                        width: "100%",
+                        boxSizing: "border-box",
+                        resize: "vertical",
+                      }}
+                      placeholder="Mô tả tóm tắt nội dung chương trình banner..."
+                      value={bannerForm.description}
+                      onChange={(e) =>
+                        setBannerForm({
+                          ...bannerForm,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color: "#334155",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      Trạng Thái Hoạt Động
+                    </label>
+                    <select
+                      className="admin-select"
+                      style={{ width: "100%" }}
+                      value={bannerForm.status}
+                      onChange={(e) =>
+                        setBannerForm({
+                          ...bannerForm,
+                          status: Number(e.target.value),
+                        })
+                      }
+                    >
+                      <option value={1}>1 - Đang hiển thị công khai</option>
+                      <option value={0}>0 - Tạm ẩn banner</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="admin-modal-footer">
+                <button
+                  type="button"
+                  className="btn-admin-cancel"
+                  onClick={() => setIsBannerModalOpen(false)}
+                >
+                  Hủy bỏ
+                </button>
+                <button type="submit" className="btn-admin-primary">
+                  <i className="bi bi-check-lg"></i>{" "}
+                  {editingBanner ? "Lưu Cập Nhật" : "Tạo Banner Mới"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* ================= MODAL: CHI TIẾT DOANH THU THEO NĂM / QUÝ / THÁNG ================= */}
+      {isRevenueModalOpen && (
+        <div
+          className="admin-modal-overlay"
+          onClick={() => setIsRevenueModalOpen(false)}
+        >
+          <div
+            className="admin-modal-card"
+            style={{
+              maxWidth: "1000px",
+              width: "95%",
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="admin-modal-header">
+              <div>
+                <h3 className="admin-modal-title">
+                  <i
+                    className="bi bi-bar-chart-line-fill text-blue"
+                    style={{ marginRight: "8px" }}
+                  ></i>
+                  Báo Cáo Chi Tiết Doanh Thu (Theo Quý & Theo Năm)
+                </h3>
+                <span
+                  style={{
+                    fontSize: "13px",
+                    color: "var(--admin-text-muted)",
+                  }}
+                >
+                  Phân tích doanh thu & dữ liệu tài chính đa chiều ViDairy
+                </span>
+              </div>
+              <button
+                type="button"
+                className="btn-modal-close"
+                onClick={() => setIsRevenueModalOpen(false)}
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            <div className="admin-modal-body" style={{ padding: "20px 24px" }}>
+              {/* Bộ lọc thời gian */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "12px",
+                  background: "#f8fbff",
+                  padding: "14px 18px",
+                  borderRadius: "10px",
+                  border: "1px solid #dbeafe",
+                  marginBottom: "20px",
+                }}
+              >
+                <div>
+                  <span style={{ fontSize: "13px", color: "#475569" }}>
+                    Thời gian đang xem:{" "}
+                    <strong
+                      style={{
+                        color: "var(--admin-primary)",
+                        fontSize: "15px",
+                      }}
+                    >
+                      {dashboardStats.timeframeLabel}
+                    </strong>
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {/* Nút chọn chế độ */}
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      background: "#e2e8f0",
+                      padding: "3px",
+                      borderRadius: "8px",
+                      gap: "4px",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setDashboardTimeframe("YEAR")}
+                      style={{
+                        padding: "6px 14px",
+                        borderRadius: "6px",
+                        border: "none",
+                        fontWeight: "700",
+                        fontSize: "12.5px",
+                        cursor: "pointer",
+                        background:
+                          dashboardTimeframe === "YEAR"
+                            ? "var(--admin-primary)"
+                            : "transparent",
+                        color:
+                          dashboardTimeframe === "YEAR" ? "#ffffff" : "#475569",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <i
+                        className="bi bi-calendar-range"
+                        style={{ marginRight: "5px" }}
+                      ></i>
+                      Theo Năm
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDashboardTimeframe("QUARTER")}
+                      style={{
+                        padding: "6px 14px",
+                        borderRadius: "6px",
+                        border: "none",
+                        fontWeight: "700",
+                        fontSize: "12.5px",
+                        cursor: "pointer",
+                        background:
+                          dashboardTimeframe === "QUARTER"
+                            ? "var(--admin-primary)"
+                            : "transparent",
+                        color:
+                          dashboardTimeframe === "QUARTER"
+                            ? "#ffffff"
+                            : "#475569",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <i
+                        className="bi bi-pie-chart-fill"
+                        style={{ marginRight: "5px" }}
+                      ></i>
+                      Theo Quý
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDashboardTimeframe("MONTH")}
+                      style={{
+                        padding: "6px 14px",
+                        borderRadius: "6px",
+                        border: "none",
+                        fontWeight: "700",
+                        fontSize: "12.5px",
+                        cursor: "pointer",
+                        background:
+                          dashboardTimeframe === "MONTH"
+                            ? "var(--admin-primary)"
+                            : "transparent",
+                        color:
+                          dashboardTimeframe === "MONTH"
+                            ? "#ffffff"
+                            : "#475569",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <i
+                        className="bi bi-calendar-month"
+                        style={{ marginRight: "5px" }}
+                      ></i>
+                      Theo Tháng
+                    </button>
+                  </div>
+
+                  {/* Dropdown Năm */}
+                  <select
+                    className="admin-select"
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      borderColor: "var(--admin-primary)",
+                      color: "var(--admin-primary)",
+                    }}
+                  >
+                    {dashboardStats.orderYears.map((yr) => (
+                      <option key={yr} value={yr}>
+                        Năm {yr}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Dropdown Quý */}
+                  {dashboardTimeframe === "QUARTER" && (
+                    <select
+                      className="admin-select"
+                      value={selectedQuarter}
+                      onChange={(e) =>
+                        setSelectedQuarter(Number(e.target.value))
+                      }
+                      style={{
+                        padding: "6px 12px",
+                        fontSize: "13px",
+                        fontWeight: "700",
+                        borderColor: "var(--admin-accent)",
+                        color: "var(--admin-accent)",
+                      }}
+                    >
+                      <option value={1}>Quý 1 (Tháng 1 - Tháng 3)</option>
+                      <option value={2}>Quý 2 (Tháng 4 - Tháng 6)</option>
+                      <option value={3}>Quý 3 (Tháng 7 - Tháng 9)</option>
+                      <option value={4}>Quý 4 (Tháng 10 - Tháng 12)</option>
+                    </select>
+                  )}
+
+                  {/* Dropdown Tháng */}
+                  {dashboardTimeframe === "MONTH" && (
+                    <select
+                      className="admin-select"
+                      value={selectedMonth}
+                      onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                      style={{
+                        padding: "6px 12px",
+                        fontSize: "13px",
+                        fontWeight: "700",
+                        borderColor: "var(--admin-accent)",
+                        color: "var(--admin-accent)",
+                      }}
+                    >
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                        <option key={m} value={m}>
+                          Tháng {m}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+
+              {/* 3 KPI mini cards */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                  gap: "16px",
+                  marginBottom: "20px",
+                }}
+              >
+                <div
+                  style={{
+                    background: "#ecfdf5",
+                    border: "1px solid #a7f3d0",
+                    borderRadius: "10px",
+                    padding: "16px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <span
+                      style={{
+                        fontSize: "12.5px",
+                        color: "#065f46",
+                        fontWeight: "600",
+                      }}
+                    >
+                      Doanh Thu ({dashboardStats.timeframeLabel})
+                    </span>
+                    <div
+                      style={{
+                        fontSize: "20px",
+                        fontWeight: "800",
+                        color: "#047857",
+                        marginTop: "4px",
+                        fontFamily: "'ViDairy1', sans-serif",
+                      }}
+                    >
+                      {dashboardStats.revenue.toLocaleString("vi-VN")}đ
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "8px",
+                      background: "#d1fae5",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#059669",
+                      fontSize: "20px",
+                    }}
+                  >
+                    <i className="bi bi-currency-dollar"></i>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    background: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: "10px",
+                    padding: "16px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <span
+                      style={{
+                        fontSize: "12.5px",
+                        color: "#1e40af",
+                        fontWeight: "600",
+                      }}
+                    >
+                      Đơn Hàng ({dashboardStats.timeframeLabel})
+                    </span>
+                    <div
+                      style={{
+                        fontSize: "20px",
+                        fontWeight: "800",
+                        color: "var(--admin-primary)",
+                        marginTop: "4px",
+                        fontFamily: "'ViDairy1', sans-serif",
+                      }}
+                    >
+                      {dashboardStats.orderCount} đơn
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "8px",
+                      background: "#dbeafe",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--admin-primary)",
+                      fontSize: "20px",
+                    }}
+                  >
+                    <i className="bi bi-bag-check-fill"></i>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    background: "#fff7ed",
+                    border: "1px solid #fed7aa",
+                    borderRadius: "10px",
+                    padding: "16px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <span
+                      style={{
+                        fontSize: "12.5px",
+                        color: "#9a3412",
+                        fontWeight: "600",
+                      }}
+                    >
+                      Giá Trị Trung Bình / Đơn
+                    </span>
+                    <div
+                      style={{
+                        fontSize: "20px",
+                        fontWeight: "800",
+                        color: "var(--admin-accent)",
+                        marginTop: "4px",
+                        fontFamily: "'ViDairy1', sans-serif",
+                      }}
+                    >
+                      {dashboardStats.avgOrderValue.toLocaleString("vi-VN")}đ
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "8px",
+                      background: "#ffedd5",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--admin-accent)",
+                      fontSize: "20px",
+                    }}
+                  >
+                    <i className="bi bi-calculator-fill"></i>
+                  </div>
+                </div>
+              </div>
+
+              {/* Biểu đồ phân bổ */}
+              <div
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid var(--admin-border)",
+                  borderRadius: "10px",
+                  padding: "18px 20px",
+                  marginBottom: "20px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "16px",
+                  }}
+                >
+                  <h4
+                    style={{
+                      margin: 0,
+                      fontSize: "15px",
+                      fontWeight: "700",
+                      color: "var(--admin-primary)",
+                    }}
+                  >
+                    Biểu Đồ Doanh Thu - {dashboardStats.timeframeLabel}
+                  </h4>
+                  <span className="status-badge active">
+                    {dashboardStats.timeframeLabel}
+                  </span>
+                </div>
+
+                <div className="admin-chart-bars" style={{ height: "160px" }}>
+                  {dashboardStats.chartBars.map((bar, idx) => (
+                    <div
+                      key={idx}
+                      className="admin-bar-col"
+                      title={`${bar.label}: ${bar.revenue.toLocaleString("vi-VN")}đ (${bar.orderCount} đơn)`}
+                    >
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          fontWeight: "700",
+                          color:
+                            bar.revenue > 0
+                              ? "var(--admin-primary)"
+                              : "#94a3b8",
+                        }}
+                      >
+                        {bar.revenue > 0
+                          ? bar.revenue >= 1000000
+                            ? `${(bar.revenue / 1000000).toFixed(1)}Tr`
+                            : `${(bar.revenue / 1000).toFixed(0)}K`
+                          : "0đ"}
+                      </span>
+                      <div
+                        className="admin-bar-fill"
+                        style={{
+                          height: `${bar.heightPercent}%`,
+                          background:
+                            bar.revenue > 0
+                              ? undefined
+                              : "linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%)",
+                        }}
+                      ></div>
+                      <span className="admin-bar-label">{bar.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bảng phân bổ chi tiết */}
+              <div
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid var(--admin-border)",
+                  borderRadius: "10px",
+                  padding: "18px 20px",
+                  marginBottom: "20px",
+                }}
+              >
+                <h4
+                  style={{
+                    margin: "0 0 14px 0",
+                    fontSize: "15px",
+                    fontWeight: "700",
+                    color: "var(--admin-primary)",
+                  }}
+                >
+                  Bảng Thống Kê Chi Tiết Từng Kỳ (
+                  {dashboardStats.timeframeLabel})
+                </h4>
+                <div className="admin-table-responsive">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>GIAI ĐOẠN / KỲ</th>
+                        <th>DOANH THU (VND)</th>
+                        <th>SỐ ĐƠN HÀNG</th>
+                        <th>TỶ TRỌNG TRONG KỲ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dashboardStats.chartBars.map((bar, idx) => {
+                        const pct =
+                          dashboardStats.revenue > 0
+                            ? Math.round(
+                                (bar.revenue / dashboardStats.revenue) * 100,
+                              )
+                            : 0;
+                        return (
+                          <tr key={idx}>
+                            <td>
+                              <strong>{bar.label}</strong>
+                            </td>
+                            <td>
+                              <strong style={{ color: "var(--admin-primary)" }}>
+                                {bar.revenue.toLocaleString("vi-VN")}đ
+                              </strong>
+                            </td>
+                            <td>{bar.orderCount} đơn</td>
+                            <td>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    flex: 1,
+                                    height: "8px",
+                                    background: "#e2e8f0",
+                                    borderRadius: "4px",
+                                    overflow: "hidden",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      width: `${pct}%`,
+                                      height: "100%",
+                                      background: "var(--admin-primary)",
+                                    }}
+                                  ></div>
+                                </div>
+                                <span
+                                  style={{
+                                    fontSize: "12px",
+                                    fontWeight: "700",
+                                    color: "#475569",
+                                    minWidth: "35px",
+                                  }}
+                                >
+                                  {pct}%
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Danh sách đơn hàng trong kỳ */}
+              <div
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid var(--admin-border)",
+                  borderRadius: "10px",
+                  padding: "18px 20px",
+                }}
+              >
+                <h4
+                  style={{
+                    margin: "0 0 14px 0",
+                    fontSize: "15px",
+                    fontWeight: "700",
+                    color: "var(--admin-primary)",
+                  }}
+                >
+                  Danh Sách Đơn Hàng Trong Kỳ (
+                  {dashboardStats.filteredOrders.length} đơn)
+                </h4>
+                <div className="admin-table-responsive">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>MÃ ĐƠN</th>
+                        <th>KHÁCH HÀNG</th>
+                        <th>NGÀY ĐẶT</th>
+                        <th>TỔNG TIỀN</th>
+                        <th>THANH TOÁN</th>
+                        <th>TRẠNG THÁI</th>
+                        <th>THAO TÁC</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dashboardStats.filteredOrders.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan="7"
+                            style={{
+                              textAlign: "center",
+                              padding: "20px",
+                              color: "var(--admin-text-muted)",
+                            }}
+                          >
+                            Không có đơn hàng nào trong khoảng thời gian{" "}
+                            {dashboardStats.timeframeLabel}
+                          </td>
+                        </tr>
+                      ) : (
+                        dashboardStats.filteredOrders.map((o) => (
+                          <tr key={o.id}>
+                            <td>
+                              <strong>{o.orderCode}</strong>
+                            </td>
+                            <td>
+                              <div>{o.customer}</div>
+                              <small style={{ color: "#64748b" }}>
+                                {o.phone}
+                              </small>
+                            </td>
+                            <td>
+                              <span style={{ fontSize: "12px" }}>
+                                {o.createdAt}
+                              </span>
+                            </td>
+                            <td>
+                              <strong style={{ color: "var(--admin-primary)" }}>
+                                {(Number(o.total) || 0).toLocaleString("vi-VN")}
+                                đ
+                              </strong>
+                            </td>
+                            <td>
+                              <span
+                                className={`status-badge ${
+                                  o.paymentStatus === "Completed"
+                                    ? "completed"
+                                    : "pending"
+                                }`}
+                              >
+                                {o.paymentMethod}
+                              </span>
+                            </td>
+                            <td>
+                              <span
+                                className={`status-badge ${
+                                  o.orderStatus === "Completed"
+                                    ? "completed"
+                                    : o.orderStatus === "Shipping"
+                                      ? "shipping"
+                                      : "processing"
+                                }`}
+                              >
+                                {o.orderStatus === "Completed" && "Hoàn thành"}
+                                {o.orderStatus === "Shipping" && "Đang giao"}
+                                {o.orderStatus === "Processing" &&
+                                  "Đang chuẩn bị"}
+                                {o.orderStatus === "Pending" && "Chờ xác nhận"}
+                              </span>
+                            </td>
+                            <td>
+                              <button
+                                type="button"
+                                className="btn-action-icon"
+                                title="Xem chi tiết"
+                                onClick={() => {
+                                  setSelectedOrder(o);
+                                }}
+                              >
+                                <i className="bi bi-eye-fill"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div className="admin-modal-footer">
+              <button
+                type="button"
+                className="btn-admin-primary"
+                onClick={() => setIsRevenueModalOpen(false)}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: XUẤT & IN HÓA ĐƠN BÁN LẺ / HÓA ĐƠN VAT (POS & INVOICES) ================= */}
+      {printableInvoiceOrder && (
+        <div
+          className="admin-modal-overlay"
+          onClick={() => setPrintableInvoiceOrder(null)}
+          style={{ zIndex: 9999 }}
+        >
+          <div
+            className="admin-modal-card"
+            style={{ maxWidth: "620px", padding: 0, overflow: "hidden" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div
+              className="admin-modal-header"
+              style={{
+                backgroundColor: "#23408e",
+                color: "#ffffff",
+                padding: "16px 20px",
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <i
+                  className="bi bi-receipt-cutoff"
+                  style={{ fontSize: "20px" }}
+                ></i>
+                <h3
+                  className="admin-modal-title"
+                  style={{ color: "#ffffff", margin: 0, fontSize: "16px" }}
+                >
+                  {printableInvoiceOrder.hasVAT
+                    ? "Hóa Đơn Giá Trị Gia Tăng (VAT Điện Tử)"
+                    : "Phiếu Thu Tiền & Hóa Đơn Bán Lẻ Tại Quầy"}
+                </h3>
+              </div>
+              <button
+                type="button"
+                className="btn-modal-close"
+                style={{ color: "#ffffff", opacity: 0.85 }}
+                onClick={() => setPrintableInvoiceOrder(null)}
+              >
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+
+            {/* Printable Receipt Paper Container */}
+            <div
+              id="vidairy-printable-receipt"
+              style={{
+                padding: "24px 28px",
+                backgroundColor: "#ffffff",
+                fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                color: "#0f172a",
+                fontSize: "13px",
+                lineHeight: "1.45",
+              }}
+            >
+              {/* Store Header */}
+              <div
+                style={{
+                  textAlign: "center",
+                  borderBottom: "1.5px dashed #cbd5e1",
+                  paddingBottom: "14px",
+                  marginBottom: "14px",
+                }}
+              >
+                <img
+                  src="/src/assets/img/logo.png"
+                  alt="ViDairy"
+                  style={{ height: "42px", marginBottom: "6px" }}
+                />
+                <h2
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: "800",
+                    color: "#23408e",
+                    margin: "0 0 4px 0",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  CÔNG TY CỔ PHẦN DINH DƯỠNG QUỐC TẾ VIDAIRY
+                </h2>
+                <div style={{ fontSize: "12px", color: "#475569" }}>
+                  Chi nhánh:{" "}
+                  {printableInvoiceOrder.branchName ||
+                    "ViDairy Flagship Store - Quận 1 (TP.HCM)"}
+                </div>
+                <div style={{ fontSize: "12px", color: "#475569" }}>
+                  Đ/C:{" "}
+                  {printableInvoiceOrder.shippingAddress ||
+                    "120 Nguyễn Huệ, P. Bến Nghé, Quận 1, TP.HCM"}
+                </div>
+                <div style={{ fontSize: "12px", color: "#475569" }}>
+                  Hotline CSKH: <strong>0989 584 592</strong> • MST:{" "}
+                  <strong>0316889988</strong>
+                </div>
+              </div>
+
+              {/* Title & Metadata */}
+              <div style={{ textAlign: "center", marginBottom: "14px" }}>
+                <h3
+                  style={{
+                    fontSize: "17px",
+                    fontWeight: "800",
+                    margin: "0 0 4px 0",
+                    color: "#0f172a",
+                    letterSpacing: "0.5px",
+                  }}
+                >
+                  {printableInvoiceOrder.hasVAT
+                    ? "HÓA ĐƠN GIÁ TRỊ GIA TĂNG (VAT)"
+                    : "HÓA ĐƠN BÁN LẺ KIÊM PHIẾU XUẤT KHO"}
+                </h3>
+                <div style={{ fontSize: "12px", color: "#64748b" }}>
+                  Mã đơn: <strong>{printableInvoiceOrder.orderCode}</strong> • Số
+                  HĐ:{" "}
+                  <strong style={{ color: "#23408e" }}>
+                    {getInvoiceNumber(printableInvoiceOrder)}
+                  </strong>
+                </div>
+                <div style={{ fontSize: "11.5px", color: "#64748b" }}>
+                  Thời gian:{" "}
+                  {printableInvoiceOrder.createdAt ||
+                    new Date().toLocaleString("vi-VN")}
+                </div>
+              </div>
+
+              {/* Customer & Cashier info */}
+              <div
+                style={{
+                  backgroundColor: "#f8fafc",
+                  borderRadius: "6px",
+                  padding: "10px 12px",
+                  marginBottom: "14px",
+                  border: "1px solid #e2e8f0",
+                  fontSize: "12.5px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "6px",
+                  }}
+                >
+                  <div>
+                    <span style={{ color: "#64748b" }}>Khách hàng:</span>{" "}
+                    <strong>
+                      {printableInvoiceOrder.customer || "Khách lẻ tại quầy"}
+                    </strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "#64748b" }}>SĐT:</span>{" "}
+                    <strong>
+                      {printableInvoiceOrder.phone || "0989584592"}
+                    </strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "#64748b" }}>Thu ngân:</span>{" "}
+                    <span>
+                      {printableInvoiceOrder.cashier ||
+                        user?.FullName ||
+                        "Nhân viên CSKH"}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: "#64748b" }}>Phương thức:</span>{" "}
+                    <strong style={{ color: "#16a34a" }}>
+                      {printableInvoiceOrder.paymentMethod === "CASH"
+                        ? "Tiền mặt"
+                        : printableInvoiceOrder.paymentMethod === "BANKING_QR"
+                          ? "Chuyển khoản QR"
+                          : printableInvoiceOrder.paymentMethod === "CARD"
+                            ? "Quẹt thẻ POS"
+                            : printableInvoiceOrder.paymentMethod || "Tiền mặt"}
+                    </strong>
+                  </div>
+                </div>
+
+                {/* VAT Details if applicable */}
+                {printableInvoiceOrder.hasVAT && (
+                  <div
+                    style={{
+                      marginTop: "8px",
+                      borderTop: "1px dashed #cbd5e1",
+                      paddingTop: "6px",
+                      fontSize: "12px",
+                    }}
+                  >
+                    <div>
+                      <span style={{ color: "#64748b" }}>Đơn vị xuất VAT:</span>{" "}
+                      <strong>
+                        {printableInvoiceOrder.vatInfo?.company ||
+                          printableInvoiceOrder.vatInfo?.Company ||
+                          "Công ty TNHH Khách Hàng"}
+                      </strong>
+                    </div>
+                    <div>
+                      <span style={{ color: "#64748b" }}>
+                        Mã số thuế (MST):
+                      </span>{" "}
+                      <strong>
+                        {printableInvoiceOrder.vatInfo?.taxId ||
+                          printableInvoiceOrder.vatInfo?.TaxId ||
+                          "0315899210"}
+                      </strong>
+                    </div>
+                    <div>
+                      <span style={{ color: "#64748b" }}>Email nhận HĐ:</span>{" "}
+                      <span>
+                        {printableInvoiceOrder.vatInfo?.email ||
+                          printableInvoiceOrder.vatInfo?.Email ||
+                          "ketoan@khachhang.vn"}
+                      </span>
+                    </div>
+                    <div>
+                      <span style={{ color: "#64748b" }}>Địa chỉ:</span>{" "}
+                      <span>
+                        {printableInvoiceOrder.vatInfo?.address ||
+                          printableInvoiceOrder.vatInfo?.Address ||
+                          "TP. Hồ Chí Minh"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Items Table */}
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  marginBottom: "14px",
+                  fontSize: "12.5px",
+                }}
+              >
+                <thead>
+                  <tr
+                    style={{
+                      borderBottom: "1.5px solid #0f172a",
+                      backgroundColor: "#f1f5f9",
+                    }}
+                  >
+                    <th
+                      style={{
+                        padding: "6px 4px",
+                        textAlign: "center",
+                        width: "30px",
+                      }}
+                    >
+                      #
+                    </th>
+                    <th style={{ padding: "6px 8px", textAlign: "left" }}>
+                      Tên sản phẩm
+                    </th>
+                    <th
+                      style={{
+                        padding: "6px 8px",
+                        textAlign: "right",
+                        width: "90px",
+                      }}
+                    >
+                      Đơn giá
+                    </th>
+                    <th
+                      style={{
+                        padding: "6px 4px",
+                        textAlign: "center",
+                        width: "40px",
+                      }}
+                    >
+                      SL
+                    </th>
+                    <th
+                      style={{
+                        padding: "6px 8px",
+                        textAlign: "right",
+                        width: "100px",
+                      }}
+                    >
+                      Thành tiền
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(printableInvoiceOrder.items || []).map((it, idx) => (
+                    <tr
+                      key={idx}
+                      style={{
+                        borderBottom: "1px solid #e2e8f0",
+                      }}
+                    >
+                      <td
+                        style={{
+                          padding: "6px 4px",
+                          textAlign: "center",
+                          color: "#64748b",
+                        }}
+                      >
+                        {idx + 1}
+                      </td>
+                      <td style={{ padding: "6px 8px" }}>
+                        <div style={{ fontWeight: "600" }}>
+                          {it.name || it.productName}
+                        </div>
+                        {it.variant && (
+                          <small style={{ color: "#64748b" }}>
+                            Quy cách: {it.variant}
+                          </small>
+                        )}
+                      </td>
+                      <td style={{ padding: "6px 8px", textAlign: "right" }}>
+                        {(Number(it.price || it.unitPrice) || 0).toLocaleString(
+                          "vi-VN",
+                        )}
+                        đ
+                      </td>
+                      <td
+                        style={{
+                          padding: "6px 4px",
+                          textAlign: "center",
+                          fontWeight: "700",
+                        }}
+                      >
+                        {it.qty || it.quantity || 1}
+                      </td>
+                      <td
+                        style={{
+                          padding: "6px 8px",
+                          textAlign: "right",
+                          fontWeight: "700",
+                        }}
+                      >
+                        {(
+                          (Number(it.price || it.unitPrice) || 0) *
+                          (Number(it.qty || it.quantity) || 1)
+                        ).toLocaleString("vi-VN")}
+                        đ
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Financial Calculations */}
+              <div
+                style={{
+                  borderTop: "1.5px dashed #cbd5e1",
+                  paddingTop: "10px",
+                  marginBottom: "14px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "5px",
+                  fontSize: "13px",
+                }}
+              >
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <span style={{ color: "#475569" }}>Tổng tiền hàng:</span>
+                  <strong>
+                    {(
+                      Number(printableInvoiceOrder.subTotal) ||
+                      Number(printableInvoiceOrder.total) ||
+                      0
+                    ).toLocaleString("vi-VN")}
+                    đ
+                  </strong>
+                </div>
+
+                {Number(printableInvoiceOrder.discount) > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      color: "#16a34a",
+                    }}
+                  >
+                    <span>
+                      Chiết khấu / Voucher (
+                      {printableInvoiceOrder.appliedCoupon || "Ưu đãi"}):
+                    </span>
+                    <strong>
+                      -
+                      {Number(printableInvoiceOrder.discount).toLocaleString(
+                        "vi-VN",
+                      )}
+                      đ
+                    </strong>
+                  </div>
+                )}
+
+                {printableInvoiceOrder.hasVAT && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      color: "#2563eb",
+                    }}
+                  >
+                    <span>Thuế GTGT (VAT 10%):</span>
+                    <strong>
+                      +
+                      {Math.round(
+                        (Number(
+                          printableInvoiceOrder.subTotal ||
+                            printableInvoiceOrder.total,
+                        ) -
+                          Number(printableInvoiceOrder.discount || 0)) *
+                          0.1,
+                      ).toLocaleString("vi-VN")}
+                      đ
+                    </strong>
+                  </div>
+                )}
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "baseline",
+                    borderTop: "1.5px solid #0f172a",
+                    paddingTop: "8px",
+                    marginTop: "4px",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "14.5px",
+                      fontWeight: "800",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Tổng Thanh Toán:
+                  </span>
+                  <strong
+                    style={{
+                      fontSize: "20px",
+                      color: "#23408e",
+                      fontFamily: "ViDairy1, sans-serif",
+                    }}
+                  >
+                    {(Number(printableInvoiceOrder.total) || 0).toLocaleString(
+                      "vi-VN",
+                    )}
+                    đ
+                  </strong>
+                </div>
+              </div>
+
+              {/* Footer barcode & gratitude */}
+              <div
+                style={{
+                  textAlign: "center",
+                  borderTop: "1.5px dashed #cbd5e1",
+                  paddingTop: "12px",
+                  fontSize: "11.5px",
+                  color: "#64748b",
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: "700",
+                    color: "#0f172a",
+                    marginBottom: "2px",
+                  }}
+                >
+                  CẢM ƠN QUÝ KHÁCH & HẸN GẶP LẠI!
+                </div>
+                <div>
+                  Quý khách vui lòng kiểm tra kỹ hàng hóa và hóa đơn trước khi
+                  rời quầy.
+                </div>
+                <div>
+                  Website tra cứu:{" "}
+                  <strong>https://vidairy.vn/tra-cuu-hoa-don</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div
+              className="admin-modal-footer"
+              style={{
+                backgroundColor: "#f8fafc",
+                borderTop: "1px solid #e2e8f0",
+                padding: "12px 20px",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "10px",
+              }}
+            >
+              <button
+                type="button"
+                className="btn-admin-secondary"
+                onClick={() => setPrintableInvoiceOrder(null)}
+              >
+                Đóng
+              </button>
+              <button
+                type="button"
+                className="btn-admin-primary"
+                style={{
+                  backgroundColor: "#23408e",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+                onClick={() => window.print()}
+              >
+                <i className="bi bi-printer-fill"></i> In Hóa Đơn (Print)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-
