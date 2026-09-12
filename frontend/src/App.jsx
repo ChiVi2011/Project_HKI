@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/home";
 import Intro from "./pages/intro";
 import News from "./pages/news";
+import NewsDetail from "./pages/news-detail";
 import ProductList from "./pages/product-list";
 import ProductDetail from "./pages/product-detail";
 import CategoryShowcase from "./pages/category-showcase";
@@ -43,6 +44,7 @@ function App() {
             <Route path="/about" element={<Intro />} />
             <Route path="/intro" element={<Intro />} />
             <Route path="/news" element={<News />} />
+            <Route path="/news/:id" element={<NewsDetail />} />
             <Route path="/products" element={<ProductList />} />
             <Route path="/categories" element={<CategoryShowcase />} />
             <Route path="/product/:id" element={<ProductDetail />} />

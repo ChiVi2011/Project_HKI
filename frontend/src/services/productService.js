@@ -495,6 +495,22 @@ export const productService = {
   },
 
   /**
+   * Lấy chi tiết bài viết theo ID
+   */
+  async getNewsById(id) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/news/${id}`);
+      if (!response.ok) {
+        return { success: false, message: `Lỗi tải bài viết: ${response.status}` };
+      }
+      return await response.json();
+    } catch (err) {
+      console.warn("Lỗi mạng khi tải chi tiết tin tức:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  /**
    * Định dạng tiền tệ VND
    */
   /**

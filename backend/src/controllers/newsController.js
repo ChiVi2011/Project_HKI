@@ -1,4 +1,5 @@
 const News = require("../models/newsModel");
+const mongoose = require("mongoose");
 
 const newsController = {
   // Lấy toàn bộ bài viết tin tức
@@ -31,22 +32,43 @@ const newsController = {
     }
   },
 
-  // Lấy chi tiết bài viết
+  // Lấy chi tiết bài viết (an toàn với cả ObjectId lẫn String ID)
   async getNewsById(req, res) {
     try {
       const { id } = req.params;
-      const article = await News.findById(id).lean();
+      let article = null;
+
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        article = await News.findById(id).lean();
+      }
+
+      if (!article) {
+        // Tìm theo id tùy chỉnh hoặc trường liên quan nếu có
+        article = await News.findOne({
+          $or: [
+            { customId: id },
+            { id: id },
+            { slug: id }
+          ]
+        }).lean();
+      }
+
       if (!article) {
         return res.status(404).json({
           success: false,
           message: "Không tìm thấy bài viết yêu cầu.",
         });
       }
+
+      // Tăng số lượt xem ngầm
+      News.findByIdAndUpdate(article._id, { $inc: { views: 1 } }).catch(() => {});
+
       return res.status(200).json({
         success: true,
         data: article,
       });
     } catch (err) {
+      console.error("Lỗi getNewsById:", err);
       return res.status(500).json({
         success: false,
         message: "Lỗi máy chủ khi xem bài viết.",
