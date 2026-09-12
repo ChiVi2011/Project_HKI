@@ -6499,7 +6499,7 @@ export default function AdminDashboard() {
                 type="button"
                 className="btn-admin-secondary"
                 onClick={() => setPrintableInvoiceOrder(null)}
-              >
+c              >
                 Đóng
               </button>
               <button

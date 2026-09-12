@@ -35,12 +35,12 @@ const userSchema = new mongoose.Schema(
     },
     Role: {
       type: String,
-      enum: ["CUSTOMER", "ADMIN", "STAFF", "MANAGER"],
+      enum: ["CUSTOMER", "ADMIN", "SUPERADMIN", "STAFF", "MANAGER"],
+      default: "CUSTOMER",
     },
     Permissions: {
       type: [String],
       default: [],
-      default: "CUSTOMER",
     },
     Gender: {
       type: Boolean, // 1: Nam, 0: Nữ
@@ -73,7 +73,7 @@ const userSchema = new mongoose.Schema(
         return ret;
       },
     },
-  }
+  },
 );
 
 // Tạo mã khách hàng tự động trước khi lưu nếu chưa có
@@ -102,7 +102,9 @@ const userModel = {
   // Lấy dữ liệu theo email
   async getByEmail(Email) {
     if (!Email) return null;
-    return await UserModel.findOne({ Email: Email.toLowerCase().trim() }).lean();
+    return await UserModel.findOne({
+      Email: Email.toLowerCase().trim(),
+    }).lean();
   },
 
   // Lấy dữ liệu theo số điện thoại
@@ -153,8 +155,10 @@ const userModel = {
         DateOfBirth: data.DateOfBirth ?? null,
         Address: data.Address,
       },
-      { new: true }
-    ).select("-PasswordHash").lean();
+      { new: true },
+    )
+      .select("-PasswordHash")
+      .lean();
   },
 
   // Cập nhật mật khẩu mới

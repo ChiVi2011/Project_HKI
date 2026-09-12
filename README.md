@@ -14,7 +14,7 @@
 
 ## III. Kiến trúc hệ thống
 
-```text
+````text
                  +----------------------+
                  |      Người dùng      |
                  +----------+-----------+
@@ -36,20 +36,20 @@
                  |      Backend API     |
                  +----------+-----------+
                             |
-          +-----------------+------------------+
-          |                                    |
-          |                                    |
-          v                                    v
-+-----------------------+          +----------------------+
-|      |          | MongoDB             |
-| - User                |          | - Activity Log      |
-| - Product             |          | - Audit Log         |
-| - Category            |          | - Search History    |
-| - Order               |          | - Product View      |
-| - Payment             |          +----------------------+
-| - Inventory           |
-+-----------------------+
-```
+                            -+
+                            |
+                            |
+                            v
+                    +-----------------------+
+                    |      MongoDB          |
+                    | - User                |
+                    | - Product             |
+                    | - Category            |
+                    | - Order               |
+                    | - Payment             |
+                    | - Inventory           |
+                    +-----------------------+
+                    ```
 
     1. Người dùng thao tác trên giao diện React.
     2. Frontend gửi yêu cầu đến Backend thông qua RESTful API.
@@ -118,8 +118,7 @@
 
     1. Yêu cầu môi trường
         - Node.js >= 18
-        - SQL Server 2022 (đã cài đặt và tạo database trống)
-        - MongoDB (local hoặc MongoDB Atlas)
+        - MongoDB Atlas
         - Git
 
     2. Clone dự án
@@ -147,8 +146,8 @@
         - dev: nhánh tích hợp, các nhánh feature merge vào đây trước.
 
     2. Đặt tên nhánh feature
-        feature/<ten-chuc-nang>      
-        fix/<mo-ta-loi>            
+        feature/<ten-chuc-nang>
+        fix/<mo-ta-loi>
 
     3. Quy tắc commit message
         <loại>: <mô tả ngắn>
@@ -185,7 +184,7 @@
     4. Comment & tài liệu
         - Comment cho các hàm xử lý nghiệp vụ phức tạp.
         - Không cần comment cho code quá đơn giản, tự giải thích.
-        
+
 ## XI. Tài liệu dự án (docs/)
     1. Requirement
     2. Sitemap
@@ -196,3 +195,4 @@
     7. API
     8. Database
     9. TestCase
+````

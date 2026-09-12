@@ -19,6 +19,8 @@ const Coupon = require("../models/couponModel");
 const News = require("../models/newsModel");
 const Order = require("../models/orderModel");
 const Branch = require("../models/branchModel");
+const Banner = require("../models/bannerModel");
+const Setting = require("../models/settingModel");
 const userModel = require("../models/userModel");
 const User = userModel.MongooseModel;
 
@@ -40,11 +42,21 @@ async function seedDatabase() {
     console.log("✅ Đã kết nối thành công tới MongoDB Atlas (ViDairyDB)!\n");
 
     // 1. Tải dữ liệu mẫu từ Frontend
-    const productsDataPath = path.resolve(__dirname, "../../../frontend/src/data/productsData.js");
-    const newsDataPath = path.resolve(__dirname, "../../../frontend/src/data/newsData.js");
+    const productsDataPath = path.resolve(
+      __dirname,
+      "../../../frontend/src/data/productsData.js",
+    );
+    const newsDataPath = path.resolve(
+      __dirname,
+      "../../../frontend/src/data/newsData.js",
+    );
 
-    const productsModule = await import("file:///" + productsDataPath.replace(/\\/g, "/"));
-    const newsModule = await import("file:///" + newsDataPath.replace(/\\/g, "/"));
+    const productsModule = await import(
+      "file:///" + productsDataPath.replace(/\\/g, "/")
+    );
+    const newsModule = await import(
+      "file:///" + newsDataPath.replace(/\\/g, "/")
+    );
 
     const { categoriesData, productsData, promotionsData } = productsModule;
     const { newsData } = newsModule;
@@ -60,6 +72,8 @@ async function seedDatabase() {
       News.deleteMany({}),
       Branch.deleteMany({}),
       Order.deleteMany({}),
+      Banner.deleteMany({}),
+      Setting.deleteMany({}),
     ]);
     console.log("✅ Đã làm mới các collection.\n");
 
@@ -71,7 +85,8 @@ async function seedDatabase() {
       Description: cat.subTitle || cat.description || "",
       icon: cat.icon || "bi-grid",
       color: cat.color || "#23408e",
-      bgGradient: cat.bgGradient || "linear-gradient(135deg, #f0f7ff 0%, #e0eeff 100%)",
+      bgGradient:
+        cat.bgGradient || "linear-gradient(135deg, #f0f7ff 0%, #e0eeff 100%)",
       brandTags: cat.brandTags || ["Tất cả"],
       bannerDesc: cat.bannerDesc || "",
       Status: true,
@@ -107,7 +122,9 @@ async function seedDatabase() {
       packaging: p.packaging || "Lon thiếc tiêu chuẩn",
       targetUser: p.targetUser || "Mọi lứa tuổi",
       price: p.price || 0,
-      imageUrl: p.imageUrl || "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
+      imageUrl:
+        p.imageUrl ||
+        "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
       isHot: Boolean(p.isHot),
       isFeatured: p.isFeatured !== undefined ? Boolean(p.isFeatured) : true,
       rating: p.rating || 5.0,
@@ -134,12 +151,16 @@ async function seedDatabase() {
       tag: promo.tag || "Khuyến mãi",
       badgeColor: promo.badgeColor || "#e11d48",
       date: promo.date || "Đang áp dụng",
-      imageUrl: promo.imageUrl || "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
+      imageUrl:
+        promo.imageUrl ||
+        "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
       details: promo.details || {},
       Status: true,
     }));
     await Promotion.insertMany(promoDocs);
-    console.log(`✅ Đã nạp thành công ${promoDocs.length} chương trình khuyến mãi.`);
+    console.log(
+      `✅ Đã nạp thành công ${promoDocs.length} chương trình khuyến mãi.`,
+    );
 
     // 7. Nạp Mã giảm giá (Coupons)
     console.log("🎫 Đang nạp mã voucher ưu đãi...");
@@ -194,7 +215,9 @@ async function seedDatabase() {
         author: item.author || "Chuyên gia Dinh dưỡng VitaDairy",
         summary: item.summary || item.title,
         content: item.content || item.summary || "",
-        imageUrl: item.imageUrl || "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
+        imageUrl:
+          item.imageUrl ||
+          "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
         isFeatured: Boolean(item.isFeatured),
         views: item.views || 120,
       }));
@@ -234,7 +257,9 @@ async function seedDatabase() {
       },
     ];
     await Branch.insertMany(branchDocs);
-    console.log(`✅ Đã nạp thành công ${branchDocs.length} chi nhánh cửa hàng.`);
+    console.log(
+      `✅ Đã nạp thành công ${branchDocs.length} chi nhánh cửa hàng.`,
+    );
 
     // 10. Nạp Đơn hàng mẫu (Orders)
     console.log("🛒 Đang nạp đơn hàng mẫu vào Database...");
@@ -253,7 +278,8 @@ async function seedDatabase() {
             VariantName: "Lon 800g",
             Quantity: 2,
             UnitPrice: 580000,
-            ImageURL: "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
+            ImageURL:
+              "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
           },
         ],
         SubTotal: 1160000,
@@ -270,7 +296,8 @@ async function seedDatabase() {
         OrderCode: "VD20260903002",
         ReceiverName: "Phạm Thùy Linh",
         ReceiverPhone: "0987654321",
-        ShippingAddress: "Tòa nhà Landmark 81, 720A Điện Biên Phủ, P.22, Q.Bình Thạnh, TP.HCM",
+        ShippingAddress:
+          "Tòa nhà Landmark 81, 720A Điện Biên Phủ, P.22, Q.Bình Thạnh, TP.HCM",
         DeliveryType: "DELIVERY",
         BranchName: "",
         Items: [
@@ -280,7 +307,8 @@ async function seedDatabase() {
             VariantName: "Lon 800g",
             Quantity: 2,
             UnitPrice: 560000,
-            ImageURL: "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
+            ImageURL:
+              "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
           },
         ],
         SubTotal: 1120000,
@@ -313,7 +341,8 @@ async function seedDatabase() {
             VariantName: "Lon 850g",
             Quantity: 1,
             UnitPrice: 620000,
-            ImageURL: "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
+            ImageURL:
+              "https://vitadairy.vn/s/images/product/hinh-thumnail-sp-380-x-210.jpg",
           },
         ],
         SubTotal: 620000,
@@ -330,8 +359,103 @@ async function seedDatabase() {
     await Order.insertMany(orderDocs);
     console.log(`✅ Đã nạp thành công ${orderDocs.length} đơn hàng mẫu.`);
 
-    // 11. Nạp Tài khoản mẫu (Admin & Khách hàng demo)
+    // 11. Nạp Banners
+    console.log("🖼️ Đang nạp danh sách banner hệ thống...");
+    const bannerDocs = [
+      {
+        BannerID: "banner-hero-cover",
+        title: "VitaDairy Luôn Đồng Hành Cùng Mẹ Và Bé",
+        position: "Trang Sản Phẩm (Cover Hero)",
+        page: "product-list",
+        imageUrl: "/src/assets/img/mother_baby_banner.jpg",
+        linkUrl: "/products",
+        description:
+          "ViDairy hướng tới sản xuất các sản phẩm sữa chăm sóc sức khỏe người tiêu dùng ở nhiều lứa tuổi từ những sản phẩm cung cấp năng lượng cho người lớn, sản phẩm chuyên biệt dành cho người bệnh, sản phẩm cho trẻ biếng ăn, suy dinh dưỡng thấp còi đến các dòng sản phẩm giúp bé phát triển trí não, tăng chiều cao...",
+        displayOrder: 1,
+        status: 1,
+      },
+      {
+        BannerID: "banner-home-hero",
+        title: "Dinh Dưỡng Vàng Cho Tương Lai Khỏe Mạnh",
+        position: "Trang Chủ (Hero Banner)",
+        page: "home",
+        imageUrl: "/src/assets/img/ViDairy_banner_1536x816.png",
+        linkUrl: "/products",
+        description:
+          "Kháng thể tự nhiên ColosIgG 24h nhập khẩu độc quyền từ Mỹ",
+        displayOrder: 2,
+        status: 1,
+      },
+      {
+        BannerID: "banner-child-care",
+        title: "Dinh Dưỡng Vượt Trội Cho Bé Yêu",
+        position: "Danh Mục Trẻ Em",
+        page: "product-list",
+        imageUrl: "/src/assets/img/cau_be_vidaiary.png",
+        linkUrl: "/products?category=san-pham-cho-be",
+        description: "Phát triển não bộ và tăng cường miễn dịch",
+        displayOrder: 3,
+        status: 1,
+      },
+      {
+        BannerID: "banner-nut-milk",
+        title: "Sống Khỏe Mỗi Ngày Với Sữa Hạt Tự Nhiên",
+        position: "Danh Mục Sữa Hạt",
+        page: "product-list",
+        imageUrl: "/src/assets/img/sua_hat_vidairy.png",
+        linkUrl: "/products?category=dung-kem",
+        description: "Thuần thực vật thanh nhẹ giàu chất chống oxy hóa",
+        displayOrder: 4,
+        status: 1,
+      },
+    ];
+    await Banner.insertMany(bannerDocs);
+    console.log(`✅ Đã nạp thành công ${bannerDocs.length} banner hệ thống.`);
+
+    // 12. Nạp Cài đặt hệ thống (Settings)
+    console.log("⚙️ Đang nạp cấu hình cài đặt hệ thống...");
+    const defaultSettingDoc = {
+      settingKey: "general_settings",
+      siteName: "ViDairy - Sữa Dinh Dưỡng Chuẩn Y Học",
+      logoUrl: "/src/assets/img/logo.png",
+      faviconUrl: "/src/assets/favicon/favicon.ico",
+      hotline: "0989 584 592",
+      email: "cskh@vidairy.vn",
+      address: "Số 120 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
+      productPageBanner: "/src/assets/img/mother_baby_banner.jpg",
+      productPageTitle: "VitaDairy Luôn Đồng Hành Cùng Mẹ Và Bé",
+      productPageDescription:
+        "ViDairy hướng tới sản xuất các sản phẩm sữa chăm sóc sức khỏe người tiêu dùng ở nhiều lứa tuổi từ những sản phẩm cung cấp năng lượng cho người lớn, sản phẩm chuyên biệt dành cho người bệnh, sản phẩm cho trẻ biếng ăn, suy dinh dưỡng thấp còi đến các dòng sản phẩm giúp bé phát triển trí não, tăng chiều cao...",
+      homeHeroTitle: "Dinh Dưỡng Vàng Cho Tương Lai Khỏe Mạnh",
+      homeHeroSubtitle:
+        "Kháng thể tự nhiên ColosIgG 24h nhập khẩu độc quyền từ Mỹ",
+      homeHeroBanner: "/src/assets/img/ViDairy_banner_1536x816.png",
+      brandSlogan: "ViDairy - Trao Sức Khỏe, Trọn Yêu Thương",
+    };
+    await Setting.create(defaultSettingDoc);
+    console.log("✅ Đã nạp thành công cấu hình cài đặt hệ thống.");
+
+    // 13. Nạp Tài khoản mẫu (SuperAdmin, Admin & Khách hàng demo)
     console.log("👤 Đang kiểm tra và tạo tài khoản mẫu...");
+    const superAdminExists = await User.findOne({
+      Email: "superadmin@vidairy.vn",
+    });
+    if (!superAdminExists) {
+      const superHash = await bcrypt.hash("Admin@123", 10);
+      await User.create({
+        CustomerCode: "KH000000",
+        FullName: "Tổng Quản Trị Hệ Thống (Super Admin)",
+        Email: "superadmin@vidairy.vn",
+        Phone: "0909999999",
+        PasswordHash: superHash,
+        Role: "SUPERADMIN",
+        Status: true,
+      });
+      console.log(
+        "✅ Đã tạo tài khoản SuperAdmin: superadmin@vidairy.vn / Admin@123",
+      );
+    }
+
     const adminExists = await User.findOne({ Email: "admin@vidairy.vn" });
     if (!adminExists) {
       const adminHash = await bcrypt.hash("Admin@123", 10);
@@ -359,13 +483,21 @@ async function seedDatabase() {
         Role: "CUSTOMER",
         Status: true,
       });
-      console.log("✅ Đã tạo tài khoản Khách hàng: khachhang@gmail.com / Customer@123");
+      console.log(
+        "✅ Đã tạo tài khoản Khách hàng: khachhang@gmail.com / Customer@123",
+      );
     }
 
-    console.log("\n🎉 ========================================================");
+    console.log(
+      "\n🎉 ========================================================",
+    );
     console.log("🎉 TOÀN BỘ DỮ LIỆU ĐÃ ĐƯỢC NẠP LÊN MONGODB ATLAS THÀNH CÔNG!");
-    console.log("🎉 CSDL: ViDairyDB (Bao gồm Categories, Brands, Products, Promotions, Coupons, News, Branches, Orders, Users)");
-    console.log("🎉 ========================================================\n");
+    console.log(
+      "🎉 CSDL: ViDairyDB (Bao gồm Categories, Brands, Products, Promotions, Coupons, News, Branches, Orders, Banners, Settings, Users)",
+    );
+    console.log(
+      "🎉 ========================================================\n",
+    );
 
     process.exit(0);
   } catch (err) {

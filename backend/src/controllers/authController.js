@@ -5,7 +5,8 @@ const OtpVerification = require("../models/otpVerificationModel");
 const { generateOtp } = require("../services/otpService");
 const { sendOtpEmail } = require("../services/mailService");
 
-const JWT_SECRET = process.env.JWT_SECRET || "vidairy_secret_jwt_key_2026_super_secure";
+const JWT_SECRET =
+  process.env.JWT_SECRET || "vidairy_secret_jwt_key_2026_super_secure";
 
 // Helper: lấy thông tin người dùng từ JWT Token
 const getUserFromToken = (req) => {
@@ -48,7 +49,8 @@ const authController = {
       if (existingUser) {
         return res.status(409).json({
           success: false,
-          message: "Email này đã được đăng ký tài khoản. Vui lòng sử dụng email khác hoặc đăng nhập!",
+          message:
+            "Email này đã được đăng ký tài khoản. Vui lòng sử dụng email khác hoặc đăng nhập!",
         });
       }
 
@@ -77,7 +79,8 @@ const authController = {
       console.error("Lỗi sendRegisterOtp:", err);
       return res.status(500).json({
         success: false,
-        message: "Không thể gửi email OTP. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau!",
+        message:
+          "Không thể gửi email OTP. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau!",
         error: err.message,
       });
     }
@@ -167,7 +170,7 @@ const authController = {
           CustomerCode: newUser.CustomerCode,
         },
         JWT_SECRET,
-        { expiresIn: "7d" }
+        { expiresIn: "7d" },
       );
 
       const userObj = newUser.toObject();
@@ -208,11 +211,8 @@ const authController = {
       const cleanAccount = targetAccount.trim();
 
       // Tìm user theo Email hoặc Phone
-      const user = await User.findOne({
-        $or: [
-          { Email: cleanAccount.toLowerCase() },
-          { Phone: cleanAccount },
-        ],
+      let user = await User.findOne({
+        $or: [{ Email: cleanAccount.toLowerCase() }, { Phone: cleanAccount }],
       });
 
       if (!user) {
@@ -226,7 +226,8 @@ const authController = {
       if (user.Status === false) {
         return res.status(403).json({
           success: false,
-          message: "Tài khoản của bạn đang bị khóa hoặc tạm ngưng hoạt động. Vui lòng liên hệ quản trị viên!",
+          message:
+            "Tài khoản của bạn đang bị khóa hoặc tạm ngưng hoạt động. Vui lòng liên hệ quản trị viên!",
         });
       }
 
@@ -248,7 +249,7 @@ const authController = {
           CustomerCode: user.CustomerCode,
         },
         JWT_SECRET,
-        { expiresIn: "7d" }
+        { expiresIn: "7d" },
       );
 
       const userObj = user.toObject();
@@ -278,12 +279,19 @@ const authController = {
     try {
       const decoded = getUserFromToken(req);
       if (!decoded) {
-        return res.status(401).json({ success: false, message: "Bạn chưa đăng nhập hoặc phiên đã hết hạn!" });
+        return res.status(401).json({
+          success: false,
+          message: "Bạn chưa đăng nhập hoặc phiên đã hết hạn!",
+        });
       }
 
-      const user = await User.findById(decoded.UserID).select("-PasswordHash").lean();
+      const user = await User.findById(decoded.UserID)
+        .select("-PasswordHash")
+        .lean();
       if (!user) {
-        return res.status(404).json({ success: false, message: "Không tìm thấy người dùng!" });
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy người dùng!" });
       }
 
       user.UserID = user._id;
@@ -292,7 +300,9 @@ const authController = {
         data: user,
       });
     } catch (err) {
-      return res.status(500).json({ success: false, message: "Lỗi máy chủ", error: err.message });
+      return res
+        .status(500)
+        .json({ success: false, message: "Lỗi máy chủ", error: err.message });
     }
   },
 
@@ -301,10 +311,13 @@ const authController = {
     try {
       const decoded = getUserFromToken(req);
       if (!decoded) {
-        return res.status(401).json({ success: false, message: "Bạn chưa đăng nhập!" });
+        return res
+          .status(401)
+          .json({ success: false, message: "Bạn chưa đăng nhập!" });
       }
 
-      const { FullName, Phone, Gender, DateOfBirth, Address, Avatar } = req.body;
+      const { FullName, Phone, Gender, DateOfBirth, Address, Avatar } =
+        req.body;
 
       const updated = await User.findByIdAndUpdate(
         decoded.UserID,
@@ -316,11 +329,15 @@ const authController = {
           ...(Address !== undefined && { Address: Address.trim() }),
           ...(Avatar && { Avatar }),
         },
-        { new: true }
-      ).select("-PasswordHash").lean();
+        { new: true },
+      )
+        .select("-PasswordHash")
+        .lean();
 
       if (!updated) {
-        return res.status(404).json({ success: false, message: "Không tìm thấy tài khoản!" });
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy tài khoản!" });
       }
 
       updated.UserID = updated._id;
@@ -331,7 +348,9 @@ const authController = {
       });
     } catch (err) {
       console.error("Lỗi updateProfile:", err);
-      return res.status(500).json({ success: false, message: "Lỗi máy chủ", error: err.message });
+      return res
+        .status(500)
+        .json({ success: false, message: "Lỗi máy chủ", error: err.message });
     }
   },
 
@@ -340,15 +359,28 @@ const authController = {
     try {
       const decoded = getUserFromToken(req);
       if (!decoded) {
-        return res.status(401).json({ success: false, message: "Yêu cầu đăng nhập!" });
+        return res
+          .status(401)
+          .json({ success: false, message: "Yêu cầu đăng nhập!" });
       }
 
       // Kiểm tra quyền Quản trị / Nhân sự
-      if (!["ADMIN", "MANAGER", "STAFF"].includes(decoded.Role)) {
-        return res.status(403).json({ success: false, message: "Quyền truy cập bị từ chối. Chỉ dành cho Quản trị viên và Nhân sự!" });
+      if (
+        !["SUPERADMIN", "ADMIN", "MANAGER", "STAFF"].includes(
+          decoded.Role?.toUpperCase(),
+        )
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "Quyền truy cập bị từ chối. Chỉ dành cho Quản trị viên và Nhân sự!",
+        });
       }
 
-      const users = await User.find().select("-PasswordHash").sort({ createdAt: -1 }).lean();
+      const users = await User.find()
+        .select("-PasswordHash")
+        .sort({ createdAt: -1 })
+        .lean();
       const mapped = users.map((u) => ({ ...u, UserID: u._id }));
 
       return res.status(200).json({
@@ -357,7 +389,11 @@ const authController = {
         data: mapped,
       });
     } catch (err) {
-      return res.status(500).json({ success: false, message: "Lỗi lấy danh sách người dùng", error: err.message });
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi lấy danh sách người dùng",
+        error: err.message,
+      });
     }
   },
 
@@ -365,24 +401,51 @@ const authController = {
   async toggleUserStatus(req, res) {
     try {
       const decoded = getUserFromToken(req);
-      if (!decoded || !["ADMIN", "MANAGER"].includes(decoded.Role)) {
+      if (
+        !decoded ||
+        !["SUPERADMIN", "ADMIN", "MANAGER"].includes(
+          decoded.Role?.toUpperCase(),
+        )
+      ) {
         return res.status(403).json({
           success: false,
-          message: "Chỉ Quản trị viên và Quản lý mới có quyền chuyển đổi trạng thái tài khoản!",
+          message:
+            "Chỉ Super Admin, Quản trị viên và Quản lý mới có quyền chuyển đổi trạng thái tài khoản!",
         });
       }
+
+      const isSuperAdmin =
+        decoded.Role?.toUpperCase() === "SUPERADMIN" ||
+        decoded.Email === "superadmin@vidairy.vn";
 
       const { id } = req.params;
       const user = await User.findById(id);
       if (!user) {
-        return res.status(404).json({ success: false, message: "Không tìm thấy người dùng!" });
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy người dùng!" });
       }
 
-      // Bảo vệ: Tuyệt đối không can thiệp hoặc khóa tài khoản Quản trị viên duy nhất
-      if (user.Role === "ADMIN" || user.Email === "admin@vidairy.vn") {
+      // Bảo vệ tối cao: Tuyệt đối không can thiệp hoặc khóa tài khoản Super Admin
+      if (
+        user.Role === "SUPERADMIN" ||
+        user.Email === "superadmin@vidairy.vn"
+      ) {
         return res.status(403).json({
           success: false,
-          message: "Không thể khóa tài khoản Quản trị viên duy nhất của hệ thống!",
+          message: "Tài khoản Super Admin là cấp cao nhất, không thể khóa!",
+        });
+      }
+
+      // Nếu không phải Super Admin, không được phép khóa tài khoản ADMIN
+      if (
+        !isSuperAdmin &&
+        (user.Role === "ADMIN" || user.Email === "admin@vidairy.vn")
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "Chỉ Super Admin mới có quyền khóa hoặc mở khóa tài khoản Quản trị viên (ADMIN)!",
         });
       }
 
@@ -408,7 +471,11 @@ const authController = {
         data: userObj,
       });
     } catch (err) {
-      return res.status(500).json({ success: false, message: "Lỗi chuyển đổi trạng thái", error: err.message });
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi chuyển đổi trạng thái",
+        error: err.message,
+      });
     }
   },
 
@@ -416,31 +483,25 @@ const authController = {
   async updateUserRole(req, res) {
     try {
       const decoded = getUserFromToken(req);
-      if (!decoded || !["ADMIN", "MANAGER"].includes(decoded.Role)) {
+      if (
+        !decoded ||
+        !["SUPERADMIN", "ADMIN", "MANAGER"].includes(
+          decoded.Role?.toUpperCase(),
+        )
+      ) {
         return res.status(403).json({
           success: false,
-          message: "Chỉ Quản trị viên và Quản lý mới có quyền phân quyền tài khoản!",
+          message:
+            "Chỉ Super Admin, Quản trị viên và Quản lý mới có quyền phân quyền tài khoản!",
         });
       }
+
+      const isSuperAdmin =
+        decoded.Role?.toUpperCase() === "SUPERADMIN" ||
+        decoded.Email === "superadmin@vidairy.vn";
 
       const { id } = req.params;
       const { role, permissions } = req.body;
-
-      // Không cho phép bất kỳ ai gán thêm vai trò ADMIN cho tài khoản khác
-      if (role === "ADMIN") {
-        return res.status(400).json({
-          success: false,
-          message: "Không thể gán vai trò Admin. Hệ thống chỉ có 1 tài khoản Quản trị viên VitaDairy duy nhất!",
-        });
-      }
-
-      const validRoles = ["CUSTOMER", "STAFF", "MANAGER"];
-      if (role && !validRoles.includes(role)) {
-        return res.status(400).json({
-          success: false,
-          message: "Vai trò người dùng không hợp lệ! Chỉ có thể đặt vai trò là Khách hàng (CUSTOMER), Nhân viên (STAFF) hoặc Quản lý (MANAGER).",
-        });
-      }
 
       const targetUser = await User.findById(id);
       if (!targetUser) {
@@ -450,19 +511,56 @@ const authController = {
         });
       }
 
-      // Bảo vệ: Tuyệt đối không can thiệp hoặc thay đổi tài khoản ADMIN duy nhất
-      if (targetUser.Role === "ADMIN" || targetUser.Email === "admin@vidairy.vn") {
+      // Bảo vệ tối cao: Tuyệt đối không can thiệp hoặc thay đổi tài khoản Super Admin
+      if (
+        targetUser.Role === "SUPERADMIN" ||
+        targetUser.Email === "superadmin@vidairy.vn"
+      ) {
         return res.status(403).json({
           success: false,
-          message: "Không thể can thiệp, thay đổi vai trò hoặc phân quyền của tài khoản Quản trị viên duy nhất!",
+          message:
+            "Tài khoản Super Admin có quyền tối cao trong toàn hệ thống và không thể thay đổi!",
         });
       }
 
-      // Bảo vệ: Không cho phép tự đặt vai trò hoặc tự phân quyền cho chính mình
+      // Nếu không phải Super Admin: không được gán quyền ADMIN hay can thiệp vào tài khoản ADMIN
+      if (!isSuperAdmin) {
+        if (role === "SUPERADMIN" || role === "ADMIN") {
+          return res.status(403).json({
+            success: false,
+            message:
+              "Chỉ Super Admin mới có quyền chỉ định vai trò Quản trị viên (ADMIN)!",
+          });
+        }
+        if (
+          targetUser.Role === "ADMIN" ||
+          targetUser.Email === "admin@vidairy.vn"
+        ) {
+          return res.status(403).json({
+            success: false,
+            message:
+              "Chỉ Super Admin mới có quyền phân quyền hoặc thay đổi vai trò tài khoản Quản trị viên!",
+          });
+        }
+      }
+
+      const validRoles = isSuperAdmin
+        ? ["CUSTOMER", "STAFF", "MANAGER", "ADMIN"]
+        : ["CUSTOMER", "STAFF", "MANAGER"];
+
+      if (role && !validRoles.includes(role)) {
+        return res.status(400).json({
+          success: false,
+          message: `Vai trò không hợp lệ! Các vai trò được phép: ${validRoles.join(", ")}.`,
+        });
+      }
+
+      // Bảo vệ: Không cho phép tự phân quyền cho chính mình
       if (String(targetUser._id) === String(decoded.UserID)) {
         return res.status(403).json({
           success: false,
-          message: "Bạn không thể tự thay đổi vai trò hoặc tự phân quyền cho chính mình!",
+          message:
+            "Bạn không thể tự thay đổi vai trò hoặc tự phân quyền cho chính mình!",
         });
       }
 
@@ -470,14 +568,16 @@ const authController = {
       if (role) updateFields.Role = role;
       if (Array.isArray(permissions)) updateFields.Permissions = permissions;
 
-      const updatedUser = await User.findByIdAndUpdate(id, updateFields, { new: true })
+      const updatedUser = await User.findByIdAndUpdate(id, updateFields, {
+        new: true,
+      })
         .select("-PasswordHash")
         .lean();
 
       updatedUser.UserID = updatedUser._id;
       return res.status(200).json({
         success: true,
-        message: `Đã cập nhật phân quyền cho tài khoản "${updatedUser.FullName}" thành công!`,
+        message: `Đã cập nhật phân quyền cho tài khoản "${updatedUser.FullName}" (Vai trò: ${updatedUser.Role}) thành công!`,
         data: updatedUser,
       });
     } catch (err) {
